@@ -1,0 +1,63 @@
+Changelog for Health Check
+
+[Golang]
+This build on Golang Version: go version go1.20.4
+
+
+[Unreleased]
+
+[1.4.1-beta]
+
+1- Interact with vCenter if the cloud provider is VMware
+
+
+[1.4] 2023-06-6
+
+1- Group all check reports into major index README.adoc
+2- Adding more checks
+3- Adding Key Summary section
+4- More than 40 checks for openshift cluster
+5- Generate full formatted document healthcheck-body.adoc
+
+[1.3] - 2023-03-08
+1- A major change has been set, a general template to render for each check list instead each template for a check.
+2- Content data has been removed.
+3- General enhancement on other check for accuracy.
+
+
+
+
+[1.2] - 2023-03-05
+Added
+Added podImagePullStatus check
+Added DefaultOpenShiftUser check
+Added monitoringStack check
+Added checkLogging check
+Added applicationProbes check
+Added resourceLimit check
+
+
+
+
+[1.1] - 2023-02-26
+Added
+Added checkCO check
+Added nodeStatus check
+Added nodeUsage check
+Added ETCDEncryption check
+Added etcdBackup check
+Added DefaultProject check
+Added checkSelfProvisioners check
+Added checkNetworkPolicy check
+Added checkLDAPIdentity check
+Added apiSSLVerify check
+Added appsSSLVerify check
+Added resourceQuota check
+Added Generate Markdown documents for each check
+
+
+[1.0] - 2023-02-06
+Added
+Initial release with basic health checks.
+
+
