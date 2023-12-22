@@ -4,12 +4,10 @@ Changelog for Health Check
 This build on Golang Version: go version go1.20.4
 
 
-[Unreleased]
 
-[1.4.1-beta]
-
-1- Interact with vCenter if the cloud provider is VMware
-
+[1.4.2] 2023-12-22
+1- Update SCC profiles
+2- Add compatibility with OpenShift 4.14 and later - DeploymentConfigs is deprecated
 
 [1.4] 2023-06-6
 
