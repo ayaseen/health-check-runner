@@ -74,31 +74,65 @@ func init() {
 }
 
 func compareVersions(version1, version2 string) (int, error) {
-	components1 := strings.Split(version1, ".")
-	components2 := strings.Split(version2, ".")
-
-	// Ensure that both versions have three components
-	if len(components1) != 3 || len(components2) != 3 {
-		return 0, fmt.Errorf("invalid version format")
+	// Directly compare if version1 is "4.14" or greater
+	if isGreaterThanOrEqual(version1, "4.14") {
+		return 0, nil
 	}
 
-	for i := 0; i < 3; i++ {
-		v1, err := strconv.Atoi(components1[i])
-		if err != nil {
-			return 0, fmt.Errorf("invalid version format: %s", version1)
-		}
+	// Compare the two versions normally if version1 is less than "4.14"
+	v1, v2, err := parseVersions(version1, version2)
+	if err != nil {
+		return 0, err
+	}
 
-		v2, err := strconv.Atoi(components2[i])
-		if err != nil {
-			return 0, fmt.Errorf("invalid version format: %s", version2)
-		}
-
-		if v1 < v2 {
+	for i := 0; i < len(v1); i++ {
+		if v1[i] < v2[i] {
 			return -1, nil
-		} else if v1 > v2 {
+		} else if v1[i] > v2[i] {
 			return 1, nil
 		}
 	}
+	return 0, nil // Versions are equal
+}
 
-	return 0, nil // Both versions are equal
+// isGreaterThanOrEqual checks if a version is greater than or equal to a target version.
+func isGreaterThanOrEqual(version, target string) bool {
+	v1, v2, err := parseVersions(version, target)
+	if err != nil {
+		return false
+	}
+
+	for i := 0; i < len(v1); i++ {
+		if v1[i] > v2[i] {
+			return true
+		} else if v1[i] < v2[i] {
+			return false
+		}
+	}
+	return true // Versions are equal
+}
+
+// parseVersions parses and converts the version strings into slices of integers.
+func parseVersions(version1, version2 string) ([]int, []int, error) {
+	v1Components := strings.Split(version1, ".")
+	v2Components := strings.Split(version2, ".")
+
+	v1 := make([]int, len(v1Components))
+	v2 := make([]int, len(v2Components))
+
+	var err error
+	for i := 0; i < len(v1Components); i++ {
+		v1[i], err = strconv.Atoi(v1Components[i])
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid version format: %s", version1)
+		}
+	}
+
+	for i := 0; i < len(v2Components); i++ {
+		v2[i], err = strconv.Atoi(v2Components[i])
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid version format: %s", version2)
+		}
+	}
+	return v1, v2, nil
 }

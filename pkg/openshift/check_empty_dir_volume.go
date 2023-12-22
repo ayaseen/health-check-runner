@@ -58,6 +58,9 @@ func emptyDirVolume() {
 		"default",
 	}
 
+	version, _ := getOpenShiftVersion() // Retrieve the OpenShift version
+	result, _ := compareVersions(version, latestRelease)
+
 	projects, err := clientset.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		log.Fatalf("Error listing projects: %v", err)
@@ -89,33 +92,70 @@ func emptyDirVolume() {
 			}
 		}
 
-		deployments, err := appsClientset.DeploymentConfigs(project.Name).List(context.Background(), metav1.ListOptions{})
-		if err != nil {
-			log.Fatalf("Error listing deployment configs in project %s: %v", project.Name, err)
-		}
+		// Check if the OpenShift version is 4.14 or greater
 
-		for _, deployment := range deployments.Items {
-			podTemplate := deployment.Spec.Template
+		if result < 0 {
 
-			pods, err := clientset.CoreV1().Pods(project.Name).List(context.Background(), metav1.ListOptions{})
+			deployments, err := appsClientset.DeploymentConfigs(project.Name).List(context.Background(), metav1.ListOptions{})
 			if err != nil {
-				log.Fatalf("Error listing pods in project %s: %v", project.Name, err)
+				log.Fatalf("Error listing deployment configs in project %s: %v", project.Name, err)
 			}
 
-			for _, pod := range pods.Items {
-				if pod.Name == podTemplate.Name {
-					isEmptyDirVolume := false
+			for _, deployment := range deployments.Items {
+				podTemplate := deployment.Spec.Template
 
-					volumes := podTemplate.Spec.Volumes
-					for _, volume := range volumes {
-						if volume.EmptyDir != nil {
-							isEmptyDirVolume = true
-							break
+				pods, err := clientset.CoreV1().Pods(project.Name).List(context.Background(), metav1.ListOptions{})
+				if err != nil {
+					log.Fatalf("Error listing pods in project %s: %v", project.Name, err)
+				}
+
+				for _, pod := range pods.Items {
+					if pod.Name == podTemplate.Name {
+						isEmptyDirVolume := false
+
+						volumes := podTemplate.Spec.Volumes
+						for _, volume := range volumes {
+							if volume.EmptyDir != nil {
+								isEmptyDirVolume = true
+								break
+							}
+						}
+
+						if isEmptyDirVolume {
+							emptyDirCount++
 						}
 					}
+				}
+			}
+		} else {
+			deployments, err := clientset.AppsV1().Deployments(project.Name).List(context.Background(), metav1.ListOptions{})
+			if err != nil {
+				log.Fatalf("Error listing deployment in project %s: %v", project.Name, err)
+			}
 
-					if isEmptyDirVolume {
-						emptyDirCount++
+			for _, deployment := range deployments.Items {
+				podTemplate := deployment.Spec.Template
+
+				pods, err := clientset.CoreV1().Pods(project.Name).List(context.Background(), metav1.ListOptions{})
+				if err != nil {
+					log.Fatalf("Error listing pods in project %s: %v", project.Name, err)
+				}
+
+				for _, pod := range pods.Items {
+					if pod.Name == podTemplate.Name {
+						isEmptyDirVolume := false
+
+						volumes := podTemplate.Spec.Volumes
+						for _, volume := range volumes {
+							if volume.EmptyDir != nil {
+								isEmptyDirVolume = true
+								break
+							}
+						}
+
+						if isEmptyDirVolume {
+							emptyDirCount++
+						}
 					}
 				}
 			}
