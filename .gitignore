@@ -12,6 +12,7 @@ checksum.go
 *.dylib
 config
 test*.*
+*.sh
 resources.*
 main
 author*

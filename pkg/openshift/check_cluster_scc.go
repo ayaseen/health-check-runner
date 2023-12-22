@@ -47,18 +47,7 @@ fsGroup:
 groups: []
 kind: SecurityContextConstraints
 metadata:
-  annotations:
-    include.release.openshift.io/ibm-cloud-managed: "true"
-    include.release.openshift.io/self-managed-high-availability: "true"
-    include.release.openshift.io/single-node-developer: "true"
-    kubernetes.io/description: restricted denies access to all host features and requires
-      pods to be run with a UID, and SELinux context that are allocated to the namespace.
-    release.openshift.io/create-only: "true"
-  creationTimestamp: "2023-05-25T05:17:11Z"
-  generation: 6
   name: restricted
-  resourceVersion: "1132577"
-  uid: 22828d97-7f4f-4569-ae9c-65eff489bd59
 priority: null
 readOnlyRootFilesystem: false
 requiredDropCapabilities:
@@ -75,8 +64,10 @@ supplementalGroups:
 users: []
 volumes:
 - configMap
+- csi
 - downwardAPI
 - emptyDir
+- ephemeral
 - persistentVolumeClaim
 - projected
 - secret`
@@ -98,18 +89,7 @@ type SecurityContextConstraints struct {
 	Groups                   []string          `yaml:"groups"`
 	Kind                     string            `yaml:"kind"`
 	Metadata                 struct {
-		Annotations struct {
-			IncludeReleaseOpenshiftIOIBMCloudManaged             string `yaml:"include.release.openshift.io/ibm-cloud-managed"`
-			IncludeReleaseOpenshiftIOSelfManagedHighAvailability string `yaml:"include.release.openshift.io/self-managed-high-availability"`
-			IncludeReleaseOpenshiftIOSingleNodeDeveloper         string `yaml:"include.release.openshift.io/single-node-developer"`
-			KubernetesIODescription                              string `yaml:"kubernetes.io/description"`
-			ReleaseOpenshiftIOCreateOnly                         string `yaml:"release.openshift.io/create-only"`
-		} `yaml:"annotations"`
-		CreationTimestamp string `yaml:"creationTimestamp"`
-		Generation        int    `yaml:"generation"`
-		Name              string `yaml:"name"`
-		ResourceVersion   string `yaml:"resourceVersion"`
-		UID               string `yaml:"uid"`
+		Name string `yaml:"name"`
 	} `yaml:"metadata"`
 	Priority                 string            `yaml:"priority"`
 	ReadOnlyRootFilesystem   bool              `yaml:"readOnlyRootFilesystem"`
@@ -149,16 +129,7 @@ func compareSCC(current, expected []byte) bool {
 		!compareStringMaps(currentSCC.FSGroup, expectedSCC.FSGroup) ||
 		!compareStringSlices(currentSCC.Groups, expectedSCC.Groups) ||
 		currentSCC.Kind != expectedSCC.Kind ||
-		//currentSCC.Metadata.Annotations.IncludeReleaseOpenshiftIOIBMCloudManaged != expectedSCC.Metadata.Annotations.IncludeReleaseOpenshiftIOIBMCloudManaged ||
-		//currentSCC.Metadata.Annotations.IncludeReleaseOpenshiftIOSelfManagedHighAvailability != expectedSCC.Metadata.Annotations.IncludeReleaseOpenshiftIOSelfManagedHighAvailability ||
-		//currentSCC.Metadata.Annotations.IncludeReleaseOpenshiftIOSingleNodeDeveloper != expectedSCC.Metadata.Annotations.IncludeReleaseOpenshiftIOSingleNodeDeveloper ||
-		//currentSCC.Metadata.Annotations.KubernetesIODescription != expectedSCC.Metadata.Annotations.KubernetesIODescription ||
-		//currentSCC.Metadata.Annotations.ReleaseOpenshiftIOCreateOnly != expectedSCC.Metadata.Annotations.ReleaseOpenshiftIOCreateOnly ||
-		//currentSCC.Metadata.CreationTimestamp != expectedSCC.Metadata.CreationTimestamp ||
-		//currentSCC.Metadata.Generation != expectedSCC.Metadata.Generation ||
 		currentSCC.Metadata.Name != expectedSCC.Metadata.Name ||
-		//currentSCC.Metadata.ResourceVersion != expectedSCC.Metadata.ResourceVersion ||
-		//currentSCC.Metadata.UID != expectedSCC.Metadata.UID ||
 		currentSCC.Priority != expectedSCC.Priority ||
 		currentSCC.ReadOnlyRootFilesystem != expectedSCC.ReadOnlyRootFilesystem ||
 		!compareStringSlices(currentSCC.RequiredDropCapabilities, expectedSCC.RequiredDropCapabilities) ||
