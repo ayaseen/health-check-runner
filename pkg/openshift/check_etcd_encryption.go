@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,13 +36,13 @@ func etcdEncryption() {
 	}
 	encryptionType = strings.TrimSpace(string(out))
 
-	if encryptionType == "aescbc" {
-		color.Green("ETCD Encryption is set\t\t\t\t\tPASSED")
-
-	} else {
-		color.Red("ETCD Encryption is set\t\t\t\t\tFAILED")
-
-	}
+	//if encryptionType == "aescbc" {
+	//	color.Green("ETCD Encryption is set\t\t\t\t\tPASSED")
+	//
+	//} else {
+	//	color.Red("ETCD Encryption is set\t\t\t\t\tFAILED")
+	//
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
@@ -97,7 +96,7 @@ func checkETCDEncryption() (string, error) {
 func etcdEncryptionProcess(line string) string {
 	if strings.HasPrefix(line, "<<ETCD Encryption Enabled>>") {
 		// Render the change status
-		if encryptionType != "aescbc" {
+		if encryptionType != "aescbc" && encryptionType != "aesgcm" {
 			return line + "\n\n| No ETCD encryption \n\n" + GetKeyChanges("recommended")
 		} else {
 			return line + "\n\n|None \n\n" + GetKeyChanges("nochange")
@@ -108,7 +107,7 @@ func etcdEncryptionProcess(line string) string {
 		etcdEncrypt, _ := checkETCDEncryption()
 		version, _ := getOpenShiftVersion()
 
-		if encryptionType != "aescbc" {
+		if encryptionType != "aescbc" && encryptionType != "aesgcm" {
 			return line + "\n\n" + GetChanges("recommended") + "\n\n[source, yaml]\n----\n" + etcdEncrypt + "\n----\n" +
 				"\n\n**Observation**\n\nNo ETCD encryption\n\n" +
 				"**Recommendation**\n\nCheck in the reference how to encrypt ETCD data. \n\n" +
