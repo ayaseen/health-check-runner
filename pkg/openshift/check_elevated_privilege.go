@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	ocappsv1client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -156,15 +155,15 @@ func checkElevatedPrivileges() {
 		}
 	}
 
-	if foundPodsWithPrivileged == false {
-		color.Green("Elevated Privileged\t\t\t\t\tPASSED")
-	} else {
-		// Generate and print the markdown table
-		color.Red("Elevated Privileged\t\t\t\t\tFAILED")
-
-		//markdown := table.GenerateMarkdown()
-		//fmt.Println(markdown)
-	}
+	//if foundPodsWithPrivileged == false {
+	//	color.Green("Elevated Privileged\t\t\t\t\tPASSED")
+	//} else {
+	//	// Generate and print the markdown table
+	//	color.Red("Elevated Privileged\t\t\t\t\tFAILED")
+	//
+	//	//markdown := table.GenerateMarkdown()
+	//	//fmt.Println(markdown)
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

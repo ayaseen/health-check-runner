@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,9 +36,7 @@ func ingressControllerPlacement() {
 	}
 
 	if strings.Contains(string(ingressPlacement), "node-role.kubernetes.io/infra") {
-		color.Green("Ingress Controller Placement is set\t\t\tPASSED")
-	} else {
-		color.Red("Ingress Controller Placement not set\t\t\tFAILED")
+		//color.Green("Ingress Controller Placement is set\t\t\tPASSED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

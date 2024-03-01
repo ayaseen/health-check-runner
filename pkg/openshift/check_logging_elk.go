@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"log"
 	"os"
 	"os/exec"
@@ -47,12 +46,8 @@ func CheckElasticSearch() {
 
 	if elk != "[]" && loggingConfigure != "" {
 		if diskUsage != -1 {
-			color.Red("ElasticSearch Disk storage usage more than 90%\t\tCRITICAL")
-		} else {
-			color.Green("ElasticSearch Disk storage usage is normal\t\tPASSED")
+			//color.Red("ElasticSearch Disk storage usage more than 90%\t\tCRITICAL")
 		}
-	} else {
-		color.HiCyan("ElasticSearch not installed or configure\t\tSKIPPED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

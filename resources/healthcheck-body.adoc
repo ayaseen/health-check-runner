@@ -205,7 +205,7 @@ vSphere
 a|
 VMware vSphere Version
 
-| 7.0.3.19666520 
+| 8.0.1.22742005 
 
 |
 {set:cellbgcolor:#00FF00}
@@ -1105,11 +1105,11 @@ Cluster Config
 a|
 <<Default Security Context Constraint>>
 
-| SCC has not been modified 
+| SCC not modified 
 
 |
-{set:cellbgcolor:#00FF00}
-No Change
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
 
 
 
@@ -1470,11 +1470,11 @@ Cluster Config
 a|
 <<Etcd Performance>>
 
-| ETCD is healthy 
+| ETCD is not healthy 
 
 |
-{set:cellbgcolor:#00FF00}
-No Change
+{set:cellbgcolor:#FF0000}
+Changes Required
 
 
 
@@ -2438,12 +2438,12 @@ No Change
 
 [source, bash]
 ----
-NAME                                 STATUS   ROLES    AGE    VERSION
-master-0.2dmkg.dynamic.opentlc.com   Ready    master   3d2h   v1.24.0+dc5a2fd
-master-1.2dmkg.dynamic.opentlc.com   Ready    master   3d2h   v1.24.0+dc5a2fd
-master-2.2dmkg.dynamic.opentlc.com   Ready    master   3d2h   v1.24.0+dc5a2fd
-worker-0.2dmkg.dynamic.opentlc.com   Ready    worker   3d2h   v1.24.0+dc5a2fd
-worker-1.2dmkg.dynamic.opentlc.com   Ready    worker   3d2h   v1.24.0+dc5a2fd
+NAME                                 STATUS   ROLES    AGE   VERSION
+master-0.n6n8k.dynamic.opentlc.com   Ready    master   15h   v1.24.0+dc5a2fd
+master-1.n6n8k.dynamic.opentlc.com   Ready    master   15h   v1.24.0+dc5a2fd
+master-2.n6n8k.dynamic.opentlc.com   Ready    master   15h   v1.24.0+dc5a2fd
+worker-0.n6n8k.dynamic.opentlc.com   Ready    worker   14h   v1.24.0+dc5a2fd
+worker-1.n6n8k.dynamic.opentlc.com   Ready    worker   14h   v1.24.0+dc5a2fd
 
 ----
 
@@ -2472,11 +2472,11 @@ Advisory
 [source, bash]
 ----
 NAME                                 CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
-master-0.2dmkg.dynamic.opentlc.com   682m         19%    8558Mi          58%       
-master-1.2dmkg.dynamic.opentlc.com   1108m        31%    10803Mi         73%       
-master-2.2dmkg.dynamic.opentlc.com   672m         19%    7827Mi          53%       
-worker-0.2dmkg.dynamic.opentlc.com   661m         44%    3676Mi          55%       
-worker-1.2dmkg.dynamic.opentlc.com   406m         27%    3839Mi          57%       
+master-0.n6n8k.dynamic.opentlc.com   1405m        40%    11031Mi         74%       
+master-1.n6n8k.dynamic.opentlc.com   834m         23%    6808Mi          46%       
+master-2.n6n8k.dynamic.opentlc.com   674m         19%    7198Mi          48%       
+worker-0.n6n8k.dynamic.opentlc.com   502m         33%    3482Mi          52%       
+worker-1.n6n8k.dynamic.opentlc.com   537m         35%    3725Mi          55%       
 
 ----
 
@@ -2520,7 +2520,7 @@ vSphere
 a|
 VMware vSphere Version
 
-| 7.0.3.19666520 
+| 8.0.1.22742005 
 
 |
 {set:cellbgcolor:#00FF00}
@@ -3301,9 +3301,9 @@ Changes Recommended
 
 [source, bash]
 ----
-NAME                            READY   STATUS    RESTARTS   AGE    IP               NODE                                 NOMINATED NODE   READINESS GATES
-router-default-87cfb795-6x9ff   1/1     Running   0          3d2h   192.168.32.200   worker-0.2dmkg.dynamic.opentlc.com   <none>           <none>
-router-default-87cfb795-mtk5w   1/1     Running   0          3d2h   192.168.32.201   worker-1.2dmkg.dynamic.opentlc.com   <none>           <none>
+NAME                              READY   STATUS    RESTARTS   AGE   IP               NODE                                 NOMINATED NODE   READINESS GATES
+router-default-7bb945c647-9tx22   1/1     Running   0          15h   192.168.81.201   worker-1.n6n8k.dynamic.opentlc.com   <none>           <none>
+router-default-7bb945c647-dsxpq   1/1     Running   0          15h   192.168.81.200   worker-0.n6n8k.dynamic.opentlc.com   <none>           <none>
 
 ----
 
@@ -3332,9 +3332,9 @@ Changes Recommended
 
 [source, bash]
 ----
-NAME                            READY   STATUS    RESTARTS   AGE
-router-default-87cfb795-6x9ff   1/1     Running   0          3d2h
-router-default-87cfb795-mtk5w   1/1     Running   0          3d2h
+NAME                              READY   STATUS    RESTARTS   AGE
+router-default-7bb945c647-9tx22   1/1     Running   0          15h
+router-default-7bb945c647-dsxpq   1/1     Running   0          15h
 
 ----
 
@@ -3392,11 +3392,11 @@ items:
 - apiVersion: config.openshift.io/v1
   kind: Network
   metadata:
-    creationTimestamp: "2023-06-09T04:10:44Z"
+    creationTimestamp: "2024-02-29T16:24:26Z"
     generation: 2
     name: cluster
-    resourceVersion: "2948"
-    uid: 25e02f32-8571-4134-bdc3-a7bb2b10ad62
+    resourceVersion: "2878"
+    uid: 3a5b2f43-86a4-4e60-a430-ae2562a90174
   spec:
     clusterNetwork:
     - cidr: 10.128.0.0/14
@@ -3824,11 +3824,11 @@ Cluster Config
 a|
 <<Default Security Context Constraint>>
 
-| SCC has not been modified 
+| SCC not modified 
 
 |
-{set:cellbgcolor:#00FF00}
-No Change
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
 
 
 
@@ -4188,11 +4188,11 @@ Cluster Config
 a|
 <<Etcd Performance>>
 
-| ETCD is healthy 
+| ETCD is not healthy 
 
 |
-{set:cellbgcolor:#00FF00}
-No Change
+{set:cellbgcolor:#FF0000}
+Changes Required
 
 
 // ------------------------ITEM END
@@ -4310,16 +4310,181 @@ items:
 - apiVersion: config.openshift.io/v1
   kind: ClusterVersion
   metadata:
-    creationTimestamp: "2023-06-09T04:10:48Z"
+    creationTimestamp: "2024-02-29T16:24:30Z"
     generation: 2
     name: version
-    resourceVersion: "1629273"
-    uid: 0609ac70-1564-48de-9187-07f57d0e6b19
+    resourceVersion: "322184"
+    uid: f5e47723-3547-4d5a-be4a-01c68a7d2a00
   spec:
     channel: stable-4.11
-    clusterID: b5ce90b3-469f-401a-8744-c30afe5bea7c
+    clusterID: f19bccb9-5116-4aaa-8bd7-8a15704ed5b8
   status:
     availableUpdates:
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:60091111bfb629d995977e4a91f090a2306e5be609d3a2652f31280ce0eea1f3
+      url: https://access.redhat.com/errata/RHSA-2024:0682
+      version: 4.11.58
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:e06117543fc10003c12017829bf7707fcc9f847c9aabcc7ac6150f7babf17ed1
+      url: https://access.redhat.com/errata/RHSA-2024:0306
+      version: 4.11.57
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:6fcfee1b6d7e4d2f9c0e05ec2b0ad159809ea93736ac0acdc710df0584510892
+      url: https://access.redhat.com/errata/RHSA-2024:0059
+      version: 4.11.56
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:5054bd54461e838f8ecf4a9b1c012cb38001ca79586bbd23e4db7041f2777a26
+      url: https://access.redhat.com/errata/RHSA-2023:7691
+      version: 4.11.55
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:f659402f24812b07e63e84901e79720650d1af4097535f059ce731031948a8a8
+      url: https://access.redhat.com/errata/RHSA-2023:7479
+      version: 4.11.54
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:ce532664d72d7b768ad61a83500e239f67a5d2aa2b62cb6a7caf90a8d3ed6e2e
+      url: https://access.redhat.com/errata/RHSA-2023:6272
+      version: 4.11.53
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:39d2479528d17b7b8a2238af4b0dfd69658b0f33edb416ed1ffb72bf6911befa
+      url: https://access.redhat.com/errata/RHSA-2023:5697
+      version: 4.11.52
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:57b4ea34db9f8ac57b3d796ae0e82e749d9a7708821364cc1770292586edfd87
+      url: https://access.redhat.com/errata/RHBA-2023:5350
+      version: 4.11.50
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:c0b6536214019f240004c1738e41c6f10f14599393eabada95eb32b2b79eee77
+      url: https://access.redhat.com/errata/RHSA-2023:5001
+      version: 4.11.49
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:08cd58a3f7f44512c69490126461fcc369877a98c8eb8807a92cf2dc54e60bd3
+      url: https://access.redhat.com/errata/RHBA-2023:4752
+      version: 4.11.48
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:bbed7981242fbc034a0e75ef265040137515da3756ac2eab9d2dd46348967c06
+      url: https://access.redhat.com/errata/RHBA-2023:4614
+      version: 4.11.47
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:88583eeaddcda4fbfdcf21f4dad86b01ff09bb010357c51f08fb24eb07fdb602
+      url: https://access.redhat.com/errata/RHSA-2023:4310
+      version: 4.11.46
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:c6771b12bd873c0e3e5fbc7afa600d92079de6534dcb52f09cb1d22ee49608a9
+      url: https://access.redhat.com/errata/RHSA-2023:4053
+      version: 4.11.45
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:52cbfbbeb9cc03b49c2788ac7333e63d3dae14673e01a9d8e59270f3a8390ed3
+      url: https://access.redhat.com/errata/RHSA-2023:3915
+      version: 4.11.44
+    - channels:
+      - candidate-4.11
+      - candidate-4.12
+      - eus-4.12
+      - fast-4.11
+      - fast-4.12
+      - stable-4.11
+      - stable-4.12
+      image: quay.io/openshift-release-dev/ocp-release@sha256:d11cd63a623d33bda744f1a886d4b55710db4d68878967be2ebcd5535fafa25d
+      url: https://access.redhat.com/errata/RHSA-2023:3542
+      version: 4.11.43
     - channels:
       - candidate-4.11
       - candidate-4.12
@@ -4540,7 +4705,38 @@ items:
       - openshift-samples
     conditionalUpdates:
     - conditions:
-      - lastTransitionTime: "2023-06-12T06:36:28Z"
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
+        message: The update is recommended, because none of the conditional update
+          risks apply to this cluster.
+        reason: AsExpected
+        status: "True"
+        type: Recommended
+      release:
+        channels:
+        - candidate-4.11
+        - candidate-4.12
+        - eus-4.12
+        - fast-4.11
+        - fast-4.12
+        - stable-4.11
+        - stable-4.12
+        image: quay.io/openshift-release-dev/ocp-release@sha256:39d2479528d17b7b8a2238af4b0dfd69658b0f33edb416ed1ffb72bf6911befa
+        url: https://access.redhat.com/errata/RHSA-2023:5697
+        version: 4.11.52
+      risks:
+      - matchingRules:
+        - promql:
+            promql: |
+              group(cluster_infrastructure_provider{type="BareMetal"})
+              or
+              0 * group(cluster_infrastructure_provider)
+          type: PromQL
+        message: The target release fails to provision and de-provision new baremetal
+          machines required for scaling of a cluster.
+        name: BrokenBaremetalProvisioning
+        url: https://issues.redhat.com/browse/METAL-739
+    - conditions:
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
         message: The 4.11.36 release only resolves an installation issue https://issues.redhat.com//browse/OCPBUGS-11663
           , which does not affect already running clusters. 4.11.36 does not include
           fixes delivered in recent 4.11.z releases and therefore upgrading from these
@@ -4572,7 +4768,7 @@ items:
         name: PatchesOlderRelease
         url: https://access.redhat.com/solutions/7007136
     - conditions:
-      - lastTransitionTime: "2023-06-12T06:36:28Z"
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
         message: Machine Config Operator stalls when encountering orphaned KubeletConfig
           or ContainerRuntimeConfig resources. https://issues.redhat.com/browse/OCPNODE-1502
         reason: LeakedMachineConfigBlocksMCO
@@ -4598,7 +4794,7 @@ items:
         name: LeakedMachineConfigBlocksMCO
         url: https://issues.redhat.com/browse/OCPNODE-1502
     - conditions:
-      - lastTransitionTime: "2023-06-12T06:36:28Z"
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
         message: Machine Config Operator stalls when encountering orphaned KubeletConfig
           or ContainerRuntimeConfig resources. https://issues.redhat.com/browse/OCPNODE-1502
         reason: LeakedMachineConfigBlocksMCO
@@ -4624,7 +4820,7 @@ items:
         name: LeakedMachineConfigBlocksMCO
         url: https://issues.redhat.com/browse/OCPNODE-1502
     - conditions:
-      - lastTransitionTime: "2023-06-12T06:36:28Z"
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
         message: Machine Config Operator stalls when encountering orphaned KubeletConfig
           or ContainerRuntimeConfig resources. https://issues.redhat.com/browse/OCPNODE-1502
         reason: LeakedMachineConfigBlocksMCO
@@ -4650,7 +4846,7 @@ items:
         name: LeakedMachineConfigBlocksMCO
         url: https://issues.redhat.com/browse/OCPNODE-1502
     - conditions:
-      - lastTransitionTime: "2023-06-12T06:36:28Z"
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
         message: Machine Config Operator stalls when encountering orphaned KubeletConfig
           or ContainerRuntimeConfig resources. https://issues.redhat.com/browse/OCPNODE-1502
         reason: LeakedMachineConfigBlocksMCO
@@ -4676,7 +4872,7 @@ items:
         name: LeakedMachineConfigBlocksMCO
         url: https://issues.redhat.com/browse/OCPNODE-1502
     - conditions:
-      - lastTransitionTime: "2023-06-12T06:36:28Z"
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
         message: Machine Config Operator stalls when encountering orphaned KubeletConfig
           or ContainerRuntimeConfig resources. https://issues.redhat.com/browse/OCPNODE-1502
         reason: LeakedMachineConfigBlocksMCO
@@ -4702,7 +4898,7 @@ items:
         name: LeakedMachineConfigBlocksMCO
         url: https://issues.redhat.com/browse/OCPNODE-1502
     - conditions:
-      - lastTransitionTime: "2023-06-12T06:36:28Z"
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
         message: Machine Config Operator stalls when encountering orphaned KubeletConfig
           or ContainerRuntimeConfig resources. https://issues.redhat.com/browse/OCPNODE-1502
         reason: LeakedMachineConfigBlocksMCO
@@ -4728,7 +4924,7 @@ items:
         name: LeakedMachineConfigBlocksMCO
         url: https://issues.redhat.com/browse/OCPNODE-1502
     - conditions:
-      - lastTransitionTime: "2023-06-12T06:36:28Z"
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
         message: Machine Config Operator stalls when encountering orphaned KubeletConfig
           or ContainerRuntimeConfig resources. https://issues.redhat.com/browse/OCPNODE-1502
         reason: LeakedMachineConfigBlocksMCO
@@ -4754,7 +4950,7 @@ items:
         name: LeakedMachineConfigBlocksMCO
         url: https://issues.redhat.com/browse/OCPNODE-1502
     - conditions:
-      - lastTransitionTime: "2023-06-12T06:36:28Z"
+      - lastTransitionTime: "2024-03-01T07:28:25Z"
         message: 4.11.23 was replaced with 4.11.24. Please update to 4.11.24, it is
           an identical release except for the errata link. https://access.redhat.com/errata/RHSA-2023:0069
         reason: DuplicateRelease
@@ -4780,34 +4976,34 @@ items:
         name: DuplicateRelease
         url: https://access.redhat.com/errata/RHSA-2023:0069
     conditions:
-    - lastTransitionTime: "2023-06-09T04:10:53Z"
+    - lastTransitionTime: "2024-02-29T16:24:33Z"
       status: "True"
       type: RetrievedUpdates
-    - lastTransitionTime: "2023-06-09T04:10:53Z"
+    - lastTransitionTime: "2024-02-29T16:24:33Z"
       message: Kubernetes 1.25 and therefore OpenShift 4.12 remove several APIs which
         require admin consideration. Please see the knowledge article https://access.redhat.com/articles/6955381
         for details and instructions.
       reason: AdminAckRequired
       status: "False"
       type: Upgradeable
-    - lastTransitionTime: "2023-06-09T04:10:53Z"
+    - lastTransitionTime: "2024-02-29T16:24:33Z"
       message: Capabilities match configured spec
       reason: AsExpected
       status: "False"
       type: ImplicitlyEnabledCapabilities
-    - lastTransitionTime: "2023-06-09T04:10:53Z"
+    - lastTransitionTime: "2024-02-29T16:24:33Z"
       message: Payload loaded version="4.11.9" image="quay.io/openshift-release-dev/ocp-release@sha256:94b611f00f51c9acc44ca3f4634e46bd79d7d28b46047c7e3389d250698f0c99"
       reason: PayloadLoaded
       status: "True"
       type: ReleaseAccepted
-    - lastTransitionTime: "2023-06-09T04:29:18Z"
+    - lastTransitionTime: "2024-02-29T16:54:54Z"
       message: Done applying 4.11.9
       status: "True"
       type: Available
-    - lastTransitionTime: "2023-06-09T04:14:53Z"
+    - lastTransitionTime: "2024-02-29T16:54:54Z"
       status: "False"
       type: Failing
-    - lastTransitionTime: "2023-06-09T04:29:18Z"
+    - lastTransitionTime: "2024-02-29T16:54:54Z"
       message: Cluster version is 4.11.9
       status: "False"
       type: Progressing
@@ -4824,9 +5020,9 @@ items:
       url: https://access.redhat.com/errata/RHBA-2022:6897
       version: 4.11.9
     history:
-    - completionTime: "2023-06-09T04:29:18Z"
+    - completionTime: "2024-02-29T16:54:54Z"
       image: quay.io/openshift-release-dev/ocp-release@sha256:94b611f00f51c9acc44ca3f4634e46bd79d7d28b46047c7e3389d250698f0c99
-      startedTime: "2023-06-09T04:10:53Z"
+      startedTime: "2024-02-29T16:24:33Z"
       state: Completed
       verified: false
       version: 4.11.9
@@ -4864,38 +5060,38 @@ No Change
 [source, bash]
 ----
 NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE   MESSAGE
-authentication                             4.11.9    True        False         False      44h     
-baremetal                                  4.11.9    True        False         False      3d2h    
-cloud-controller-manager                   4.11.9    True        False         False      3d2h    
-cloud-credential                           4.11.9    True        False         False      3d2h    
-cluster-autoscaler                         4.11.9    True        False         False      3d2h    
-config-operator                            4.11.9    True        False         False      3d2h    
-console                                    4.11.9    True        False         False      3d2h    
-csi-snapshot-controller                    4.11.9    True        False         False      3d2h    
-dns                                        4.11.9    True        False         False      3d2h    
-etcd                                       4.11.9    True        False         False      3d2h    
-image-registry                             4.11.9    True        False         False      3d2h    
-ingress                                    4.11.9    True        False         False      3d2h    
-insights                                   4.11.9    True        False         False      3d2h    
-kube-apiserver                             4.11.9    True        False         False      3d2h    
-kube-controller-manager                    4.11.9    True        False         False      3d2h    
-kube-scheduler                             4.11.9    True        False         False      3d2h    
-kube-storage-version-migrator              4.11.9    True        False         False      3d2h    
-machine-api                                4.11.9    True        False         False      3d2h    
-machine-approver                           4.11.9    True        False         False      3d2h    
-machine-config                             4.11.9    True        False         False      3d2h    
-marketplace                                4.11.9    True        False         False      3d2h    
-monitoring                                 4.11.9    True        False         False      3d2h    
-network                                    4.11.9    True        False         False      3d2h    
-node-tuning                                4.11.9    True        False         False      3d2h    
-openshift-apiserver                        4.11.9    True        False         False      3d2h    
-openshift-controller-manager               4.11.9    True        False         False      3d2h    
-openshift-samples                          4.11.9    True        False         False      3d2h    
-operator-lifecycle-manager                 4.11.9    True        False         False      3d2h    
-operator-lifecycle-manager-catalog         4.11.9    True        False         False      3d2h    
-operator-lifecycle-manager-packageserver   4.11.9    True        False         False      3d2h    
-service-ca                                 4.11.9    True        False         False      3d2h    
-storage                                    4.11.9    True        False         False      3d2h    
+authentication                             4.11.9    True        False         False      3h18m   
+baremetal                                  4.11.9    True        False         False      15h     
+cloud-controller-manager                   4.11.9    True        False         False      15h     
+cloud-credential                           4.11.9    True        False         False      15h     
+cluster-autoscaler                         4.11.9    True        False         False      15h     
+config-operator                            4.11.9    True        False         False      15h     
+console                                    4.11.9    True        False         False      14h     
+csi-snapshot-controller                    4.11.9    True        False         False      15h     
+dns                                        4.11.9    True        False         False      15h     
+etcd                                       4.11.9    True        False         False      14h     
+image-registry                             4.11.9    True        False         False      14h     
+ingress                                    4.11.9    True        False         False      14h     
+insights                                   4.11.9    True        False         False      14h     
+kube-apiserver                             4.11.9    True        False         False      14h     
+kube-controller-manager                    4.11.9    True        False         False      14h     
+kube-scheduler                             4.11.9    True        False         False      14h     
+kube-storage-version-migrator              4.11.9    True        False         False      15h     
+machine-api                                4.11.9    True        False         False      14h     
+machine-approver                           4.11.9    True        False         False      15h     
+machine-config                             4.11.9    True        False         False      15h     
+marketplace                                4.11.9    True        False         False      15h     
+monitoring                                 4.11.9    True        False         False      14h     
+network                                    4.11.9    True        False         False      15h     
+node-tuning                                4.11.9    True        False         False      15h     
+openshift-apiserver                        4.11.9    True        False         False      14h     
+openshift-controller-manager               4.11.9    True        False         False      14h     
+openshift-samples                          4.11.9    True        False         False      14h     
+operator-lifecycle-manager                 4.11.9    True        False         False      15h     
+operator-lifecycle-manager-catalog         4.11.9    True        False         False      15h     
+operator-lifecycle-manager-packageserver   4.11.9    True        False         False      14h     
+service-ca                                 4.11.9    True        False         False      15h     
+storage                                    4.11.9    True        False         False      14h     
 
 ----
 
@@ -4971,8 +5167,8 @@ Infrastructure nodes allow customers to isolate infrastructure workloads for two
 [cols="^"]
 |===
 |
-{set:cellbgcolor:#00FF00}
-No Change
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
 |===
 
 [source, yaml]
@@ -4999,11 +5195,11 @@ metadata:
     kubernetes.io/description: restricted denies access to all host features and requires
       pods to be run with a UID, and SELinux context that are allocated to the namespace.
     release.openshift.io/create-only: "true"
-  creationTimestamp: "2023-06-09T04:10:30Z"
+  creationTimestamp: "2024-02-29T16:24:12Z"
   generation: 1
   name: restricted
-  resourceVersion: "346"
-  uid: 1a152179-1de0-4cc1-9acb-6407a6346fdd
+  resourceVersion: "342"
+  uid: eeef2900-15b0-4d36-a473-36e8a5e910e2
 priority: null
 readOnlyRootFilesystem: false
 requiredDropCapabilities:
@@ -5031,11 +5227,11 @@ volumes:
 
 **Observation**
 
-OpenShift Default Security Context Constraint has not been changed
+OpenShift Default Security Context Constraint has been changed
 
 **Recommendation**
 
-Do not modify the default SCCs. Customizing the default SCCs can lead to issues when some of the platform pods deploy or OpenShift Container Platform is upgraded. Additionally, the default SCC values are reset to the defaults during some cluster upgrades, which discards all customizations to those SCCs.
+Do not modify the default SCCs. Customizing the default SCCs can lead to issues when some of the platform pods deploy or OpenShift Container Platform is upgraded.Additionally, the default SCC values are reset to the defaults during some cluster upgrades, which discards all customizations to those SCCs.
 
 Instead of modifying the default SCCs, create and modify your own SCCs as needed. For detailed steps, see Creating security context constraints.
 
@@ -5085,16 +5281,16 @@ metadata:
     include.release.openshift.io/self-managed-high-availability: "true"
     include.release.openshift.io/single-node-developer: "true"
     release.openshift.io/create-only: "true"
-  creationTimestamp: "2023-06-09T04:11:29Z"
+  creationTimestamp: "2024-02-29T16:25:08Z"
   generation: 1
   name: cluster
   ownerReferences:
   - apiVersion: config.openshift.io/v1
     kind: ClusterVersion
     name: version
-    uid: 0609ac70-1564-48de-9187-07f57d0e6b19
-  resourceVersion: "1685"
-  uid: 1e88ef35-2440-4908-8969-d7752d0304a1
+    uid: f5e47723-3547-4d5a-be4a-01c68a7d2a00
+  resourceVersion: "1617"
+  uid: 8c2f911d-949f-4d12-9374-5d6982142b2a
 spec: {}
 
 ----
@@ -5185,7 +5381,7 @@ Changes Required
 [source, bash]
 ----
 NAME        TYPE     DATA   AGE
-kubeadmin   Opaque   1      3d2h
+kubeadmin   Opaque   1      15h
 
 ----
 
@@ -5418,16 +5614,16 @@ items:
       include.release.openshift.io/single-node-developer: "true"
       oauth-apiserver.openshift.io/secure-token-storage: "true"
       release.openshift.io/create-only: "true"
-    creationTimestamp: "2023-06-09T04:10:56Z"
+    creationTimestamp: "2024-02-29T16:24:36Z"
     generation: 1
     name: cluster
     ownerReferences:
     - apiVersion: config.openshift.io/v1
       kind: ClusterVersion
       name: version
-      uid: 0609ac70-1564-48de-9187-07f57d0e6b19
-    resourceVersion: "834"
-    uid: c36246c5-8243-4bd7-8e3b-7d10f5d577c9
+      uid: f5e47723-3547-4d5a-be4a-01c68a7d2a00
+    resourceVersion: "785"
+    uid: 947082f9-a723-43ef-9cb3-f7cb417f8c87
   spec:
     audit:
       profile: Default
@@ -5456,26 +5652,28 @@ Check in the reference how to encrypt ETCD data.
 [cols="^"]
 |===
 |
-{set:cellbgcolor:#00FF00}
-No Change
+{set:cellbgcolor:#FF0000}
+Changes Required
 |===
 
-Reported etcd_disk_backend_commit_duration_seconds_bucket metric 5 minutes rate 99th percentile is less than 25ms.
 
 
-Reported etcd_disk_wal_fsync_duration_seconds_bucket metric 5 minutes rate 99th percentile is less than 20ms.
+Reported etcd_disk_backend_commit_duration_seconds_bucket metric 10 minutes rate 99th percentile is more than 25ms.
 
+Reported etcd_disk_wal_fsync_duration_seconds_bucket metric 10 minutes rate 99th percentile is more than 20ms.
 
-Reported etcd_network_peer_round_trip_time_seconds_bucket metric 5 minutes rate 99th percentile is less than 50ms.
+Reported etcd_network_peer_round_trip_time_seconds_bucket metric 10 minutes rate 99th percentile is more than 50ms.
+
+{endpoint="etcd-metrics", instance="192.168.81.102:9979", job="etcd", namespace="openshift-etcd", pod="etcd-master-2.n6n8k.dynamic.opentlc.com", service="etcd"} => 0.03055999999999994 @[1709278166.04]
 
 
 **Observation**
 
-ETCD is healthy 
+ETCD is not healthy 
 
 **Recommendation**
 
-None
+Check the reference for more details.
 *Reference Link(s)*
 
 * https://access.redhat.com/documentation/en-us/openshift_container_platform/4.11/html-single/scalability_and_performance/index#recommended-etcd-practices_recommended-host-practices[ETCD Recommended Practice]
@@ -5493,8 +5691,8 @@ Changes Recommended
 [source, bash]
 ----
 NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINECOUNT   UPDATEDMACHINECOUNT   DEGRADEDMACHINECOUNT   AGE
-master   rendered-master-569cc50eaaee50e98f3702b103462a1d   True      False      False      3              3                   3                     0                      3d2h
-worker   rendered-worker-beb983bdfbe0d44d642240443245c3e9   True      False      False      2              2                   2                     0                      3d2h
+master   rendered-master-28681326574294a0c37e66e6ef9a856d   True      False      False      3              3                   3                     0                      15h
+worker   rendered-worker-071216cbf21bc04ab793be24fd595b29   True      False      False      2              2                   2                     0                      15h
 
 ----
 
@@ -5569,11 +5767,11 @@ Not Applicable
 apiVersion: config.openshift.io/v1
 kind: Proxy
 metadata:
-  creationTimestamp: "2023-06-09T04:10:44Z"
+  creationTimestamp: "2024-02-29T16:24:26Z"
   generation: 1
   name: cluster
-  resourceVersion: "535"
-  uid: c35eb89c-751c-4c5e-9b61-69bb23f05772
+  resourceVersion: "438"
+  uid: 40704bc0-ba76-44ed-a299-313518cfe20d
 spec:
   trustedCA:
     name: ""

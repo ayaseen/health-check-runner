@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,19 +36,19 @@ func identityProvider() {
 
 	// Check if LDAP is one of the identity provider types
 	identityProviderType = strings.TrimSpace(string(out))
-	if strings.Contains(identityProviderType, "LDAP") {
-		// Check if the LDAP configuration is secure
-		if strings.Contains(identityProviderType, "ldaps") {
-			color.Green("Integrate with identity provider (LDAP) securely\tPASSED")
-
-		} else {
-			color.Yellow("Integrate with identity provider not securely\t\tREVISED")
-
-		}
-	} else {
-		color.Red("Integrate with identity provider (LDAP)\t\tFAILED")
-
-	}
+	//if strings.Contains(identityProviderType, "LDAP") {
+	//	// Check if the LDAP configuration is secure
+	//	if strings.Contains(identityProviderType, "ldaps") {
+	//		color.Green("Integrate with identity provider (LDAP) securely\tPASSED")
+	//
+	//	} else {
+	//		color.Yellow("Integrate with identity provider not securely\t\tREVISED")
+	//
+	//	}
+	//} else {
+	//	color.Red("Integrate with identity provider (LDAP)\t\tFAILED")
+	//
+	//}
 	// Create the output file for writing
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

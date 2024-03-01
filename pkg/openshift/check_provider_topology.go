@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"log"
@@ -65,12 +64,10 @@ func providerTopology() {
 	// Print the result
 	if provider == "VSphere" {
 		if workerNodesLabeled {
-			color.Green("Physical Hypervisor Topology is set\t\t\tPASSED")
+			//color.Green("Physical Hypervisor Topology is set\t\t\tPASSED")
 		} else {
-			color.Red("Physical Hypervisor Topology is set\t\t\tFAILED")
+			//color.Red("Physical Hypervisor Topology is set\t\t\tFAILED")
 		}
-	} else {
-		color.Red("Physical Hypervisor Topology is set\t\t\tFAILED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

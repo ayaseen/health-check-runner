@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,14 +27,14 @@ import (
 func installationType() {
 
 	var err error
-	ocpInstallType, err := exec.Command("oc", "get", "cm", "-n", "openshift-config", "openshift-install").Output()
-
-	if strings.Contains(string(ocpInstallType), "openshift-install") {
-		color.HiCyan("Installation Type is IPI\t\t\t\tCHECKED")
-
-	} else {
-		color.HiCyan("Installation Type is UPI\t\t\t\tCHECKED")
-	}
+	//ocpInstallType, err := exec.Command("oc", "get", "cm", "-n", "openshift-config", "openshift-install").Output()
+	//
+	//if strings.Contains(string(ocpInstallType), "openshift-install") {
+	//	color.HiCyan("Installation Type is IPI\t\t\t\tCHECKED")
+	//
+	//} else {
+	//	color.HiCyan("Installation Type is UPI\t\t\t\tCHECKED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

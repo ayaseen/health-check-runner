@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -36,16 +35,16 @@ func checkLoggingHealth() {
 	// Parse the YAML output and check the Elasticsearch status
 	loggingHealth = string(out)
 
-	if loggingHealth != "" {
-		if strings.Index(loggingHealth, "status: yellow") != -1 || strings.Index(loggingHealth, "status: red") != -1 {
-			color.Red("The logging is healthy\t\t\t\t\tFAILED")
-
-		} else {
-			color.Green("The logging is healthy\t\t\t\t\tPASSED")
-		}
-	} else {
-		color.HiCyan("The logging is healthy\t\t\t\t\tSKIPPED")
-	}
+	//if loggingHealth != "" {
+	//	if strings.Index(loggingHealth, "status: yellow") != -1 || strings.Index(loggingHealth, "status: red") != -1 {
+	//		color.Red("The logging is healthy\t\t\t\t\tFAILED")
+	//
+	//	} else {
+	//		color.Green("The logging is healthy\t\t\t\t\tPASSED")
+	//	}
+	//} else {
+	//	color.HiCyan("The logging is healthy\t\t\t\t\tSKIPPED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

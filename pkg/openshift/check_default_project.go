@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,11 +38,11 @@ func defaultProject() {
 	}
 
 	if string(defaultProjectValidate) == "" {
-		color.Red("Project template is configured\t\t\t\tFAILED")
+		//color.Red("Project template is configured\t\t\t\tFAILED")
 
 	} else {
 
-		color.Green("Project template is configured\t\t\t\tPASSED")
+		//color.Green("Project template is configured\t\t\t\tPASSED")
 
 	}
 

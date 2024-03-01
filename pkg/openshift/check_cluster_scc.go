@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	"github.com/openshift/client-go/config/clientset/versioned"
 	"os"
 	"os/exec"
@@ -199,10 +198,10 @@ func ClusterDefaultSCC() {
 
 	// Compare the current SCC with the default SCC
 	if compareSCC(currentSCC, []byte(sccDefault)) {
-		color.Green("Default Security Context Constraint unchanged\t\tPASSED")
+		//color.Green("Default Security Context Constraint unchanged\t\tPASSED")
 		sccStatus = true
 	} else {
-		color.Red("Default Security Context Constraint unchanged\t\tFAILED")
+		//color.Red("Default Security Context Constraint unchanged\t\tFAILED")
 		sccStatus = false
 	}
 

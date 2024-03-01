@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,12 +37,12 @@ func defaultOpenShiftUser() {
 	//
 	//}
 
-	if string(defaultUserValidate) != "" {
-		color.Red("Kubeadmin user is absent\t\t\t\tFAILED")
-
-	} else {
-		color.Green("Kubeadmin user is absent\t\t\t\tPASSED")
-	}
+	//if string(defaultUserValidate) != "" {
+	//	color.Red("Kubeadmin user is absent\t\t\t\tFAILED")
+	//
+	//} else {
+	//	color.Green("Kubeadmin user is absent\t\t\t\tPASSED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

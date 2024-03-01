@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,12 +34,12 @@ func infrastructureProvider() {
 
 	infraCloudProvider = strings.TrimSpace(string(infraProvider))
 
-	if string(infraCloudProvider) == "" {
-		color.Red("Infrastructure Provider not set\t\t\t\tFAILED")
-
-	} else {
-		color.Green("Infrastructure Provider is set\t\t\t\tPASSED")
-	}
+	//if string(infraCloudProvider) == "" {
+	//	color.Red("Infrastructure Provider not set\t\t\t\tFAILED")
+	//
+	//} else {
+	//	color.Green("Infrastructure Provider is set\t\t\t\tPASSED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

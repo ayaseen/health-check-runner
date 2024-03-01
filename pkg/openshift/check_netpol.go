@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,10 +36,10 @@ func networkPolicy() {
 	}
 
 	if string(netpolicy) == "" {
-		color.Red("Network Policies are configured\t\t\tFAILED")
+		//color.Red("Network Policies are configured\t\t\tFAILED")
 
 	} else {
-		color.Green("Network Policies are configured\t\t\tPASSED")
+		//color.Green("Network Policies are configured\t\t\tPASSED")
 	}
 
 	// Create the output file for writing

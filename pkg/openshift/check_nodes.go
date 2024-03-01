@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"os"
@@ -88,13 +87,13 @@ func nodeStatus() {
 
 	}
 
-	if ready == "True" {
-		color.Green("All nodes are Ready\t\t\t\t\tPASSED")
-
-	} else {
-		color.Red("All nodes are Ready\t\t\t\t\tFAILED")
-
-	}
+	//if ready == "True" {
+	//	color.Green("All nodes are Ready\t\t\t\t\tPASSED")
+	//
+	//} else {
+	//	color.Red("All nodes are Ready\t\t\t\t\tFAILED")
+	//
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

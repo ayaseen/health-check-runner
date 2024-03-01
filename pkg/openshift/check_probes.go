@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
@@ -157,12 +156,12 @@ func applicationProbes() {
 		panic(err)
 	}
 	// Print the total number of workloads without probes
-	if workloadsWithProbes > totalProjects {
-		color.Green("Liveness and Readiness are configured\t\t\tPASSED")
-
-	} else {
-		color.Red("Liveness and Readiness are configured\t\t\tFAILED")
-	}
+	//if workloadsWithProbes > totalProjects {
+	//	color.Green("Liveness and Readiness are configured\t\t\tPASSED")
+	//
+	//} else {
+	//	color.Red("Liveness and Readiness are configured\t\t\tFAILED")
+	//}
 }
 
 func applicationProbesProcess(line string) string {

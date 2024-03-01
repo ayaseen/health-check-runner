@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -108,9 +107,9 @@ func resourceQuota() {
 
 	// To check if there are no user projects
 	if !checkQuotaUserProject && foundResourceQuota {
-		color.Green("resourceQuota is configured\t\t\t\tPASSED")
+		//color.Green("resourceQuota is configured\t\t\t\tPASSED")
 	} else {
-		color.Red("resourceQuota is configured\t\t\t\tFAILED")
+		//color.Red("resourceQuota is configured\t\t\t\tFAILED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -210,9 +209,9 @@ func resourceLimit() {
 
 	// To check if there are no user projects
 	if !checkQuotaUserProject && foundResourceLimit {
-		color.Green("LimitRange is configured\t\t\t\tPASSED")
+		//color.Green("LimitRange is configured\t\t\t\tPASSED")
 	} else {
-		color.Red("LimitRange is configured\t\t\t\tFAILED")
+		//	color.Red("LimitRange is configured\t\t\t\tFAILED")
 	}
 
 }

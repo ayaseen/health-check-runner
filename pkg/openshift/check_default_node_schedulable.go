@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"log"
 	"os"
 	"os/exec"
@@ -42,10 +41,10 @@ func defaultNodeSchedule() {
 	// Check if the default Schedulable
 	if strings.Contains(nodeSelector, "defaultNodeSelector") {
 		defaultNodeSelector = false
-		color.Green("Default Node Selector Set\t\t\t\tPASSED")
+		//color.Green("Default Node Selector Set\t\t\t\tPASSED")
 	} else {
 		defaultNodeSelector = true
-		color.Red("Default Node Selector Set\t\t\t\tFAILED")
+		//color.Red("Default Node Selector Set\t\t\t\tFAILED")
 	}
 
 	// Create the output file for writing

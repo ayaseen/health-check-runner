@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,10 +36,10 @@ func clusterCNIPlubin() {
 	}
 	clusterCNI = strings.TrimSpace(string(out))
 
-	if clusterCNI != "" {
-		color.HiCyan("Cluster CNI Type \t\t\t\t\tCHECKED")
-
-	}
+	//if clusterCNI != "" {
+	//	color.HiCyan("Cluster CNI Type \t\t\t\t\tCHECKED")
+	//
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

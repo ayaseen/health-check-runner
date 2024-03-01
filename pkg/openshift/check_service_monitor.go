@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -72,18 +71,18 @@ func serviceMonitor() {
 	// Check if any ServiceMonitors are found
 	serviceMonitorFound = len(filteredServiceMonitors)
 
-	if serviceMonitorFound == 0 {
-		color.Red("ServiceMonitors not configured\t\t\t\tFAILED")
-
-	} else {
-		// Print the filtered ServiceMonitors
-		//for _, sm := range filteredServiceMonitors {
-		//	namespace := sm.GetNamespace()
-		//	name := sm.GetName()
-		//	fmt.Printf("Namespace: %s, Name: %s\n", namespace, name)
-		//}
-		color.Green("ServiceMonitors is configured\t\t\t\tPASSED")
-	}
+	//if serviceMonitorFound == 0 {
+	//	color.Red("ServiceMonitors not configured\t\t\t\tFAILED")
+	//
+	//} else {
+	//	// Print the filtered ServiceMonitors
+	//	//for _, sm := range filteredServiceMonitors {
+	//	//	namespace := sm.GetNamespace()
+	//	//	name := sm.GetName()
+	//	//	fmt.Printf("Namespace: %s, Name: %s\n", namespace, name)
+	//	//}
+	//	color.Green("ServiceMonitors is configured\t\t\t\tPASSED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

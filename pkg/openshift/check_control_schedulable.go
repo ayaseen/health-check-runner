@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"log"
 	"os"
 	"os/exec"
@@ -42,10 +41,10 @@ func controlNodeSchedule() {
 	// Check if the mastersSchedulable field is set to false
 	if strings.Contains(controlNode, "mastersSchedulable: false") {
 		isSchedule = false
-		color.Green("Masters nodes are not schedule\t\t\t\tPASSED")
+		//color.Green("Masters nodes are not schedule\t\t\t\tPASSED")
 	} else {
 		isSchedule = true
-		color.Red("Masters nodes are schedule\t\t\t\tFAILED")
+		//color.Red("Masters nodes are schedule\t\t\t\tFAILED")
 	}
 
 	// Create the output file for writing

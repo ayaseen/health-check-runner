@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/vim25/soap"
@@ -59,12 +58,8 @@ func vmwareNodePlacement() {
 		eachOnSeparateHost, _ = IsEachMasterNodeOnSeparateESXiHost(vCenterURL, username, password, dataCenter, masterNodes)
 
 		if eachOnSeparateHost == true {
-			color.Green("Master node is on a separate ESXi host\t\t\tPASSED")
-		} else {
-			color.Red("Master node is on a separate ESXi host\t\t\tFAILED")
+			//color.Green("Master node is on a separate ESXi host\t\t\tPASSED")
 		}
-	} else {
-		color.HiCyan("Master node is on a separate ESXi host\t\t\tSKIPPED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

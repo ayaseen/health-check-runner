@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,13 +42,9 @@ func checkLoggingForwardersOPS() {
 			if !strings.Contains(loggingForwarderOPS, "outputs: []") ||
 				!strings.Contains(loggingForwarderOPS, "pipelines: []") ||
 				!strings.Contains(loggingForwarderOPS, "inputs: []") {
-				color.Green("Log forwarding audit, infra, applications\t\tPASSED")
+				//color.Green("Log forwarding audit, infra, applications\t\tPASSED")
 			}
-		} else {
-			color.Red("Log forwarding audit, infra, applications\t\tFAILED")
 		}
-	} else {
-		color.HiCyan("Log forwarding audit, infra, applications\t\tSKIPPED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

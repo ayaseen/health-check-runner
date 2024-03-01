@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/utils"
 	"log"
 	"os"
@@ -52,10 +51,8 @@ func vmwareStorageType() {
 		// Call the function to retrieve the datastore information
 		storageType, _ = utils.GetDatastoreStorageType(vCenterURL, username, password, dataCenter)
 
-		color.HiCyan("VMware Datastore Storage Provider\t\t\tCHECKED")
+		//color.HiCyan("VMware Datastore Storage Provider\t\t\tCHECKED")
 
-	} else {
-		color.HiCyan("VMware Datastore Storage Provider\t\t\tSKIPPED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
