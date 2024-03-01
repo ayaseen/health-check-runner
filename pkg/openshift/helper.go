@@ -213,7 +213,7 @@ func Compress(srcPath, destPath string) string {
 		fmt.Errorf("failed to add files to zip archive: %w", err)
 	}
 
-	log.Printf("Compressed folder '%s' to '%s' with password '%s'", srcPath, destPath, passwordStr)
+	log.Printf("Compressed folder '%s' to '%s'", srcPath, destPath)
 
 	return passwordStr
 }
