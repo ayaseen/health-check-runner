@@ -7,6 +7,7 @@ This build on Golang Version: go version go1.22.0
 [1.5] 2024-03-1
 1- Update Go version
 2- Add progress bar instead showing the checks during the run
+3- Update the health check to match the latest OpenShift version
 
 
 [1.4.2] 2023-12-22
