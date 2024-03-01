@@ -32,7 +32,9 @@ Dependencies
 The application runs against a list of checks defined in the pkg/openshift/openshift_check_list.go file.
 You can add or modify the checks in this file to suit your requirements.
 
-To run the checks, simply execute the ./main command. The application will run each check and generate a documentation file for each one under resources.
+To run the checks, simply execute the ./hc-runner command. The application will run each check and generate a documentation file for each one under resources.
+
+The generated file is protected with a password "7e5eed48001f9a407bbb87b29c32871b"
 
 # Documentation
 The application generates a basic documentation file for each check in the docs directory.
