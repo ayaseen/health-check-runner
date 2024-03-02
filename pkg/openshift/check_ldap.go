@@ -163,7 +163,7 @@ func identityProviderProcess(line string) string {
 				if strings.Contains(idpProvider, "ldaps") && strings.Contains(idpProvider, "(memberOf") {
 					return line + "\n\n" + GetChanges("nochange") +
 						"\n\n**Observation**\n\nLDAP is configured as an identity provider" +
-						"**Recommendation**\n\nNone\n\n" +
+						"\n\n**Recommendation**\n\nNone\n\n" +
 						"*Reference Link(s)*\n\n* https://access.redhat.com/documentation/en-us/openshift_container_platform/" + version +
 						"html-single/authentication_and_authorization/index#configuring-ldap-identity-provider[Configuring an LDAP identity provider]\n" +
 						"\n\n\n\n== Identity Provider Search URL\n\n" + GetChanges("nochange") +
@@ -180,7 +180,7 @@ func identityProviderProcess(line string) string {
 				} else if !strings.Contains(idpProvider, "ldaps") && strings.Contains(idpProvider, "memberOf") {
 					return line + "\n\n" + GetChanges("nochange") +
 						"\n\n**Observation**\n\nLDAP is configured as an identity provider" +
-						"**Recommendation**\n\nNone\n\n" +
+						"\n\n**Recommendation**\n\nNone\n\n" +
 						"*Reference Link(s)*\n\n* https://access.redhat.com/documentation/en-us/openshift_container_platform/" + version +
 						"/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider[Configuring an LDAP identity provider]\n" +
 						"\n\n\n\n== Identity Provider Search URL\n\n" + GetChanges("nochange") +
@@ -197,7 +197,7 @@ func identityProviderProcess(line string) string {
 				} else {
 					return line + "\n\n" + GetChanges("nochange") +
 						"\n\n**Observation**\n\nLDAP is configured as an identity provider" +
-						"**Recommendation**\n\nNone\n\n" +
+						"\n\n**Recommendation**\n\nNone\n\n" +
 						"*Reference Link(s)*\n\n* https://access.redhat.com/documentation/en-us/openshift_container_platform/" + version +
 						"/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider[Configuring an LDAP identity provider]\n" +
 						"\n\n\n\n== Identity Provider Search URL\n\n" + GetChanges("recommended") +

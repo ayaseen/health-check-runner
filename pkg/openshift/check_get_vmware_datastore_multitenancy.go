@@ -130,7 +130,7 @@ func vmwareDatastoreMultitenancyProcess(line string) string {
 			} else {
 				return line + "\n\n" + GetChanges("nochange") +
 					"\n\n**Observation**\n\nOpenShift use separate DataStore\n\n" +
-					"**Recommendation**\n\n*None "
+					"**Recommendation**\n\nNone\n\n"
 			}
 
 		} else {
