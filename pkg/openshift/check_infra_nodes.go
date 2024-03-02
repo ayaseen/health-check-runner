@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"os"
@@ -66,11 +65,11 @@ func checkInfraNode() {
 		}
 	}
 
-	if infraNodeCount > 0 {
-		color.Green("Infra nodes are available\t\t\t\tPASSED")
-	} else {
-		color.Red("Infra nodes are available\t\t\t\tFAILED")
-	}
+	//if infraNodeCount > 0 {
+	//	color.Green("Infra nodes are available\t\t\t\tPASSED")
+	//} else {
+	//	color.Red("Infra nodes are available\t\t\t\tFAILED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

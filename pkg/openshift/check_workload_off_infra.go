@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"os"
@@ -47,13 +46,9 @@ func InfraTaints() {
 	if nodeName != "" {
 		hasTaint = checkTaints(clientset, nodeName)
 		if hasTaint {
-			color.Green("Infrastructure node with required taints found\t\tPASSED")
-		} else {
-			color.Red("Infrastructure node with required taints found\t\tFAILED")
+			//color.Green("Infrastructure node with required taints found\t\tPASSED")
 		}
 
-	} else {
-		color.Red("Infrastructure node with required taints found\t\tFAILED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

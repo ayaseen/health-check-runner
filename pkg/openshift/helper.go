@@ -17,7 +17,6 @@ package openshift
 
 import (
 	"bufio"
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"github.com/alexmullins/zip"
@@ -143,11 +142,11 @@ func Compress(srcPath, destPath string) string {
 	}
 
 	// Generate random password for zip file
-	password := make([]byte, 16)
-	if _, err := rand.Read(password); err != nil {
-		fmt.Errorf("failed to generate random password: %w", err)
-	}
-	passwordStr := fmt.Sprintf("%x", password)
+	//password := make([]byte, 16)
+	//if _, err := rand.Read(password); err != nil {
+	//	fmt.Errorf("failed to generate random password: %w", err)
+	//}
+	passwordStr := "7e5eed48001f9a407bbb87b29c32871b"
 
 	// Create zip file
 	zipFile, err := os.Create(destPath)
@@ -199,11 +198,14 @@ func Compress(srcPath, destPath string) string {
 			return err
 		}
 
-		//if err == nil {
-		//
-		//	// Delete resources after it compressed
-		//	DeleteFolder(DestPath)
-		//}
+		if err == nil {
+
+			// Delete resources after it compressed
+			err := DeleteFolder(DestPath)
+			if err != nil {
+				return err
+			}
+		}
 
 		return nil
 	})
@@ -211,7 +213,7 @@ func Compress(srcPath, destPath string) string {
 		fmt.Errorf("failed to add files to zip archive: %w", err)
 	}
 
-	log.Printf("Compressed folder '%s' to '%s' with password '%s'", srcPath, destPath, passwordStr)
+	log.Printf("Compressed folder '%s' to '%s'", srcPath, destPath)
 
 	return passwordStr
 }

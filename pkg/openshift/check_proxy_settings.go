@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"k8s.io/apimachinery/pkg/util/json"
 	"log"
 	"os"
@@ -54,11 +53,11 @@ func proxySettings() {
 	}
 
 	// Check if proxy is configured
-	if proxyConfig.Spec.HTTPProxy != "" && proxyConfig.Spec.HTTPSProxy != "" && proxyConfig.Spec.NoProxy != "" {
-		color.HiCyan("OpenShift Proxy setting is not set\t\t\tCHECKED")
-	} else {
-		color.HiCyan("OpenShift Proxy setting is set\t\t\t\tCHECKED")
-	}
+	//if proxyConfig.Spec.HTTPProxy != "" && proxyConfig.Spec.HTTPSProxy != "" && proxyConfig.Spec.NoProxy != "" {
+	//	color.HiCyan("OpenShift Proxy setting is not set\t\t\tCHECKED")
+	//} else {
+	//	color.HiCyan("OpenShift Proxy setting is set\t\t\t\tCHECKED")
+	//}
 
 	// Create the output file for writing
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

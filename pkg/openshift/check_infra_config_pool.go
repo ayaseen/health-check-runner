@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,11 +34,11 @@ func checkInfraConfigPool() {
 
 	infraPool = string(infraPoolConfig)
 
-	if !strings.Contains(infraPool, "infra") {
-		color.Red("Infrastructure Pool is configured\t\t\tFAILED")
-	} else {
-		color.Green("Infrastructure Pool is configured\t\t\tPASSED")
-	}
+	//if !strings.Contains(infraPool, "infra") {
+	//	color.Red("Infrastructure Pool is configured\t\t\tFAILED")
+	//} else {
+	//	color.Green("Infrastructure Pool is configured\t\t\tPASSED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

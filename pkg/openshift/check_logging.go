@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,12 +38,12 @@ func checkLogging() {
 
 	logging = string(out)
 
-	if strings.Contains(string(out), "instance") && strings.Contains(string(out), "Managed") {
-		color.Green("Logging is installed and configured\t\t\tPASSED")
-
-	} else {
-		color.Red("Logging is installed and configured\t\t\tFAILED")
-	}
+	//if strings.Contains(string(out), "instance") && strings.Contains(string(out), "Managed") {
+	//	color.Green("Logging is installed and configured\t\t\tPASSED")
+	//
+	//} else {
+	//	color.Red("Logging is installed and configured\t\t\tFAILED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
@@ -72,11 +71,11 @@ func monitoringStack() {
 
 	}
 
-	if !hasPrometheusK8sVolumeClaimTemplate(data) && configMapStackExist == false && !ok {
-		color.Red("OpenShift Monitoring storage is enabled\t\tFAILED")
-	} else {
-		color.Green("OpenShift Monitoring storage is enabled\t\tPASSED")
-	}
+	//if !hasPrometheusK8sVolumeClaimTemplate(data) && configMapStackExist == false && !ok {
+	//	color.Red("OpenShift Monitoring storage is enabled\t\tFAILED")
+	//} else {
+	//	color.Green("OpenShift Monitoring storage is enabled\t\tPASSED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

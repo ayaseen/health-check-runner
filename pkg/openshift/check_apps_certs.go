@@ -18,9 +18,7 @@ package openshift
 import (
 	"bufio"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"github.com/fatih/color"
 	"net/http"
 	"os"
 	"os/exec"
@@ -62,18 +60,18 @@ func defaultIngressCertificate() {
 	client := &http.Client{Transport: tr}
 
 	_, err = client.Get(appURL)
-	if err != nil {
-		if _, ok := err.(x509.UnknownAuthorityError); ok {
-			fmt.Println("The OpenShift APPS URL has self-signed certificates.")
-		} else {
-			color.Red("Ingress Controller Certificate \t\t\tFAILED")
-			verifySslAPPS = false
-		}
-
-	} else {
-		color.Green("Ingress Controller Certificate  \t\t\tPASSED")
-		verifySslAPPS = true
-	}
+	//if err != nil {
+	//	if _, ok := err.(x509.UnknownAuthorityError); ok {
+	//		fmt.Println("The OpenShift APPS URL has self-signed certificates.")
+	//	} else {
+	//		color.Red("Ingress Controller Certificate \t\t\tFAILED")
+	//		verifySslAPPS = false
+	//	}
+	//
+	//} else {
+	//	color.Green("Ingress Controller Certificate  \t\t\tPASSED")
+	//	verifySslAPPS = true
+	//}
 
 	// Create the output file for writing
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

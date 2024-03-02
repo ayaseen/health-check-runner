@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"k8s.io/apimachinery/pkg/util/json"
 	"log"
 	"os"
@@ -55,13 +54,11 @@ func checkLoggingPlacement() {
 				appropriate = false
 			}
 		}
-		if appropriate {
-			color.Green("Elasticsearch pods are scheduled on appropriate nodes\tPASSED")
-		} else {
-			color.Red("Elasticsearch pods are scheduled on appropriate nodes\tFAILED")
-		}
-	} else {
-		color.HiCyan("Elasticsearch pods are scheduled on appropriate nodes\tSKIPPED")
+		//if appropriate {
+		//	color.Green("Elasticsearch pods are scheduled on appropriate nodes\tPASSED")
+		//} else {
+		//	color.Red("Elasticsearch pods are scheduled on appropriate nodes\tFAILED")
+		//}
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

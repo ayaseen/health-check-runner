@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,10 +36,10 @@ func clusterVersion() {
 	}
 	clusterVer = strings.TrimSpace(string(out))
 
-	if clusterVer != "" {
-		color.HiCyan("Cluster version \t\t\t\t\tCHECKED")
-
-	}
+	//if clusterVer != "" {
+	//	color.HiCyan("Cluster version \t\t\t\t\tCHECKED")
+	//
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

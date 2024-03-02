@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	configv1 "github.com/openshift/api/config/v1"
 	"github.com/openshift/client-go/config/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -78,24 +77,24 @@ func checkCO() {
 	}
 
 	// Print the result
-	if allAvailable {
-		color.Green("All cluster operators are available\t\t\tPASSED")
-	} else {
-		for _, co := range cos.Items {
-
-			for _, condition := range co.Status.Conditions {
-				if condition.Type == configv1.OperatorAvailable {
-					availability = string(condition.Status)
-					break
-				}
-			}
-			if availability == "False" {
-
-				clusterOperators += "\n\n|===\n|Operator Name | Available\n\n|" + co.Name + "\n|" + availability + "\n|===\n"
-			}
-		}
-		color.Red("All cluster operators are available\t\t\tFAILED")
-	}
+	//if allAvailable {
+	//	color.Green("All cluster operators are available\t\t\tPASSED")
+	//} else {
+	//	for _, co := range cos.Items {
+	//
+	//		for _, condition := range co.Status.Conditions {
+	//			if condition.Type == configv1.OperatorAvailable {
+	//				availability = string(condition.Status)
+	//				break
+	//			}
+	//		}
+	//		if availability == "False" {
+	//
+	//			clusterOperators += "\n\n|===\n|Operator Name | Available\n\n|" + co.Name + "\n|" + availability + "\n|===\n"
+	//		}
+	//	}
+	//	color.Red("All cluster operators are available\t\t\tFAILED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -40,12 +39,7 @@ func ingressControllerReplica() {
 	ingressReplicaCount := strings.Trim(string(ingressReplica), "'")
 
 	if string(ingressReplicaCount) != "3" {
-		color.Red("Default OpenShift ingress replica match\t\tFAILED")
-
-	} else {
-
-		color.Green("Default OpenShift ingress replica match\t\tPASSED")
-
+		//color.Red("Default OpenShift ingress replica match\t\tFAILED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

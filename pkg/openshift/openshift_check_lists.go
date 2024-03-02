@@ -17,7 +17,7 @@ package openshift
 
 import (
 	"fmt"
-	"github.com/briandowns/spinner"
+	"github.com/schollz/progressbar/v3"
 	"log"
 	"os"
 	"time"
@@ -25,65 +25,67 @@ import (
 
 var provider string
 
+// Define a struct to hold a check function and its name
+type check struct {
+	name string
+	fn   func()
+}
+
 // Main function to call sub lists
 var (
-	functions []func() = []func(){
-		checkCO,
-		etcdHealth,
-		clusterVersion,
-		clusterCNIPlubin,
-		checkElevatedPrivileges,
-		nodeStatus,
-		checkLoggingHealth,
-		vmwareVersion,
-		etcdEncryption,
-		vmwareHA,
-		installationType,
-		emptyDirVolume,
-		defaultOpenShiftUser,
-		resourceLimit,
-		checkInfraNode,
-		defaultNodeSchedule,
-		resourceQuota,
-		selfProvisioners,
-		controlNodeSchedule,
-		defaultProject,
-		serviceMonitor,
-		proxySettings,
-		defaultIngressCertificate,
-		infrastructureProvider,
-		networkPolicy,
-		nodeUsage,
-		vmwareNetworkType,
-		vmwareStorageType,
-		checkInfraConfigPool,
-		providerTopology,
-		monitoringUserWorkload,
-		checkLogging,
-		ingressControllerPlacement,
-		applicationProbes,
-		vmwareNodePlacement,
-		vmwareDatastoreMultitenancy,
-		monitoringStack,
-		identityProvider,
-		ingressControllerReplica,
-		CheckElasticSearch,
-		checkLoggingForwardersOPS,
-		checkLoggingForwarders,
-		internalRegistry,
-		IngressControllerType,
-		ClusterDefaultSCC,
-		InfraTaints,
-		KubeletConfig,
-		alerts,
-		checkLoggingPlacement,
-
-		//podImagePullStatus,
-
-		//etcdBackup,
-
-		//apiServerCertificate,
-
+	functions = []check{
+		{"All nodes are Ready", checkCO},
+		{"Etcd Health", etcdHealth},
+		{"Cluster Version", clusterVersion},
+		{"Cluster CNI Plugin", clusterCNIPlubin},
+		{"Elevated Privileges", checkElevatedPrivileges},
+		{"Node Status", nodeStatus},
+		{"Logging Health", checkLoggingHealth},
+		{"VMware Version", vmwareVersion},
+		{"ETCD Encryption Type", etcdEncryption},
+		{"vCenter Highly Available", vmwareHA},
+		{"Installation Type", installationType},
+		{"EmptyDir Volumes not in use", emptyDirVolume},
+		{"Kubeadmin user is absent", defaultOpenShiftUser},
+		{"LimitRange is configured", resourceLimit},
+		{"Infra nodes are available", checkInfraNode},
+		{"Default Node Schedule", defaultNodeSchedule},
+		{"ResourceQuota is configured", resourceQuota},
+		{"Self Provisioners", selfProvisioners},
+		{"Control Node Schedule", controlNodeSchedule},
+		{"Project template is configured", defaultProject},
+		{"ServiceMonitors is configured", serviceMonitor},
+		{"OpenShift Proxy setting is set", proxySettings},
+		{"Default Ingress Certificate", defaultIngressCertificate},
+		{"Infrastructure Provider", infrastructureProvider},
+		{"Network Policy", networkPolicy},
+		{"Node Usage", nodeUsage},
+		{"VMware Network Type", vmwareNetworkType},
+		{"VMware Storage Type", vmwareStorageType},
+		{"Infra Config Pool", checkInfraConfigPool},
+		{"Physical Hypervisor Topology", providerTopology},
+		{"User Workload Monitoring is enabled", monitoringUserWorkload},
+		{"Logging is installed and configured", checkLogging},
+		{"Ingress Controller Placement", ingressControllerPlacement},
+		{"Liveness and Readiness are configured", applicationProbes},
+		{"VMware Nodes Placement", vmwareNodePlacement},
+		{"VMware Datastore Multitenancy", vmwareDatastoreMultitenancy},
+		{"OpenShift Monitoring Storage", monitoringStack},
+		{"Identity Provider", identityProvider},
+		{"Default Ingress Controller Replica", ingressControllerReplica},
+		{"ElasticSearch Health", CheckElasticSearch},
+		{"Logging Forwarders OPS", checkLoggingForwardersOPS},
+		{"Logging Forwarders Configuration", checkLoggingForwarders},
+		{"Internal registry is functioning", internalRegistry},
+		{"Default OpenShift ingress controller Type", IngressControllerType},
+		{"Cluster Default SCC", ClusterDefaultSCC},
+		{"Infra Taints Configuration", InfraTaints},
+		{"Kubelet Configuration (Garbage Collection)", KubeletConfig},
+		{"OpenShift alerts are forwarded to an external system", alerts},
+		{"Check Logging Placement", checkLoggingPlacement},
+		//{"Pod Image Pull Status", podImagePullStatus},
+		//{"Etcd Backup", etcdBackup},
+		//{"API Server Certificate", apiServerCertificate},
 	}
 )
 
@@ -117,20 +119,41 @@ func CheckLists() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Starting CheckLists...")
+	fmt.Println("OpenShift Health Check in Progress ...")
+	fmt.Println() // Ensure separation from the first check message.
 
-	s := spinner.New(spinner.CharSets[24], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
-	s.Suffix = " Checking... OpenShift  "
-	s.FinalMSG = "All checks completed!\n"
-	_ = s.Color("red", "bold")
+	// Initialize the progress bar for the total number of checks
+	bar := progressbar.NewOptions(len(functions),
+		progressbar.OptionEnableColorCodes(true),
+		progressbar.OptionSetWidth(50),
+		progressbar.OptionSetDescription("Initializing..."),
+		progressbar.OptionShowCount(),
+		progressbar.OptionSetTheme(progressbar.Theme{
+			Saucer:        "[green]=[reset]",
+			SaucerPadding: " ",
+			BarStart:      "|",
+			BarEnd:        "|",
+		}),
+	)
 
-	s.Start()
+	// Render the initial state of the progress bar
+	_ = bar.RenderBlank()
 
-	for _, f := range functions {
-		f()
-		time.Sleep(4 * time.Second)
+	for _, check := range functions {
+		// Update the progress bar's description to include the current check name
+		bar.Describe(fmt.Sprintf("[green]\033[1m%s\033[22m[reset] check in Progress ...", check.name))
+
+		// Refresh the progress bar to show the updated description immediately
+		_ = bar.RenderBlank()
+
+		check.fn() // Execute the check function
+
+		_ = bar.Add(1) // Increment the progress bar by one for each check
+
+		time.Sleep(100 * time.Millisecond) // Simulate check duration
 	}
-	s.Stop()
+
+	fmt.Println("\nAll checks completed!") // Final message after all checks
 
 	// Compress resource folder and protect a random password
 	Compress(DestPath, CompressFile)

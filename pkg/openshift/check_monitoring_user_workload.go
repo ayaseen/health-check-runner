@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
@@ -65,10 +64,8 @@ func monitoringUserWorkload() {
 	}
 
 	if !configMapData.EnableUserWorkload && configMapExist == false && !check {
-		color.Red("User Workload Monitoring is enabled\t\t\tFAILED")
+		//color.Red("User Workload Monitoring is enabled\t\t\tFAILED")
 
-	} else {
-		color.Green("User Workload Monitoring is enabled\t\t\tPASSED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

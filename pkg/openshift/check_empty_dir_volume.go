@@ -19,7 +19,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 	appsv1client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -164,11 +163,11 @@ func emptyDirVolume() {
 
 	//fmt.Printf("Number of pods with EmptyDir volume: %d\n", emptyDirCount)
 
-	if emptyDirCount == 0 {
-		color.Green("EmptyDir Volumes not in use\t\t\t\tPASSED")
-	} else {
-		color.Red("EmptyDir Volumes in use\t\t\t\tFAILED")
-	}
+	//if emptyDirCount == 0 {
+	//	color.Green("EmptyDir Volumes not in use\t\t\t\tPASSED")
+	//} else {
+	//	color.Red("EmptyDir Volumes in use\t\t\t\tFAILED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

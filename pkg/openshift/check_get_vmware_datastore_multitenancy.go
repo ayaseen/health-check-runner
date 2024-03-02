@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/utils"
 	"log"
 	"os"
@@ -61,12 +60,10 @@ func vmwareDatastoreMultitenancy() {
 		// Check total nodes in OpenShift
 		nodesCount, _ = utils.GetOpenShiftNodesCount()
 
-		if totalMachines > nodesCount {
-			color.HiCyan("VMware Datastore Multitenancy Provider\t\t\tCHECKED")
-		}
+		//if totalMachines > nodesCount {
+		//	color.HiCyan("VMware Datastore Multitenancy Provider\t\t\tCHECKED")
+		//}
 
-	} else {
-		color.HiCyan("VMware Datastore Multitenancy Provider\t\t\tSKIPPED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -133,7 +130,7 @@ func vmwareDatastoreMultitenancyProcess(line string) string {
 			} else {
 				return line + "\n\n" + GetChanges("nochange") +
 					"\n\n**Observation**\n\nOpenShift use separate DataStore\n\n" +
-					"**Recommendation**\n\n*None "
+					"**Recommendation**\n\nNone\n\n"
 			}
 
 		} else {

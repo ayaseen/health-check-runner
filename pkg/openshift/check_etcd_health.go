@@ -21,7 +21,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/fatih/color"
 	routev1client "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -246,15 +245,15 @@ func etcdHealth() {
 			break
 
 		} else {
-			color.Cyan("ETCD Health\t\t\t\t\t\tWarning")
+			//	color.Cyan("ETCD Health\t\t\t\t\t\tWarning")
 			break
 
 		}
 	}
 
-	if passed {
-		color.Green("ETCD is Healthy\t\t\t\t\tPASSED")
-	}
+	//if passed {
+	//	color.Green("ETCD is Healthy\t\t\t\t\tPASSED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,14 +37,15 @@ func KubeletConfig() {
 
 	}
 
-	if string(kubeletConfigValidate) == "" {
-		color.Red("Kubelet Configuration (Garbage Collection) is set\tFAILED")
-
-	} else {
-
-		color.Green("Kubelet Configuration (Garbage Collection) is set\tPASSED")
-
-	}
+	//
+	//if string(kubeletConfigValidate) == "" {
+	//	color.Red("Kubelet Configuration (Garbage Collection) is set\tFAILED")
+	//
+	//} else {
+	//
+	//	color.Green("Kubelet Configuration (Garbage Collection) is set\tPASSED")
+	//
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

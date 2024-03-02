@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"log"
 	"os"
 	"os/exec"
@@ -39,11 +38,11 @@ func internalRegistry() {
 
 	managementState = strings.TrimSpace(string(out))
 
-	if string(managementState) == "Managed" {
-		color.Green("Openshift internal registry is functioning\t\tPASSED")
-	} else {
-		color.Red("Openshift internal registry is functioning\t\tFAILED")
-	}
+	//if string(managementState) == "Managed" {
+	//	color.Green("Openshift internal registry is functioning\t\tPASSED")
+	//} else {
+	//	color.Red("Openshift internal registry is functioning\t\tFAILED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
@@ -105,7 +104,7 @@ func internalRegistryProcess(line string) string {
 
 		} else {
 			return line + "\n\n" + GetChanges("required") +
-				"\n\n**Observation**\n\nOpenshift internal registry is functioning and running\n\n" +
+				"\n\n**Observation**\n\nOpenshift internal registry is not functioning and running\n\n" +
 				"**Recommendation**\n\nChanges are required if the 'managementState' is not set to 'Managed'. \n\n" +
 				"*Reference Link(s)*\n\n* https://access.redhat.com/documentation/en-us/openshift_container_platform/" + version +
 				"html-single/registry/index[OpenShift registry]\n"

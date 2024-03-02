@@ -77,9 +77,9 @@ func nodeUsage() {
 
 	}
 	if found == false {
-		color.Green("All nodes are within the range\t\t\t\tPASSED")
+		//color.Green("All nodes are within the range\t\t\t\tPASSED")
 	} else {
-		color.HiYellow("Some node utilize more than 50%\t\t\tREVISED")
+		//color.HiYellow("Some node utilize more than 50%\t\t\tREVISED")
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))

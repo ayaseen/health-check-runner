@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,10 +34,10 @@ func selfProvisioners() {
 	}
 
 	if string(selfProvisioner) == "" {
-		color.Green("Self-provisioner is disabled\t\t\t\tPASSED")
+		//color.Green("Self-provisioner is disabled\t\t\t\tPASSED")
 
 	} else if strings.Contains(string(selfProvisioner), "system:authenticated:oauth") {
-		color.Red("Self-provisioner is disabled\t\t\t\tFAILED")
+		//color.Red("Self-provisioner is disabled\t\t\t\tFAILED")
 
 	}
 

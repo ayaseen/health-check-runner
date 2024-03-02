@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,11 +36,7 @@ func IngressControllerType() {
 	}
 
 	if string(ingressType) != "default" {
-		color.Red("Default OpenShift ingress controller not in use\t\tFAILED")
-
-	} else {
-
-		color.Green("Default OpenShift ingress controller in use\t\tPASSED")
+		//color.Red("Default OpenShift ingress controller not in use\t\tFAILED")
 
 	}
 

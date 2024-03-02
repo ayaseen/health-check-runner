@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"log"
 	"os"
 	"os/exec"
@@ -42,11 +41,11 @@ func alerts() {
 	alertState = strings.TrimSpace(string(out))
 
 	// Check if the alert with the specified name exists
-	if !strings.Contains(alertState, alertName) {
-		color.Green("OpenShift alerts are forwarded to an external system\tPASSED")
-	} else {
-		color.Red("OpenShift alerts are forwarded to an external system\tFAILED")
-	}
+	//if !strings.Contains(alertState, alertName) {
+	//	color.Green("OpenShift alerts are forwarded to an external system\tPASSED")
+	//} else {
+	//	color.Red("OpenShift alerts are forwarded to an external system\tFAILED")
+	//}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {

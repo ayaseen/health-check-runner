@@ -18,7 +18,6 @@ package openshift
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,19 +36,19 @@ func identityProvider() {
 
 	// Check if LDAP is one of the identity provider types
 	identityProviderType = strings.TrimSpace(string(out))
-	if strings.Contains(identityProviderType, "LDAP") {
-		// Check if the LDAP configuration is secure
-		if strings.Contains(identityProviderType, "ldaps") {
-			color.Green("Integrate with identity provider (LDAP) securely\tPASSED")
-
-		} else {
-			color.Yellow("Integrate with identity provider not securely\t\tREVISED")
-
-		}
-	} else {
-		color.Red("Integrate with identity provider (LDAP)\t\tFAILED")
-
-	}
+	//if strings.Contains(identityProviderType, "LDAP") {
+	//	// Check if the LDAP configuration is secure
+	//	if strings.Contains(identityProviderType, "ldaps") {
+	//		color.Green("Integrate with identity provider (LDAP) securely\tPASSED")
+	//
+	//	} else {
+	//		color.Yellow("Integrate with identity provider not securely\t\tREVISED")
+	//
+	//	}
+	//} else {
+	//	color.Red("Integrate with identity provider (LDAP)\t\tFAILED")
+	//
+	//}
 	// Create the output file for writing
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
@@ -164,7 +163,7 @@ func identityProviderProcess(line string) string {
 				if strings.Contains(idpProvider, "ldaps") && strings.Contains(idpProvider, "(memberOf") {
 					return line + "\n\n" + GetChanges("nochange") +
 						"\n\n**Observation**\n\nLDAP is configured as an identity provider" +
-						"**Recommendation**\n\nNone\n\n" +
+						"\n\n**Recommendation**\n\nNone\n\n" +
 						"*Reference Link(s)*\n\n* https://access.redhat.com/documentation/en-us/openshift_container_platform/" + version +
 						"html-single/authentication_and_authorization/index#configuring-ldap-identity-provider[Configuring an LDAP identity provider]\n" +
 						"\n\n\n\n== Identity Provider Search URL\n\n" + GetChanges("nochange") +
@@ -181,7 +180,7 @@ func identityProviderProcess(line string) string {
 				} else if !strings.Contains(idpProvider, "ldaps") && strings.Contains(idpProvider, "memberOf") {
 					return line + "\n\n" + GetChanges("nochange") +
 						"\n\n**Observation**\n\nLDAP is configured as an identity provider" +
-						"**Recommendation**\n\nNone\n\n" +
+						"\n\n**Recommendation**\n\nNone\n\n" +
 						"*Reference Link(s)*\n\n* https://access.redhat.com/documentation/en-us/openshift_container_platform/" + version +
 						"/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider[Configuring an LDAP identity provider]\n" +
 						"\n\n\n\n== Identity Provider Search URL\n\n" + GetChanges("nochange") +
@@ -198,7 +197,7 @@ func identityProviderProcess(line string) string {
 				} else {
 					return line + "\n\n" + GetChanges("nochange") +
 						"\n\n**Observation**\n\nLDAP is configured as an identity provider" +
-						"**Recommendation**\n\nNone\n\n" +
+						"\n\n**Recommendation**\n\nNone\n\n" +
 						"*Reference Link(s)*\n\n* https://access.redhat.com/documentation/en-us/openshift_container_platform/" + version +
 						"/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider[Configuring an LDAP identity provider]\n" +
 						"\n\n\n\n== Identity Provider Search URL\n\n" + GetChanges("recommended") +
