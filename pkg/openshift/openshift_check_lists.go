@@ -119,13 +119,15 @@ func CheckLists() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Starting CheckLists...")
+	fmt.Println("OpenShift Health Check in Progress ...")
+	fmt.Println() // Ensure separation from the first check message.
 
-	// Initialize the progress bar without rendering it immediately
+	// Initialize the progress bar for the total number of checks
 	bar := progressbar.NewOptions(len(functions),
 		progressbar.OptionEnableColorCodes(true),
-		progressbar.OptionSetWidth(30),
-		progressbar.OptionSetDescription(" "),
+		progressbar.OptionSetWidth(50),
+		progressbar.OptionSetDescription("Initializing..."),
+		progressbar.OptionShowCount(),
 		progressbar.OptionSetTheme(progressbar.Theme{
 			Saucer:        "[green]=[reset]",
 			SaucerPadding: " ",
@@ -134,31 +136,24 @@ func CheckLists() {
 		}),
 	)
 
-	for i, check := range functions {
-		// Move up to clear the previous "Checking..." message only for subsequent checks
-		if i > 0 {
-			fmt.Print("\033[2A\033[K") // Move up two lines and clear the line for subsequent checks
-		}
+	// Render the initial state of the progress bar
+	_ = bar.RenderBlank()
 
-		fmt.Printf("Checking %s...\n", check.name) // Print the "Checking..." message
+	for _, check := range functions {
+		// Update the progress bar's description to include the current check name
+		bar.Describe(fmt.Sprintf("[green]\033[1m%s\033[22m[reset] check in Progress ...", check.name))
 
-		if i == 0 {
-			bar.RenderBlank() // Render the progress bar for the first time after the first check message
-		}
+		// Refresh the progress bar to show the updated description immediately
+		_ = bar.RenderBlank()
 
 		check.fn() // Execute the check function
 
-		bar.Add(1) // Update the progress bar
+		_ = bar.Add(1) // Increment the progress bar by one for each check
 
 		time.Sleep(100 * time.Millisecond) // Simulate check duration
-
-		// Add a newline after the progress bar to ensure the next "Checking..." message is correctly positioned
-		if i < len(functions)-1 {
-			fmt.Println()
-		}
 	}
 
-	fmt.Println("\nAll checks completed!") // Final message
+	fmt.Println("\nAll checks completed!") // Final message after all checks
 
 	// Compress resource folder and protect a random password
 	Compress(DestPath, CompressFile)
