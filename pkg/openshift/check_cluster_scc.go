@@ -60,16 +60,7 @@ seLinuxContext:
   type: MustRunAs
 supplementalGroups:
   type: RunAsAny
-users: []
-volumes:
-- configMap
-- csi
-- downwardAPI
-- emptyDir
-- ephemeral
-- persistentVolumeClaim
-- projected
-- secret`
+users: []`
 )
 
 // Custom type that includes all the fields in the SCC
@@ -97,7 +88,7 @@ type SecurityContextConstraints struct {
 	SELinuxContext           map[string]string `yaml:"seLinuxContext"`
 	SupplementalGroups       map[string]string `yaml:"supplementalGroups"`
 	Users                    []string          `yaml:"users"`
-	Volumes                  []string          `yaml:"volumes"`
+	//	Volumes                  []string          `yaml:"volumes"`
 }
 
 // Compare the SCC objects
@@ -135,8 +126,8 @@ func compareSCC(current, expected []byte) bool {
 		!compareStringMaps(currentSCC.RunAsUser, expectedSCC.RunAsUser) ||
 		!compareStringMaps(currentSCC.SELinuxContext, expectedSCC.SELinuxContext) ||
 		!compareStringMaps(currentSCC.SupplementalGroups, expectedSCC.SupplementalGroups) ||
-		!compareStringSlices(currentSCC.Users, expectedSCC.Users) ||
-		!compareStringSlices(currentSCC.Volumes, expectedSCC.Volumes) {
+		!compareStringSlices(currentSCC.Users, expectedSCC.Users) {
+		//!compareStringSlices(currentSCC.Volumes, expectedSCC.Volumes) {
 		return false
 	}
 
