@@ -34,12 +34,12 @@ type check struct {
 // Main function to call sub lists
 var (
 	functions = []check{
-		{"All nodes are Ready", checkCO},
+		{"All cluster operators are available", checkCO},
 		{"Etcd Health", etcdHealth},
 		{"Cluster Version", clusterVersion},
 		{"Cluster CNI Plugin", clusterCNIPlubin},
 		{"Elevated Privileges", checkElevatedPrivileges},
-		{"Node Status", nodeStatus},
+		{"All nodes are Ready", nodeStatus},
 		{"Logging Health", checkLoggingHealth},
 		{"VMware Version", vmwareVersion},
 		{"ETCD Encryption Type", etcdEncryption},
