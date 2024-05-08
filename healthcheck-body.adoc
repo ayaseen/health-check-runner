@@ -1,0 +1,6182 @@
+
+= Key
+
+[cols="1,3", options=header]
+|===
+|Value
+|Description
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+|
+{set:cellbgcolor!}
+Indicates Changes Required for system stability, subscription compliance, or other reason.
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|
+{set:cellbgcolor!}
+Indicates Changes Recommended to align with recommended practices, but not urgently required
+
+|
+{set:cellbgcolor:#A6B9BF}
+N/A
+|
+{set:cellbgcolor!}
+No advise given on line item.  For line items which are data-only to provide context.
+
+|
+{set:cellbgcolor:#80E5FF}
+Advisory
+|
+{set:cellbgcolor!}
+No change required or recommended, but additional information provided.
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|
+{set:cellbgcolor!}
+No change required.  In alignment with recommended practices.
+
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+|
+{set:cellbgcolor!}
+Not yet evaluated.  Will appear only in draft copies.
+|===
+
+= Summary
+
+
+[cols="1,2,2,3", options=header]
+|===
+|*Category*
+|*Item Evaluated*
+|*Observed Result*
+|*Recommendation*
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1010_compute-provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<Infrastructure Provider(s)>>
+
+| None 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1020_installation-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<Installation Type>>
+
+| OpenShift UPI is configured 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1030_if-upi-is-customer-using-additional-machinesets.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<Check if user-provisioned infrastructure (UPI) using additional MachineSets>>
+
+| No additional MachineSet 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1070_if-upi-what-kind-of-openshift-provisioning-automation-exists.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<Check if user-provisioned infrastructure (UPI) OpenShift Provisioning Automation exists>>
+
+| No additional MachineSet 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1190_node_cpu_mem_storage.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<OpenShift Node Status>>
+
+| None 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1190_node_cpu_mem_storage.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<OpenShift Node Usage>>
+
+| NA 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1040_vmware-version.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+VMware vSphere Version
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1050_vcenter-highly-available.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+<<vCenter Highly Available>>
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1060_vcenter-service-account.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+vCenter Service Account
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1080_physical-hypervisor-topology.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+<<Physical Hypervisor Topology>>
+
+| Physical Hypervisor Topology is not set 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1090_node-placement-on-hosts.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+<<Node Placement on Hosts>>
+
+| Master node is not on a separate ESXi host 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1100_vmware-datastore-storage-provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+Check to see if the OpenShift Cluster is configured to use VMware datastore
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1110_vmware-ha-enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+<<vSphere HA Enabled>>
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1120_datastore-storage-provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+Datastore Storage Provider
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1130_datastore-multitenancy.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+Datastore Multitenancy
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1140_vmware-networking-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+VMware Networking Type
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1150_vmware-backup.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+VM Backup
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1160_vmware-time-synchronization-enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+VMware Time Synchronization Enabled
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1170_node-network-ranges.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+Node Network Ranges
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2010_node-network-topology.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+Node Network Topology
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2020_mtu-sizes.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+Cluster Network MTU Size
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2030_load-balancer-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer Type>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2040_load-balancer-health-checks-enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer Health Checks Enabled>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2050_load-balancer-balancing-algorithm.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer Balancing Algorithm>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2051_load-balancer-ssl-passthrough.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer SSL Settings>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2052_load-balancer-vips_consistently_configured.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer VIPs Consistently Configured>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2060_ingress-controller-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Ingress Controller Type>>
+
+| Default OpenShift ingress controller in use
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2070_ingress-controller-placement.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Ingress Controller Placement>>
+
+| Ingress Controller Placement not set
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2080_ingress-controller-replica-count.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Ingress Controller Replica Count>>
+
+| Default OpenShift ingress replica not match
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2080_ingress-controller-replica-count.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Ingress Controller Certificate>>
+
+|Default wildcard certificate not configured
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2090_openshift-sdn-plugin.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<CNI Network Plugin>>
+
+| OVNKubernetes
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3110_provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Provider 1
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3120_technology.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Technology 1
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3130_block-or-file.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Block or File
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3210_provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Provider 2
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3220_technology.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Technology 2
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3230_block-or-file.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Block or File
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3310_provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Provider 3
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3320_technology.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Technology 3
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3330_block-or-file.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Block or File
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3340_multipath-enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Multipath Enabled
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3350_IQN_Set_Correctly.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+iSCSI Initiator Name
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4000_openshift_version.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Cluster Version>>
+
+| 4.15.9
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4000_openshift_version.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+
+<<Cluster Operators>>
+
+| All CO operators Ready 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4001_masters_schedulable.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Control Nodes Schedulable>>
+
+|Masters nodes are Schedulable
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4005_infra-nodes.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Infrastructure Nodes present>>
+
+| Infra nodes not available, total: None
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4009_default_scc.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Default Security Context Constraint>>
+
+| SCC has not been modified 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4010_adequate-measures-in-place-to-keep-customer-workloads-off-infra-nodes.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Adequate Measures in place to keep customer workloads off Infra Nodes>>
+
+| Infrastructure node with required taints not configured 
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4011_default_project_template_set.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Default Project Template Set>>
+
+| No Default project template
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4012_default_node_selector_set.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Default Node Selector Set>>
+
+|Default Node Selector not Set
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4013_self_provisioner_enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Self Provisioner Enabled>>
+
+| Self Provisioner is not enabled 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4019_kubeadmin_enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Kubeadmin user disabled>>
+
+| Default OpenShift `kubeadmin` is present 
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Network Policy>>
+
+|Network Policies not enabled
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4020_identity-provider-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Identity Provider Type>>
+
+|Identity Provider Type is not set
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4030_identity-provider-search-url.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Identity Provider Search URL>>
+
+|Identity Provider Type is not set
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4040_ldap-encrypted-connection.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<LDAP Encrypted Connection>>
+
+|Identity Provider Type is not set
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4051_image-registry-internal.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Openshift internal registry is functioning and running>>
+
+| Openshift internal registry is functioning and running 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4160_user-workload-monitoring.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<User Workload Monitoring>>
+
+| User Workload Monitoring not Set 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4170_openshift-logging-installed.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<OpenShift Logging>>
+
+| OpenShift Logging not configured 
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4171_alternative_log_aggregation.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Alternative Log Aggregation>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4250_etcd-backup-defined.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+etcd backup defined
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4251_etcd-encryption.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<ETCD Encryption Enabled>>
+
+| No ETCD encryption 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4252_etcd_disk_performance.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Etcd Performance>>
+
+| ETCD is healthy 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4260_infra-machine-configs-defined.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Infra machine config pool defined>>
+
+| Infra machine config pool not defined
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4280_kubelet-config-overridden.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Kubelet Configuration Overridden>>
+
+| Kubelet Configuration Overridden not configured
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4290_emptydir-volumes-in-use.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<EmptyDir Volumes in use>>
+
+| Some Application Pods use EmptyDir 
+
+|
+{set:cellbgcolor:#80E5FF}
+Advisory
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4310_proxy-config.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Openshift Proxy Settings>>
+
+|OpenShift Proxy setting is not set
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5010_readiness-and-liveness-probes.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+<<Readiness and Liveness Probes>>
+
+|Readiness and Liveness Probes are configured
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5020_elevated-privileges.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+<<Elevated Privileges>>
+
+| At least one user workload use an unjustified non restricted SCC 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5030_limit-request-configured.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+<<Resource Quotas Defined>>
+
+|Resource Requests and Limits not configured for user projects
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5050_deployment-iac-items-versioned.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Deployment IaC Items Versioned
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5070_deployment-iac-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Deployment IaC Type
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5080_primary-ci-cd-tool.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Primary CI CD Tool
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5090_version-control.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Version Control
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5100_openshift-integration-method.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+OpenShift Integration Method
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5110_container-registry-integration-method.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Container Registry Integration Method
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+
+
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5150_container-base_images.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Container Base Images
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5160_disaster_recovery_deployments.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Disaster Recovery Deployments
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+
+
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6070_rbac_is_enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+Verify that RBAC is enabled
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6110_garbage_collection.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+<<Ensure that garbage collection is configured as appropriate>>
+
+| Garbage Collection configuration should be revised
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6260_client_cert_authentication.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+Client certificate authentication should not be used for users
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6310_external_secret_storage.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+Consider external secret storage
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6540_CICD-scanning.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+CI/CD integration with Security Scanning
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7010_logging-forward-audit.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Forward OpenShift audit logs to external logging system>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7020_logging-forward-app.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Forward OpenShift application logs to external logging system>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7030_logging-forward-infra.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Forward OpenShift infrastructure logs to external logging system>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7050_logging-healthy.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<OpenShift logging deployment is functioning and healthy>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7060_logging-resource-contention.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<OpenShift logging Elasticsearch pods are scheduled on appropriate nodes>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7070_logging-elastic-log-size.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<OpenShift Logging Elasticsearch storage has sufficient space>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7130_monitoring-user-apps.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Application specific metrics are monitored on OpenShift>>
+
+| ServiceMonitors is configured 
+
+|
+{set:cellbgcolor:#80E5FF}
+Advisory
+
+
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7150_monitoring-alert-notify-external.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Ensure OpenShift alerts are forwarded to an external system that is monitored>>
+
+| OpenShift alerts are not forwarded to an external system
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7160_monitoring-persistent-storage.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Monitoring components need high performance/local persistent storage to maintain consistent state after a pod restart>>
+
+| OpenShift monitoring components do not have the appropriate storage 
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7170_team-skills.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+Team Skills Operating Openshift
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+|===
+
+<<<
+
+{set:cellbgcolor!}
+
+# Infrastructure
+
+
+[cols="1,2,2,3", options=header]
+|===
+|*Category*
+|*Item Evaluated*
+|*Observed Result*
+|*Recommendation*
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1010_compute-provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<Infrastructure Provider(s)>>
+
+| None 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1020_installation-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<Installation Type>>
+
+| OpenShift UPI is configured 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1030_if-upi-is-customer-using-additional-machinesets.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<Check if user-provisioned infrastructure (UPI) using additional MachineSets>>
+
+| No additional MachineSet 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1070_if-upi-what-kind-of-openshift-provisioning-automation-exists.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<Check if user-provisioned infrastructure (UPI) OpenShift Provisioning Automation exists>>
+
+| No additional MachineSet 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1190_node_cpu_mem_storage.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<OpenShift Node Status>>
+
+| None 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1190_node_cpu_mem_storage.item
+
+// Category
+|
+{set:cellbgcolor!}
+Infra
+
+// Item Evaluated
+a|
+<<OpenShift Node Usage>>
+
+| NA 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+|===
+
+<<<
+
+== Infrastructure Provider(s)
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+**Observation**
+
+Infrastructure Cloud Provider is None
+
+**Recommendation**
+
+None
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/installing/index
+
+
+== Installation Type
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+**Observation**
+
+OpenShift installation Method is UPI
+
+**Recommendation**
+
+None
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/installing/index
+
+
+== Check if user-provisioned infrastructure (UPI) using additional MachineSets
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+**Observation**
+
+OpenShift installation Method is UPI and has no additional machineSet
+
+**Recommendation**
+
+None
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/installing/index
+
+
+== Check if user-provisioned infrastructure (UPI) OpenShift Provisioning Automation exists
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+**Observation**
+
+OpenShift installation Method is UPI and has no additional machineSet
+
+**Recommendation**
+
+None
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/installing/index
+
+
+== OpenShift Node Status
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+[source, bash]
+----
+NAME           STATUS   ROLES                         AGE    VERSION
+ai.rhlab.dev   Ready    control-plane,master,worker   3d1h   v1.28.7+f1b5f6c
+
+----
+
+
+**Observation**
+
+All nodes are Ready. 
+
+**Recommendation**
+
+None 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15
+
+== OpenShift Node Usage
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+[source, bash]
+----
+NAME           CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
+ai.rhlab.dev   2345m        3%     36554Mi         14%       
+
+----
+
+
+**Observation**
+
+All nodes within the usage range 
+
+**Recommendation**
+
+None. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15
+
+<<<
+
+{set:cellbgcolor!}
+
+# vSphere
+
+
+[cols="1,2,2,3", options=header]
+|===
+|*Category*
+|*Item Evaluated*
+|*Observed Result*
+|*Recommendation*
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1040_vmware-version.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+VMware vSphere Version
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1050_vcenter-highly-available.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+<<vCenter Highly Available>>
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1060_vcenter-service-account.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+vCenter Service Account
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1080_physical-hypervisor-topology.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+<<Physical Hypervisor Topology>>
+
+| Physical Hypervisor Topology is not set 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1090_node-placement-on-hosts.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+<<Node Placement on Hosts>>
+
+| Master node is not on a separate ESXi host 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1100_vmware-datastore-storage-provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+Check to see if the OpenShift Cluster is configured to use VMware datastore
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1110_vmware-ha-enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+<<vSphere HA Enabled>>
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1120_datastore-storage-provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+Datastore Storage Provider
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1130_datastore-multitenancy.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+Datastore Multitenancy
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1140_vmware-networking-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+VMware Networking Type
+
+| Not Applicable 
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1150_vmware-backup.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+VM Backup
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1160_vmware-time-synchronization-enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+vSphere
+
+// Item Evaluated
+a|
+VMware Time Synchronization Enabled
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+|===
+
+<<<
+
+
+== vCenter Highly Available
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+ Not Applicable
+
+**Recommendation**
+
+None
+
+
+
+== Physical Hypervisor Topology
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+ Not Applicable
+
+**Recommendation**
+
+None
+
+
+
+== Node Placement on Hosts
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+ Not Applicable
+
+**Recommendation**
+
+None
+
+
+
+== vSphere HA Enabled
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+ Not Applicable
+
+**Recommendation**
+
+None
+
+
+
+== Datastore Multitenancy
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+ Not Applicable
+
+**Recommendation**
+
+None
+
+
+
+
+
+
+
+
+<<<
+
+{set:cellbgcolor!}
+
+
+# Network
+
+
+[cols="1,2,2,3", options=header]
+|===
+|*Category*
+|*Item Evaluated*
+|*Observed Result*
+|*Recommendation*
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/1170_node-network-ranges.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+Node Network Ranges
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2010_node-network-topology.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+Node Network Topology
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2020_mtu-sizes.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+Cluster Network MTU Size
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2030_load-balancer-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer Type>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2040_load-balancer-health-checks-enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer Health Checks Enabled>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2050_load-balancer-balancing-algorithm.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer Balancing Algorithm>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2051_load-balancer-ssl-passthrough.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer SSL Settings>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2052_load-balancer-vips_consistently_configured.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Load Balancer VIPs Consistently Configured>>
+
+||
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2060_ingress-controller-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Ingress Controller Type>>
+
+| Default OpenShift ingress controller in use
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2070_ingress-controller-placement.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Ingress Controller Placement>>
+
+| Ingress Controller Placement not set
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2080_ingress-controller-replica-count.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Ingress Controller Replica Count>>
+
+| Default OpenShift ingress replica not match
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2080_ingress-controller-replica-count.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<Ingress Controller Certificate>>
+
+|Default wildcard certificate not configured
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/2090_openshift-sdn-plugin.item
+
+// Category
+|
+{set:cellbgcolor!}
+Network
+
+// Item Evaluated
+a|
+<<CNI Network Plugin>>
+
+| OVNKubernetes
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+|===
+
+<<<
+
+
+== Load Balancer Type
+
+
+
+**Observation**
+
+To Be Evaluated
+
+**Recommendation**
+
+To Be Evaluated
+
+
+
+== Load Balancer Health Checks Enabled
+
+
+
+**Observation**
+
+To Be Evaluated
+
+**Recommendation**
+
+To Be Evaluated
+
+
+
+== Load Balancer Balancing Algorithm
+
+
+
+**Observation**
+
+To Be Evaluated
+
+**Recommendation**
+
+To Be Evaluated
+
+
+
+== Load Balancer SSL Settings
+
+
+
+**Observation**
+
+To Be Evaluated
+
+**Recommendation**
+
+To Be Evaluated
+
+
+
+== Load Balancer VIPs Consistently Configured
+
+
+
+**Observation**
+
+To Be Evaluated
+
+**Recommendation**
+
+To Be Evaluated
+
+
+
+== Ingress Controller Type
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+[source, yaml]
+----
+ingresscontroller.operator.openshift.io/owning-ingresscontroller:default
+----
+
+
+**Observation**
+
+Default OpenShift ingress controller in use
+
+**Recommendation**
+
+None. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/networking/index#configuring-ingress[Configure Ingress Controller]
+
+
+== Ingress Controller Placement
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+[source, bash]
+----
+NAME                             READY   STATUS    RESTARTS   AGE   IP            NODE           NOMINATED NODE   READINESS GATES
+router-default-cf6848d4b-7bsqc   1/1     Running   0          3d    192.168.2.2   ai.rhlab.dev   <none>           <none>
+
+----
+
+
+**Observation**
+
+Default OpenShift ingress Placement not set
+
+**Recommendation**
+
+OpenShift ingress pods should place on infra nodes. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/networking/index#configuring-ingress[Configure Ingress Controller]
+
+
+== Ingress Controller Replica Count
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+[source, bash]
+----
+NAME                             READY   STATUS    RESTARTS   AGE
+router-default-cf6848d4b-7bsqc   1/1     Running   0          3d
+
+----
+
+
+**Observation**
+
+Default OpenShift ingress replica not match
+
+**Recommendation**
+
+OpenShift ingress pods should place distributed on infra nodes with replica count three (3). 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/networking/index#configuring-ingress[Configure Ingress Controller]
+
+
+== Ingress Controller Certificate
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+
+
+**Observation**
+
+Default wildcard certificate has self-singed certificate, expired or is not yet valid.
+
+**Recommendation**
+
+Replacing the default wildcard certificate with one that is issued by a public CA already included in the CA bundle as provided by the container userspace allows external clients to connect securely to applications running under the .apps sub-domain.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/security_and_compliance/configuring-certificates#replacing-default-ingress_replacing-default-ingresss[Default Ingress Certificate]
+
+
+== CNI Network Plugin
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+[source, yaml]
+----
+apiVersion: v1
+items:
+- apiVersion: config.openshift.io/v1
+  kind: Network
+  metadata:
+    creationTimestamp: "2024-05-02T05:50:02Z"
+    generation: 2
+    name: cluster
+    resourceVersion: "3387"
+    uid: e9c28675-17b5-433e-98fb-538d78fbbdba
+  spec:
+    clusterNetwork:
+    - cidr: 10.128.0.0/14
+      hostPrefix: 23
+    externalIP:
+      policy: {}
+    networkType: OVNKubernetes
+    serviceNetwork:
+    - 172.30.0.0/16
+  status:
+    clusterNetwork:
+    - cidr: 10.128.0.0/14
+      hostPrefix: 23
+    clusterNetworkMTU: 1400
+    networkType: OVNKubernetes
+    serviceNetwork:
+    - 172.30.0.0/16
+kind: List
+metadata:
+  resourceVersion: ""
+
+----
+
+
+**Observation**
+
+ OpenShift CNI Network Plugin is OVNKubernetes
+
+**Recommendation**
+
+None. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/networking/index#openshift-sdn-default-cni-network-provider[CNI Network Provider]
+
+
+<<<
+
+{set:cellbgcolor!}
+
+# Storage
+
+
+[cols="1,2,2,3", options=header]
+|===
+|*Category*
+|*Item Evaluated*
+|*Observed Result*
+|*Recommendation*
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3110_provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Provider 1
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3120_technology.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Technology 1
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3130_block-or-file.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Block or File
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3210_provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Provider 2
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3220_technology.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Technology 2
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3230_block-or-file.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Block or File
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3310_provider.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Provider 3
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3320_technology.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Technology 3
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3330_block-or-file.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Block or File
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3340_multipath-enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+Multipath Enabled
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/3350_IQN_Set_Correctly.item
+
+// Category
+|
+{set:cellbgcolor!}
+Storage
+
+// Item Evaluated
+a|
+iSCSI Initiator Name
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+|===
+
+<<<
+
+<<<
+
+{set:cellbgcolor!}
+
+# OpenShift Cluster Config
+
+
+[cols="1,2,2,3", options=header]
+|===
+|*Category*
+|*Item Evaluated*
+|*Observed Result*
+|*Recommendation*
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4000_openshift_version.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Cluster Version>>
+
+| 4.15.9
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4000_openshift_version.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Cluster Operators>>
+
+| All CO operators Ready 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4001_masters_schedulable.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Control Nodes Schedulable>>
+
+|Masters nodes are Schedulable
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4005_infra-nodes.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Infrastructure Nodes present>>
+
+| Infra nodes not available, total: None
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4009_default_scc.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Default Security Context Constraint>>
+
+| SCC has not been modified 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4010_adequate-measures-in-place-to-keep-customer-workloads-off-infra-nodes.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Adequate Measures in place to keep customer workloads off Infra Nodes>>
+
+| Infrastructure node with required taints not configured 
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4011_default_project_template_set.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Default Project Template Set>>
+
+| No Default project template
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4012_default_node_selector_set.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Default Node Selector Set>>
+
+|Default Node Selector not Set
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4013_self_provisioner_enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Self Provisioner Enabled>>
+
+| Self Provisioner is not enabled 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4019_kubeadmin_enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Kubeadmin user disabled>>
+
+| Default OpenShift `kubeadmin` is present 
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Network Policy>>
+
+|Network Policies not enabled
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4020_identity-provider-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Identity Provider Type>>
+
+|Identity Provider Type is not set
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4030_identity-provider-search-url.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Identity Provider Search URL>>
+
+|Identity Provider Type is not set
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4040_ldap-encrypted-connection.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<LDAP Encrypted Connection>>
+
+|Identity Provider Type is not set
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4051_image-registry-internal.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Openshift internal registry is functioning and running>>
+
+| Openshift internal registry is functioning and running 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4160_user-workload-monitoring.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<User Workload Monitoring>>
+
+| User Workload Monitoring not Set 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4170_openshift-logging-installed.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<OpenShift Logging>>
+
+| OpenShift Logging not configured 
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4171_alternative_log_aggregation.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Alternative Log Aggregation>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4250_etcd-backup-defined.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+etcd backup defined
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4251_etcd-encryption.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<ETCD Encryption Enabled>>
+
+| No ETCD encryption 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4252_etcd_disk_performance.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Etcd Performance>>
+
+| ETCD is healthy 
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4260_infra-machine-configs-defined.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Infra machine config pool defined>>
+
+| Infra machine config pool not defined
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4280_kubelet-config-overridden.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Kubelet Configuration Overridden>>
+
+| Kubelet Configuration Overridden not configured
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4290_emptydir-volumes-in-use.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<EmptyDir Volumes in use>>
+
+| Some Application Pods use EmptyDir 
+
+|
+{set:cellbgcolor:#80E5FF}
+Advisory
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/4310_proxy-config.item
+
+// Category
+|
+{set:cellbgcolor!}
+Cluster Config
+
+// Item Evaluated
+a|
+<<Openshift Proxy Settings>>
+
+|OpenShift Proxy setting is not set
+
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+|===
+
+<<<
+
+
+== Cluster Version
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+[source, yaml]
+----
+apiVersion: v1
+items:
+- apiVersion: config.openshift.io/v1
+  kind: ClusterVersion
+  metadata:
+    creationTimestamp: "2024-05-02T05:50:06Z"
+    generation: 2
+    name: version
+    resourceVersion: "4901444"
+    uid: 0e3a92a7-38bc-41b1-b1d0-d2806ad4b517
+  spec:
+    channel: stable-4.15
+    clusterID: cba0b753-d1fe-4461-afce-a0727889c7ef
+  status:
+    availableUpdates:
+    - channels:
+      - candidate-4.15
+      - candidate-4.16
+      - fast-4.15
+      - stable-4.15
+      image: quay.io/openshift-release-dev/ocp-release@sha256:7111fb4cec202cb758f58d9bed95a67e7fdc417353ef15be56d7bf96356909d4
+      url: https://access.redhat.com/errata/RHSA-2024:1887
+      version: 4.15.10
+    capabilities:
+      enabledCapabilities:
+      - Build
+      - CSISnapshot
+      - CloudCredential
+      - Console
+      - DeploymentConfig
+      - ImageRegistry
+      - Insights
+      - MachineAPI
+      - NodeTuning
+      - OperatorLifecycleManager
+      - Storage
+      - baremetal
+      - marketplace
+      - openshift-samples
+      knownCapabilities:
+      - Build
+      - CSISnapshot
+      - CloudCredential
+      - Console
+      - DeploymentConfig
+      - ImageRegistry
+      - Insights
+      - MachineAPI
+      - NodeTuning
+      - OperatorLifecycleManager
+      - Storage
+      - baremetal
+      - marketplace
+      - openshift-samples
+    conditions:
+    - lastTransitionTime: "2024-05-02T05:50:10Z"
+      message: Capabilities match configured spec
+      reason: AsExpected
+      status: "False"
+      type: ImplicitlyEnabledCapabilities
+    - lastTransitionTime: "2024-05-02T05:50:10Z"
+      message: Payload loaded version="4.15.9" image="quay.io/openshift-release-dev/ocp-release@sha256:4c57e9589ac8d96ad74fd8c9fce35c5e507a20a88a6871d8a731c3b295abc79a"
+        architecture="amd64"
+      reason: PayloadLoaded
+      status: "True"
+      type: ReleaseAccepted
+    - lastTransitionTime: "2024-05-02T06:24:10Z"
+      message: Done applying 4.15.9
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2024-05-03T05:50:25Z"
+      status: "False"
+      type: Failing
+    - lastTransitionTime: "2024-05-02T06:24:10Z"
+      message: Cluster version is 4.15.9
+      status: "False"
+      type: Progressing
+    - lastTransitionTime: "2024-05-02T05:50:10Z"
+      status: "True"
+      type: RetrievedUpdates
+    desired:
+      channels:
+      - candidate-4.15
+      - candidate-4.16
+      - fast-4.15
+      - stable-4.15
+      image: quay.io/openshift-release-dev/ocp-release@sha256:4c57e9589ac8d96ad74fd8c9fce35c5e507a20a88a6871d8a731c3b295abc79a
+      url: https://access.redhat.com/errata/RHSA-2024:1770
+      version: 4.15.9
+    history:
+    - completionTime: "2024-05-02T06:24:10Z"
+      image: quay.io/openshift-release-dev/ocp-release@sha256:4c57e9589ac8d96ad74fd8c9fce35c5e507a20a88a6871d8a731c3b295abc79a
+      startedTime: "2024-05-02T05:50:10Z"
+      state: Completed
+      verified: false
+      version: 4.15.9
+    observedGeneration: 2
+    versionHash: 0vIgHbIhPNA=
+kind: List
+metadata:
+  resourceVersion: ""
+
+----
+
+
+**Observation**
+
+ OpenShift version is the latest: 4.15.9
+
+**Recommendation**
+
+None. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/updating_clusters/index
+
+
+== Cluster Operators
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+[source, bash]
+----
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE   MESSAGE
+authentication                             4.15.9    True        False         False      36h     
+baremetal                                  4.15.9    True        False         False      3d1h    
+cloud-controller-manager                   4.15.9    True        False         False      3d1h    
+cloud-credential                           4.15.9    True        False         False      3d1h    
+cluster-autoscaler                         4.15.9    True        False         False      3d1h    
+config-operator                            4.15.9    True        False         False      3d1h    
+console                                    4.15.9    True        False         False      3d      
+control-plane-machine-set                  4.15.9    True        False         False      3d1h    
+csi-snapshot-controller                    4.15.9    True        False         False      3d1h    
+dns                                        4.15.9    True        False         False      3d1h    
+etcd                                       4.15.9    True        False         False      3d1h    
+image-registry                             4.15.9    True        False         False      3d      
+ingress                                    4.15.9    True        False         False      3d1h    
+insights                                   4.15.9    True        False         False      3d1h    
+kube-apiserver                             4.15.9    True        False         False      3d1h    
+kube-controller-manager                    4.15.9    True        False         False      3d1h    
+kube-scheduler                             4.15.9    True        False         False      3d1h    
+kube-storage-version-migrator              4.15.9    True        False         False      3d1h    
+machine-api                                4.15.9    True        False         False      3d1h    
+machine-approver                           4.15.9    True        False         False      3d1h    
+machine-config                             4.15.9    True        False         False      3d1h    
+marketplace                                4.15.9    True        False         False      3d1h    
+monitoring                                 4.15.9    True        False         False      3d1h    
+network                                    4.15.9    True        False         False      3d1h    
+node-tuning                                4.15.9    True        False         False      3d1h    
+openshift-apiserver                        4.15.9    True        False         False      3d      
+openshift-controller-manager               4.15.9    True        False         False      2d1h    
+openshift-samples                          4.15.9    True        False         False      3d1h    
+operator-lifecycle-manager                 4.15.9    True        False         False      3d1h    
+operator-lifecycle-manager-catalog         4.15.9    True        False         False      3d1h    
+operator-lifecycle-manager-packageserver   4.15.9    True        False         False      3d1h    
+service-ca                                 4.15.9    True        False         False      3d1h    
+storage                                    4.15.9    True        False         False      3d1h    
+
+----
+
+
+**Observation**
+
+None
+
+**Recommendation**
+
+None
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15
+
+== Control Nodes Schedulable
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+**Observation**
+
+Masters nodes are Schedulable. 
+
+**Recommendation**
+
+Avoid running user workload application on master nodes.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15html-single/nodes/index#working-with-nodes[Working with the nodes]
+
+
+== Infrastructure Nodes present
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+[source, bash]
+----
+
+----
+
+
+**Observation**
+
+Infrastructure nodes not configured. 
+
+**Recommendation**
+
+Infrastructure nodes allow customers to isolate infrastructure workloads for two primary purposes:
+
+ 1- to prevent incurring billing costs against subscription counts and
+ 2- to separate maintenance and management.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15
+
+* https://access.redhat.com/solutions/5034771[Infrastructure Nodes]
+
+== Default Security Context Constraint
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+[source, yaml]
+----
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: false
+allowedCapabilities: null
+apiVersion: security.openshift.io/v1
+defaultAddCapabilities: null
+fsGroup:
+  type: MustRunAs
+groups: []
+kind: SecurityContextConstraints
+metadata:
+  annotations:
+    include.release.openshift.io/ibm-cloud-managed: "true"
+    include.release.openshift.io/self-managed-high-availability: "true"
+    include.release.openshift.io/single-node-developer: "true"
+    kubernetes.io/description: restricted denies access to all host features and requires
+      pods to be run with a UID, and SELinux context that are allocated to the namespace.
+    release.openshift.io/create-only: "true"
+  creationTimestamp: "2024-05-02T05:49:44Z"
+  generation: 1
+  name: restricted
+  resourceVersion: "399"
+  uid: 5356be89-f0e5-496c-a712-35d413eae9dd
+priority: null
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+- KILL
+- MKNOD
+- SETUID
+- SETGID
+runAsUser:
+  type: MustRunAsRange
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+users: []
+volumes:
+- configMap
+- csi
+- downwardAPI
+- emptyDir
+- ephemeral
+- persistentVolumeClaim
+- projected
+- secret
+
+----
+
+
+**Observation**
+
+OpenShift Default Security Context Constraint has not been changed
+
+**Recommendation**
+
+Do not modify the default SCCs. Customizing the default SCCs can lead to issues when some of the platform pods deploy or OpenShift Container Platform is upgraded. Additionally, the default SCC values are reset to the defaults during some cluster upgrades, which discards all customizations to those SCCs.
+
+Instead of modifying the default SCCs, create and modify your own SCCs as needed. For detailed steps, see Creating security context constraints.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/authentication_and_authorization/index#managing-pod-security-policies[Default Security Context Constraint]
+
+
+== Adequate Measures in place to keep customer workloads off Infra Nodes
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+|===
+
+**Observation**
+
+No configuration or incomplete configuration is done to exclude application workloads from being scheduled in Infrastructure Nodes. This could lead to breach to subscription contract. 
+
+**Recommendation**
+
+Label and taint nodes designated for infrastructure. Ensure components such as the router, logging, and monitoring stacks have appropriate tolerances for these taints.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/solutions/5034771
+
+
+== Default Project Template Set
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+[source, yaml]
+----
+apiVersion: config.openshift.io/v1
+kind: Project
+metadata:
+  annotations:
+    include.release.openshift.io/ibm-cloud-managed: "true"
+    include.release.openshift.io/self-managed-high-availability: "true"
+    include.release.openshift.io/single-node-developer: "true"
+    release.openshift.io/create-only: "true"
+  creationTimestamp: "2024-05-02T05:50:31Z"
+  generation: 1
+  name: cluster
+  ownerReferences:
+  - apiVersion: config.openshift.io/v1
+    kind: ClusterVersion
+    name: version
+    uid: 0e3a92a7-38bc-41b1-b1d0-d2806ad4b517
+  resourceVersion: "1611"
+  uid: 8ea22df0-6a96-4437-9cb3-4319182689e2
+spec: {}
+
+----
+
+
+**Observation**
+
+No Default project template
+
+**Recommendation**
+
+Check in the reference how to create default project template. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/building_applications/index#configuring-project-creation[Configuring project creation]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/building_applications/index#quotas-setting-per-project[Quotas Setting Per Project]
+
+
+== Default Node Selector Set
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+**Observation**
+
+Default Node Selector not Set. 
+
+**Recommendation**
+
+None
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15html-single/nodes/index#nodes-scheduler-node-selectors-cluster_nodes-scheduler-node-selectors[Default Node Selector]
+
+
+== Self Provisioner Enabled
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+[source,bash]
+----
+Name:         self-provisioners
+Labels:       <none>
+Annotations:  rbac.authorization.kubernetes.io/autoupdate: true
+Role:
+  Kind:  ClusterRole
+  Name:  self-provisioner
+Subjects:
+  Kind   Name                        Namespace
+  ----   ----                        ---------
+  Group  system:authenticated:oauth  
+
+----
+
+
+**Observation**
+
+Self Provisioner is enabled for system:authenticated:oauth. Self Provisioner should be disabled to avoid uncontrolled namespace creation. 
+
+**Recommendation**
+
+Remove self-provisioner from the system:authenticated:oauth group
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/building_applications/index#disabling-project-self-provisioning_configuring-project-creation[Disabling project self-provisioning]
+
+
+== Kubeadmin user disabled
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+|===
+
+[source, bash]
+----
+NAME        TYPE     DATA   AGE
+kubeadmin   Opaque   1      3d1h
+
+----
+
+
+**Observation**
+
+Kubeadmin user is not disabled 
+
+**Recommendation**
+
+This user is for temporary post installation steps and should be removed to avoid any potential security breach
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/authentication_and_authorization/removing-kubeadmin[Removing Kubeadmin user]
+
+
+== Network Policy
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+[source,bash]
+----
+# oc get netpol -A
+No resources found
+----
+
+
+**Observation**
+
+To isolate one or more pods in a project, you can create networkPolicy objects in that project to indicate the allowed incoming connections. 
+
+**Recommendation**
+
+Define network policies that restrict traffic to pods in your cluster.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/networking/index#about-network-policy[About Network Policy]
+
+
+== Identity Provider Type
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+|===
+
+**Observation**
+
+There is no integration with a central identity provider (LDAP).
+
+**Recommendation**
+
+Integrate with an existing central identity provider such as Active Directory LDAP
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider[Configuring an LDAP identity provider]
+
+
+
+
+== Identity Provider Search URL
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+There is no integration with a central identity provider (LDAP).
+
+**Recommendation**
+
+Integrate with an existing central identity provider such as Active Directory LDAP
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider[Configuring an LDAP identity provider]
+
+
+
+
+== LDAP Encrypted Connection
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+There is no integration with a central identity provider (LDAP).
+
+**Recommendation**
+
+Integrate with an existing central identity provider such as Active Directory LDAP
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider[Configuring an LDAP identity provider]
+
+
+== Identity Provider Search URL
+
+
+== Openshift internal registry is functioning and running
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+**Observation**
+
+Openshift internal registry is functioning and running
+
+**Recommendation**
+
+No changes are required if the 'managementState' is set to 'Managed'. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15html-single/registry/index[OpenShift registry]
+
+
+== User Workload Monitoring
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+**Observation**
+
+User workload monitoring is not configured.
+
+**Recommendation**
+
+Using this feature centralizes monitoring for core platform components and user-defined projects.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15html-single/monitoring/configuring-the-monitoring-stack[Understanding the monitoring stack]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/monitoring/index#enabling-monitoring-for-user-defined-projects[Enabling monitoring for user-defined projects]
+
+== OpenShift Logging
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+|===
+
+**Observation**
+
+OpenShift Logging is not installed or configured. 
+
+**Recommendation**
+
+You need to deploy the logging subsystem to aggregate all the logs from your OpenShift Container Platform cluster, such as node system audit logs, application container logs, and infrastructure logs. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging-deploying[Installing OpenShift Logging]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/configuring-your-logging-deployment[Cluster Logging custom resource]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging[Understanding Red Hat OpenShift Logging]
+
+
+== Alternative Log Aggregation
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+OpenShift Logging is not installed or configured. 
+
+**Recommendation**
+
+You need to deploy the logging subsystem to aggregate all the logs from your OpenShift Container Platform cluster, such as node system audit logs, application container logs, and infrastructure logs. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging-deploying[Installing OpenShift Logging]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/configuring-your-logging-deployment[Cluster Logging custom resource]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging[Understanding Red Hat OpenShift Logging]
+
+
+== ETCD Encryption Enabled
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+[source, yaml]
+----
+apiVersion: v1
+items:
+- apiVersion: config.openshift.io/v1
+  kind: APIServer
+  metadata:
+    annotations:
+      include.release.openshift.io/ibm-cloud-managed: "true"
+      include.release.openshift.io/self-managed-high-availability: "true"
+      include.release.openshift.io/single-node-developer: "true"
+      oauth-apiserver.openshift.io/secure-token-storage: "true"
+      release.openshift.io/create-only: "true"
+    creationTimestamp: "2024-05-02T05:50:13Z"
+    generation: 1
+    name: cluster
+    ownerReferences:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      uid: 0e3a92a7-38bc-41b1-b1d0-d2806ad4b517
+    resourceVersion: "820"
+    uid: ca3d31b3-df1f-4d39-ab30-44d067defef5
+  spec:
+    audit:
+      profile: Default
+kind: List
+metadata:
+  resourceVersion: ""
+
+----
+
+
+**Observation**
+
+No ETCD encryption
+
+**Recommendation**
+
+Check in the reference how to encrypt ETCD data. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/security_and_compliance/encrypting-etcd[ETCD Encryption]
+
+
+== Etcd Performance
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+Reported etcd_disk_backend_commit_duration_seconds_bucket metric 5 minutes rate 99th percentile is less than 25ms.
+
+
+Reported etcd_disk_wal_fsync_duration_seconds_bucket metric 5 minutes rate 99th percentile is less than 20ms.
+
+
+Reported etcd_network_peer_round_trip_time_seconds_bucket metric 5 minutes rate 99th percentile is less than 50ms.
+
+
+**Observation**
+
+ETCD is healthy 
+
+**Recommendation**
+
+None
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/scalability_and_performance/index#recommended-etcd-practices_recommended-host-practices[ETCD Recommended Practice]
+
+
+== Infra machine config pool defined
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+[source, bash]
+----
+NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINECOUNT   UPDATEDMACHINECOUNT   DEGRADEDMACHINECOUNT   AGE
+master   rendered-master-4a0b878b7a9e4ddeae334289f13bf8a1   True      False      False      1              1                   1                     0                      3d1h
+worker   rendered-worker-c712440587df30e46a038053edf611c3   True      False      False      0              0                   0                     0                      3d1h
+
+----
+
+
+**Observation**
+
+Infra machine config pool not defined
+
+**Recommendation**
+
+In a production deployment, it is recommended that you deploy at least three machine sets to hold infrastructure components. Both OpenShift Logging and Red Hat OpenShift Service Mesh deploy Elasticsearch, which requires three instances to be installed on different nodes. Each of these nodes can be deployed to different availability zones for high availability.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/machine_management/index#creating-infrastructure-machinesets
+
+
+== Kubelet Configuration Overridden
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+**Observation**
+
+Kubelet configuration is not enabled to provide garbage collection.
+
+**Recommendation**
+
+Configuring garbage collection for containers and images.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/nodes/index#nodes-nodes-garbage-collection[Freeing Garbage Collection]
+
+
+== EmptyDir Volumes in use
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#80E5FF}
+Advisory
+|===
+
+**Observation**
+
+Some Application Pods use EmptyDir. 
+
+**Recommendation**
+
+Files in a container are ephemeral.As such, when a container crashes or stops, the data is lost. You can use volumes to persist the data used by the containers in a pod. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15html-single/nodes/index#nodes-containers-volumes[Container Storage]
+
+
+== Openshift Proxy Settings
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+[source,bash]
+----
+apiVersion: config.openshift.io/v1
+kind: Proxy
+metadata:
+  creationTimestamp: "2024-05-02T05:50:02Z"
+  generation: 1
+  name: cluster
+  resourceVersion: "568"
+  uid: b62b7bf1-7e19-43a2-8f14-9e9e61f0d6dd
+spec:
+  trustedCA:
+    name: ""
+status: {}
+
+----
+
+
+**Observation**
+
+OpenShift Proxy setting is not set. 
+
+**Recommendation**
+
+None.
+
+
+
+
+<<<
+
+{set:cellbgcolor!}
+
+# Application Development
+
+
+[cols="1,2,2,3", options=header]
+|===
+|*Category*
+|*Item Evaluated*
+|*Observed Result*
+|*Recommendation*
+
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5010_readiness-and-liveness-probes.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+<<Readiness and Liveness Probes>>
+
+|Readiness and Liveness Probes are configured
+
+|
+{set:cellbgcolor:#00FF00}
+No Change
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5020_elevated-privileges.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+<<Elevated Privileges>>
+
+| At least one user workload use an unjustified non restricted SCC 
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5030_limit-request-configured.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+<<Resource Quotas Defined>>
+
+|Resource Requests and Limits not configured for user projects
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5050_deployment-iac-items-versioned.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Deployment IaC Items Versioned
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5070_deployment-iac-type.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Deployment IaC Type
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5080_primary-ci-cd-tool.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Primary CI CD Tool
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5090_version-control.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Version Control
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5100_openshift-integration-method.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+OpenShift Integration Method
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5110_container-registry-integration-method.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Container Registry Integration Method
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+
+
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5150_container-base_images.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Container Base Images
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/5160_disaster_recovery_deployments.item
+
+// Category
+|
+{set:cellbgcolor!}
+App Dev
+
+// Item Evaluated
+a|
+Disaster Recovery Deployments
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+|===
+
+<<<
+
+== Readiness and Liveness Probes
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+**Observation**
+
+Container probes configured for workloads.
+
+
+=== What is a probe?
+
+A probe is an OpenShift action that periodically performs diagnostics on a running container. Probes can be added in template or via console. There are three types of probes: Readiness, Liveness and Startup
+
+Readiness Probe: Identifies when a container is able to handle external traffic received from a service. Even though the container is running it should not receive any requests.
+**If the test fails for readiness probe the container will be taken out of service**.
+
+Liveness Probe: Checks whether a pod is healthy by running a command or making a network request inside the container.
+**If a test fails then the container is restarted**.
+
+Startup Probe: Provides a way to defer the execution of liveness and readiness probes until a container indicates it is able to handle them. Kubernetes will not direct the other probe types to a container if it has a startup probe that has not yet succeeded.
+**If a test fails then the container is restarted**.
+
+OpenShift provided three options that control these probes:
+
+1.  Open a TCP socket on the pod IP
+2.  Perform an HTTP GET against a URL on a container that must return 200 OK
+3.  Run a command in the container that must return exit code 0
+
+**Recommendation**
+
+None
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/building_applications/index#application-health[Application health]
+
+
+== Elevated Privileges
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+
+
+**Observation**
+
+At least one user workload use an unjustified non restricted SCC 
+
+{set:cellbgcolor:!}
+[cols="1,3", options=header]
+|===
+|Namespace
+|Deployment
+
+**Recommendation**
+
+SCC allows host access to namespaces, file systems, and PIDs. It should only be used by trusted pods. Grant with caution.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/authentication_and_authorization/index#managing-pod-security-policies[Default Security Context Constraint]
+
+
+== Resource Quotas Defined
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+**Observation**
+
+Resource Requests and Limits not configured for user projects 
+
+**Recommendation**
+
+It is extremely important to create resource quotas and limits, particularly if horizontal pod autoscaling is to be used.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/building_applications/index#quotas[Quotas]
+
+
+
+<<<
+{set:cellbgcolor!}
+
+# Security
+
+
+[cols="1,2,2,3", options=header]
+|===
+|*Category*
+|*Item Evaluated*
+|*Observed Result*
+|*Recommendation*
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6070_rbac_is_enabled.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+Verify that RBAC is enabled
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6110_garbage_collection.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+<<Ensure that garbage collection is configured as appropriate>>
+
+| Garbage Collection configuration should be revised
+
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6260_client_cert_authentication.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+Client certificate authentication should not be used for users
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6310_external_secret_storage.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+Consider external secret storage
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/6540_CICD-scanning.item
+
+// Category
+|
+{set:cellbgcolor!}
+Security
+
+// Item Evaluated
+a|
+CI/CD integration with Security Scanning
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+
+
+
+|===
+
+<<<
+
+
+== Ensure that garbage collection is configured as appropriate
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+**Observation**
+
+Garbage Collection configuration is not enabled to provide garbage collection.
+
+**Recommendation**
+
+Configuring garbage collection for containers and images.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/nodes/index#nodes-nodes-garbage-collection[Freeing Garbage Collection]
+
+
+
+
+
+
+{set:cellbgcolor!}
+
+# Operational Readiness
+
+
+[cols="1,2,2,3", options=header]
+|===
+|*Category*
+|*Item Evaluated*
+|*Observed Result*
+|*Recommendation*
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7010_logging-forward-audit.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Forward OpenShift audit logs to external logging system>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7020_logging-forward-app.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Forward OpenShift application logs to external logging system>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7030_logging-forward-infra.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Forward OpenShift infrastructure logs to external logging system>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7050_logging-healthy.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<OpenShift logging deployment is functioning and healthy>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7060_logging-resource-contention.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<OpenShift logging Elasticsearch pods are scheduled on appropriate nodes>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7070_logging-elastic-log-size.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<OpenShift Logging Elasticsearch storage has sufficient space>>
+
+|Not Applicable|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+
+
+
+
+
+// ------------------------ITEM END
+
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7130_monitoring-user-apps.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Application specific metrics are monitored on OpenShift>>
+
+| ServiceMonitors is configured 
+
+|
+{set:cellbgcolor:#80E5FF}
+Advisory
+
+
+
+// ------------------------ITEM END
+
+
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7150_monitoring-alert-notify-external.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Ensure OpenShift alerts are forwarded to an external system that is monitored>>
+
+| OpenShift alerts are not forwarded to an external system
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7160_monitoring-persistent-storage.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+<<Monitoring components need high performance/local persistent storage to maintain consistent state after a pod restart>>
+
+| OpenShift monitoring components do not have the appropriate storage 
+
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+
+
+
+// ------------------------ITEM END
+
+// ------------------------ITEM START
+// ----ITEM SOURCE:  ./content/healthcheck-items/7170_team-skills.item
+
+// Category
+|
+{set:cellbgcolor!}
+Op-Ready
+
+// Item Evaluated
+a|
+Team Skills Operating Openshift
+
+// Result
+|
+
+
+// Recommendation
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+
+// ------------------------ITEM END
+|===
+
+<<<
+
+== Forward OpenShift audit logs to external logging system
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+OpenShift Logging is not installed or configured. 
+
+**Recommendation**
+
+You need to deploy the logging subsystem to aggregate all the logs from your OpenShift Container Platform cluster, such as node system audit logs, application container logs, and infrastructure logs. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging-deploying[Installing OpenShift Logging]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/configuring-your-logging-deployment[Cluster Logging custom resource]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging[Understanding Red Hat OpenShift Logging]
+
+
+== Forward OpenShift application logs to external logging system
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+OpenShift Logging is not installed or configured. 
+
+**Recommendation**
+
+You need to deploy the logging subsystem to aggregate all the logs from your OpenShift Container Platform cluster, such as node system audit logs, application container logs, and infrastructure logs. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging-deploying[Installing OpenShift Logging]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/configuring-your-logging-deployment[Cluster Logging custom resource]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging[Understanding Red Hat OpenShift Logging]
+
+
+== Forward OpenShift infrastructure logs to external logging system
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+OpenShift Logging is not installed or configured. 
+
+**Recommendation**
+
+You need to deploy the logging subsystem to aggregate all the logs from your OpenShift Container Platform cluster, such as node system audit logs, application container logs, and infrastructure logs. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging-deploying[Installing OpenShift Logging]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/configuring-your-logging-deployment[Cluster Logging custom resource]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging[Understanding Red Hat OpenShift Logging]
+
+
+== OpenShift logging deployment is functioning and healthy
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+OpenShift Logging is not installed or configured. 
+
+**Recommendation**
+
+You need to deploy the logging subsystem to aggregate all the logs from your OpenShift Container Platform cluster, such as node system audit logs, application container logs, and infrastructure logs. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging-deploying[Installing OpenShift Logging]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/configuring-your-logging-deployment[Cluster Logging custom resource]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging[Understanding Red Hat OpenShift Logging]
+
+
+== OpenShift logging Elasticsearch pods are scheduled on appropriate nodes
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+OpenShift Logging is not installed or configured. 
+
+**Recommendation**
+
+You need to deploy the logging subsystem to aggregate all the logs from your OpenShift Container Platform cluster, such as node system audit logs, application container logs, and infrastructure logs. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging-deploying[Installing OpenShift Logging]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/configuring-your-logging-deployment[Cluster Logging custom resource]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging[Understanding Red Hat OpenShift Logging]
+
+
+== OpenShift Logging Elasticsearch storage has sufficient space
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+Not Applicable
+|===
+
+**Observation**
+
+OpenShift Logging is not installed or configured. 
+
+**Recommendation**
+
+You need to deploy the logging subsystem to aggregate all the logs from your OpenShift Container Platform cluster, such as node system audit logs, application container logs, and infrastructure logs. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging-deploying[Installing OpenShift Logging]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/configuring-your-logging-deployment[Cluster Logging custom resource]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging[Understanding Red Hat OpenShift Logging]
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+|===
+
+**Observation**
+
+OpenShift Logging is not installed or configured. 
+
+**Recommendation**
+
+You need to deploy the logging subsystem to aggregate all the logs from your OpenShift Container Platform cluster, such as node system audit logs, application container logs, and infrastructure logs. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging-deploying[Installing OpenShift Logging]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/configuring-your-logging-deployment[Cluster Logging custom resource]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html-single/logging/cluster-logging[Understanding Red Hat OpenShift Logging]
+
+
+== Application specific metrics are monitored on OpenShift
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===
+
+**Observation**
+
+Some tools use to monitor application performance. 
+
+**Recommendation**
+
+None.
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15html-single/monitoring/index#managing-metrics[Managing Metrics]
+* https://www.dynatrace.com/technologies/openshift-monitoring/[Monitor applications deployed to OpenShift using 3rd party tools such as Dynatrace]
+* https://www.appdynamics.com/solutions/openshift[Monitor applications deployed to OpenShift using 3rd party tools such as AppDynamics]
+* https://newrelic.com/blog/how-to-relic/red-hat-openshift-monitor[Monitor applications deployed to OpenShift using 3rd party tools such as NewRelic]
+
+
+== Ensure OpenShift alerts are forwarded to an external system that is monitored
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===
+
+**Observation**
+
+OpenShift alerts are not forwarded to an external system
+
+**Recommendation**
+
+Routing alerts to receivers enables you to send timely notifications to the appropriate teams when failures occur. 
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15monitoring/index#sending-notifications-to-external-systems_managing-alerts[Sending Notification to external system]
+
+
+== Monitoring components need high performance/local persistent storage to maintain consistent state after a pod restart
+
+[cols="^"]
+|===
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+|===
+
+**Observation**
+
+The OpenShift monitoring components do not have the appropriate storage configured for a production environment and are not protected against data loss.
+
+**Recommendation**
+
+Configure persistent storage for the OpenShift monitoring components per the OpenShift documentation
+
+*Reference Link(s)*
+
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15html-single/monitoring/configuring-the-monitoring-stack[Understanding the monitoring stack]
+* https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15html-single/monitoring/index#configuring_persistent_storage_configuring-the-monitoring-stack[Monitoring Configuring persistent storage]
+
+
+
+
+
+
+
+
+// Reset bgcolor for future tables
+[grid=none,frame=none]
+|===
+|{set:cellbgcolor!}
+|===
+
