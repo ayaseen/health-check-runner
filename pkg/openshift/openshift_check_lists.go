@@ -36,7 +36,7 @@ var (
 	functions = []check{
 		{"All cluster operators are available", checkCO},
 		{"Etcd Health", etcdHealth},
-		{"Cluster Version", clusterVersion},
+		//{"Cluster Version", clusterVersion},
 		{"Cluster CNI Plugin", clusterCNIPlubin},
 		{"Elevated Privileges", checkElevatedPrivileges},
 		{"All nodes are Ready", nodeStatus},
