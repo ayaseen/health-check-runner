@@ -157,8 +157,8 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 	return result, nil
 }
 
-// GetChecks returns all networking-related health checks
-func GetChecks() []healthcheck.Check {
+// GetNetworkingChecks returns networking-related health checks - renamed to avoid conflict
+func GetNetworkingChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
 	// Add CNI network plugin check

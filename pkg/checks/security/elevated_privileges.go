@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -103,7 +104,7 @@ func (c *PrivilegedContainersCheck) Run() (healthcheck.Result, error) {
 					*container.SecurityContext.Privileged {
 
 					// Determine owner resource
-					ownerType, ownerName := findOwnerResource(clientset, ctx, pod, namespace.Name)
+					ownerType, ownerName := findOwnerResource(clientset, ctx, &pod, namespace.Name)
 
 					// Add to the list of privileged workloads
 					privilegedWorkloads = append(privilegedWorkloads, PrivilegedWorkload{
@@ -228,14 +229,14 @@ func isBuildOrDeployPod(podName string) bool {
 }
 
 // findOwnerResource determines the top-level owner resource of a pod
-func findOwnerResource(clientset *kubernetes.Clientset, ctx context.Context, pod metav1.Object, namespace string) (string, string) {
+func findOwnerResource(clientset *kubernetes.Clientset, ctx context.Context, pod *corev1.Pod, namespace string) (string, string) {
 	// Check if the pod has owner references
-	if len(pod.GetOwnerReferences()) == 0 {
-		return "Pod", pod.GetName()
+	if len(pod.OwnerReferences) == 0 {
+		return "Pod", pod.Name
 	}
 
 	// Get the owner reference
-	ownerRef := pod.GetOwnerReferences()[0]
+	ownerRef := pod.OwnerReferences[0]
 
 	switch ownerRef.Kind {
 	case "ReplicaSet":
