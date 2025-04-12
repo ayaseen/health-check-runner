@@ -90,7 +90,7 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 			"All control plane nodes are properly configured to prevent regular workloads",
 			healthcheck.ResultKeyNoChange,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -107,7 +107,7 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Add NoSchedule taints to control plane nodes using 'oc adm taint nodes <node-name> node-role.kubernetes.io/master=:NoSchedule'")
 	result.AddRecommendation("Alternatively, mark control plane nodes as unschedulable using 'oc adm cordon <node-name>'")
 
-	result = result.WithDetail(detailedOut)
+	result.Detail = detailedOut
 	return result, nil
 }
 
@@ -169,7 +169,7 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 			"No dedicated infrastructure nodes found",
 			healthcheck.ResultKeyRecommended,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -198,7 +198,7 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 			fmt.Sprintf("Found %d properly configured infrastructure nodes", len(nodes.Items)),
 			healthcheck.ResultKeyNoChange,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -214,7 +214,7 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Infrastructure nodes should be dedicated to infrastructure components")
 	result.AddRecommendation("Add NoSchedule taints to infrastructure nodes using 'oc adm taint nodes <node-name> node-role.kubernetes.io/infra=:NoSchedule'")
 
-	result = result.WithDetail(detailedOut)
+	result.Detail = detailedOut
 	return result, nil
 }
 
@@ -295,7 +295,7 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 			"Infrastructure machine config pool is degraded",
 			healthcheck.ResultKeyRequired,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -305,7 +305,7 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 		"Dedicated infrastructure machine config pool is properly configured",
 		healthcheck.ResultKeyNoChange,
 	)
-	result = result.WithDetail(detailedOut)
+	result.Detail = detailedOut
 	return result, nil
 }
 
@@ -431,7 +431,7 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 			"No user workloads are running on infrastructure nodes",
 			healthcheck.ResultKeyNoChange,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -452,7 +452,7 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 		strings.Join(podsOnInfraNodes, "\n"),
 		detailedOut)
 
-	result = result.WithDetail(detail)
+	result.Detail = detail
 	return result, nil
 }
 
@@ -502,7 +502,7 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 			"No custom default project template is configured",
 			healthcheck.ResultKeyRecommended,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -515,7 +515,7 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 			fmt.Sprintf("Default project template '%s' is configured but not found", templateName),
 			healthcheck.ResultKeyRequired,
 		)
-		result = result.WithDetail(fmt.Sprintf("%s\n\n%s", detailedOut, err.Error()))
+		result.Detail = fmt.Sprintf("%s\n\n%s", detailedOut, err.Error())
 		return result, nil
 	}
 
@@ -525,7 +525,7 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("Custom default project template '%s' is configured", templateName),
 		healthcheck.ResultKeyNoChange,
 	)
-	result = result.WithDetail(fmt.Sprintf("%s\n\nTemplate:\n%s", detailedOut, templateOut))
+	result.Detail = fmt.Sprintf("%s\n\nTemplate:\n%s", detailedOut, templateOut)
 	return result, nil
 }
 
@@ -575,7 +575,7 @@ func (c *DefaultNodeSelectorCheck) Run() (healthcheck.Result, error) {
 			"No default node selector is configured",
 			healthcheck.ResultKeyRecommended,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -585,7 +585,7 @@ func (c *DefaultNodeSelectorCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("Default node selector is configured: %s", nodeSelector),
 		healthcheck.ResultKeyNoChange,
 	)
-	result = result.WithDetail(detailedOut)
+	result.Detail = detailedOut
 	return result, nil
 }
 
@@ -637,7 +637,7 @@ func (c *KubeadminUserCheck) Run() (healthcheck.Result, error) {
 		"The kubeadmin user still exists and should be removed for security reasons",
 		healthcheck.ResultKeyRecommended,
 	)
-	result = result.WithDetail(out)
+	result.Detail = out
 	return result, nil
 }
 
@@ -687,7 +687,7 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 			"No infrastructure provider type detected",
 			healthcheck.ResultKeyRequired,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -697,7 +697,7 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("Infrastructure provider type: %s", providerType),
 		healthcheck.ResultKeyNoChange,
 	)
-	result = result.WithDetail(detailedOut)
+	result.Detail = detailedOut
 	return result, nil
 }
 
@@ -747,7 +747,7 @@ func (c *InstallationTypeCheck) Run() (healthcheck.Result, error) {
 			"No infrastructure name detected",
 			healthcheck.ResultKeyRequired,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -767,6 +767,6 @@ func (c *InstallationTypeCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("Installation type: %s", installationType),
 		healthcheck.ResultKeyNoChange,
 	)
-	result = result.WithDetail(fmt.Sprintf("Infrastructure Name: %s\n\n%s", infrastructureName, detailedOut))
+	result.Detail = fmt.Sprintf("Infrastructure Name: %s\n\n%s", infrastructureName, detailedOut)
 	return result, nil
 }

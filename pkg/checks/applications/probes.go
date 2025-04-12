@@ -268,12 +268,14 @@ Benefits of using probes:
 
 	// If all workloads have both probes, the check passes
 	if workloadsWithoutReadinessProbe == 0 && workloadsWithoutLivenessProbe == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			fmt.Sprintf("All %d user workloads have readiness and liveness probes configured", totalWorkloads),
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(probeDescription), nil
+		)
+		result.Detail = probeDescription
+		return result, nil
 	}
 
 	// Create result with missing probes information
@@ -328,7 +330,7 @@ Benefits of using probes:
 		strings.Join(workloadsWithoutProbesDetails, "\n"),
 		probeDescription)
 
-	result.WithDetail(detail)
+	result.Detail = detail
 
 	return result, nil
 }

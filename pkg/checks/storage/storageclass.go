@@ -83,12 +83,14 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 
 	// Check if any storage classes exist
 	if len(storageClasses.Items) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"No storage classes found",
 			healthcheck.ResultKeyRecommended,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	// Check if a default storage class is set
@@ -135,8 +137,8 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Configure a default storage class for dynamic provisioning")
 		result.AddRecommendation("Use 'oc patch storageclass <name> -p '{\"metadata\":{\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}'")
 
-		result.WithDetail(fmt.Sprintf("Available storage classes:\n%s\n\nDetailed output:\n%s",
-			strings.Join(storageClassNames, ", "), detailedOut))
+		result.Detail = fmt.Sprintf("Available storage classes:\n%s\n\nDetailed output:\n%s",
+			strings.Join(storageClassNames, ", "), detailedOut)
 
 		return result, nil
 	}
@@ -151,19 +153,21 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 		)
 
 		result.AddRecommendation("Consider adding a storage class that supports ReadWriteMany access mode for shared storage needs")
-		result.WithDetail(fmt.Sprintf("Available storage classes:\n%s\n\nDetailed output:\n%s",
-			strings.Join(storageClassNames, ", "), detailedOut))
+		result.Detail = fmt.Sprintf("Available storage classes:\n%s\n\nDetailed output:\n%s",
+			strings.Join(storageClassNames, ", "), detailedOut)
 
 		return result, nil
 	}
 
 	// All looks good
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		fmt.Sprintf("Default storage class '%s' is configured and RWX-capable storage is available", defaultStorageClass),
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(detailedOut), nil
+	)
+	result.Detail = detailedOut
+	return result, nil
 }
 
 // PersistentVolumeCheck checks persistent volume health
@@ -252,7 +256,7 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 		}
 		detail += fmt.Sprintf("Detailed output:\n%s", detailedOut)
 
-		result.WithDetail(detail)
+		result.Detail = detail
 
 		return result, nil
 	}
@@ -273,7 +277,7 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 		}
 		detail += fmt.Sprintf("Detailed output:\n%s", detailedOut)
 
-		result.WithDetail(detail)
+		result.Detail = detail
 
 		return result, nil
 	}
@@ -287,19 +291,21 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 		)
 
 		result.AddRecommendation("Consider reclaiming or deleting released volumes that are no longer needed")
-		result.WithDetail(fmt.Sprintf("Released persistent volumes:\n%s\n\nDetailed output:\n%s",
-			strings.Join(releasedPVs, "\n"), detailedOut))
+		result.Detail = fmt.Sprintf("Released persistent volumes:\n%s\n\nDetailed output:\n%s",
+			strings.Join(releasedPVs, "\n"), detailedOut)
 
 		return result, nil
 	}
 
 	// If we get here, all PVs are in a good state
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		fmt.Sprintf("All %d persistent volumes are healthy", len(pvs.Items)),
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(detailedOut), nil
+	)
+	result.Detail = detailedOut
+	return result, nil
 }
 
 // StoragePerformanceCheck assesses storage performance characteristics
@@ -354,15 +360,17 @@ func (c *StoragePerformanceCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Consider defining storage classes with different performance tiers")
 		result.AddRecommendation("Label storage classes with performance characteristics for better workload placement")
 
-		result.WithDetail(fmt.Sprintf("Storage Class Details:\n%s", detailedOut))
+		result.Detail = fmt.Sprintf("Storage Class Details:\n%s", detailedOut)
 
 		return result, nil
 	}
 
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		"Storage classes with performance characteristics are available",
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(detailedOut), nil
+	)
+	result.Detail = detailedOut
+	return result, nil
 }

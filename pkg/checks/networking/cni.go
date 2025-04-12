@@ -49,12 +49,14 @@ func (c *CNINetworkPluginCheck) Run() (healthcheck.Result, error) {
 
 	// Check if the CNI type is OVNKubernetes, which is the recommended type
 	if cniType == "OVNKubernetes" {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			fmt.Sprintf("Cluster is using the recommended CNI network plugin: %s", cniType),
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	// Create result with recommendation to use OVNKubernetes
@@ -73,7 +75,7 @@ func (c *CNINetworkPluginCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Consider using OVNKubernetes as the CNI network plugin")
 	}
 
-	result.WithDetail(detailedOut)
+	result.Detail = detailedOut
 
 	return result, nil
 }
@@ -103,12 +105,14 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 		// This might not be a critical error, as it could just mean no network policies exist
 		if strings.Contains(err.Error(), "No resources found") {
 			// No network policies found
-			return healthcheck.NewResult(
+			result := healthcheck.NewResult(
 				c.ID(),
 				healthcheck.StatusWarning,
 				"No network policies found in the cluster",
 				healthcheck.ResultKeyRecommended,
-			).WithDetail("No network policies configured"), nil
+			)
+			result.Detail = "No network policies configured"
+			return result, nil
 		}
 
 		return healthcheck.NewResult(
@@ -122,12 +126,14 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 	// Check if any network policies exist
 	lines := strings.Split(out, "\n")
 	if len(lines) <= 1 { // Only header line or empty
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"No network policies found in the cluster",
 			healthcheck.ResultKeyRecommended,
-		).WithDetail("No network policies configured"), nil
+		)
+		result.Detail = "No network policies configured"
+		return result, nil
 	}
 
 	// Count the number of network policies (excluding header line)
@@ -146,7 +152,7 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 		healthcheck.ResultKeyNoChange,
 	)
 
-	result.WithDetail(out)
+	result.Detail = out
 
 	return result, nil
 }

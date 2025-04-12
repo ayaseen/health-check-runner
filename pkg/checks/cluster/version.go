@@ -86,7 +86,7 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 
 		checkResult.AddRecommendation(fmt.Sprintf("Update to the latest version %s", c.latestVersion))
 		checkResult.AddRecommendation("Follow the upgrade documentation at https://docs.openshift.com/container-platform/latest/updating/updating-cluster.html")
-		checkResult.WithDetail(string(detailedOut))
+		checkResult.Detail = string(detailedOut)
 
 		return checkResult, nil
 	}
@@ -99,7 +99,7 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 		healthcheck.ResultKeyNoChange,
 	)
 
-	checkResult.WithDetail(string(detailedOut))
+	checkResult.Detail = string(detailedOut)
 
 	return checkResult, nil
 }

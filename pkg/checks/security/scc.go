@@ -145,12 +145,14 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 
 	// If not modified, return OK
 	if !modified {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			"Default security context constraint (restricted) has not been modified",
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	// Create result with modified SCC information
@@ -165,7 +167,7 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Instead, create custom SCCs for specific needs")
 	result.AddRecommendation("Follow the documentation at https://docs.openshift.com/container-platform/latest/authentication/managing-security-context-constraints.html")
 
-	result.WithDetail(detailedOut)
+	result.Detail = detailedOut
 
 	return result, nil
 }
@@ -276,7 +278,7 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 		strings.Join(privilegedNamespaces, "\n"),
 		privilegedPodsOut)
 
-	result.WithDetail(detail)
+	result.Detail = detail
 
 	return result, nil
 }

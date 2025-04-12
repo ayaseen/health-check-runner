@@ -275,7 +275,7 @@ Recommended alternatives:
 		strings.Join(workloadsWithEmptyDirDetails, "\n"),
 		emptyDirDescription)
 
-	result.WithDetail(detail)
+	result.Detail = detail
 
 	return result, nil
 }

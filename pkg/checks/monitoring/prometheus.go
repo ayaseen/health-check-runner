@@ -132,12 +132,14 @@ func (c *PrometheusCheck) Run() (healthcheck.Result, error) {
 
 	// Determine the status of Prometheus
 	if len(promPods.Items) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusCritical,
 			"No Prometheus pods found in the openshift-monitoring namespace",
 			healthcheck.ResultKeyRequired,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	// Check if all pods are ready
@@ -150,21 +152,25 @@ func (c *PrometheusCheck) Run() (healthcheck.Result, error) {
 	}
 
 	if !allReady {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusCritical,
 			"Not all Prometheus pods are running",
 			healthcheck.ResultKeyRequired,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	if !hasPrometheusRules {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"Prometheus is running but PrometheusRules CRD is not available",
 			healthcheck.ResultKeyRecommended,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	// Generate the result
@@ -192,10 +198,10 @@ func (c *PrometheusCheck) Run() (healthcheck.Result, error) {
 	// Add details about firing alerts if any
 	if len(firingAlerts) > 0 {
 		detail := fmt.Sprintf("Firing alerts:\n%s\n\n%s", strings.Join(firingAlerts, "\n"), detailedOut)
-		result.WithDetail(detail)
+		result.Detail = detail
 		result.AddRecommendation("Investigate the firing alerts in the Prometheus UI")
 	} else {
-		result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 	}
 
 	return result, nil
@@ -271,30 +277,36 @@ func (c *AlertManagerCheck) Run() (healthcheck.Result, error) {
 
 	// Determine the status of AlertManager
 	if len(alertManagerPods.Items) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusCritical,
 			"No AlertManager pods found in the openshift-monitoring namespace",
 			healthcheck.ResultKeyRequired,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	if !allReady {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusCritical,
 			"Not all AlertManager pods are running",
 			healthcheck.ResultKeyRequired,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	if !hasConfig {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"AlertManager is running but configuration is missing",
 			healthcheck.ResultKeyRecommended,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	if !hasReceivers {
@@ -306,17 +318,19 @@ func (c *AlertManagerCheck) Run() (healthcheck.Result, error) {
 		)
 
 		result.AddRecommendation("Configure alert receivers to ensure alerts are sent to the appropriate channels")
-		result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 
 		return result, nil
 	}
 
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		"AlertManager is running and configured correctly",
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(detailedOut), nil
+	)
+	result.Detail = detailedOut
+	return result, nil
 }
 
 // GrafanaCheck checks if Grafana is running correctly
@@ -398,12 +412,14 @@ func (c *GrafanaCheck) Run() (healthcheck.Result, error) {
 			), nil
 		}
 
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"No Grafana pods found in the openshift-monitoring namespace and console plugin not found",
 			healthcheck.ResultKeyAdvisory,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	// Check if all pods are ready
@@ -416,18 +432,22 @@ func (c *GrafanaCheck) Run() (healthcheck.Result, error) {
 	}
 
 	if !allReady {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"Not all Grafana pods are running",
 			healthcheck.ResultKeyAdvisory,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		"Grafana is running correctly",
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(detailedOut), nil
+	)
+	result.Detail = detailedOut
+	return result, nil
 }

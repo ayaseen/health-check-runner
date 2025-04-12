@@ -111,12 +111,14 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 
 	// If there are no issues, return OK result
 	if len(issues) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			"Ingress controller is properly configured",
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	// Create a result with issues and recommendations
@@ -147,7 +149,7 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation(rec)
 	}
 
-	result.WithDetail(detailedResult)
+	result.Detail = detailedResult
 
 	return result, nil
 }

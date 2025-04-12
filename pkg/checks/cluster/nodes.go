@@ -86,7 +86,7 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 			fmt.Sprintf("All %d nodes are ready", len(nodes.Items)),
 			healthcheck.ResultKeyNoChange,
 		)
-		result = result.WithDetail(detailedOut)
+		result.Detail = detailedOut
 		return result, nil
 	}
 
@@ -102,7 +102,7 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Check node logs using 'oc adm node-logs <node-name>'")
 	result.AddRecommendation("Check node diagnostics using 'oc debug node/<node-name>'")
 
-	result = result.WithDetail(detailedOut)
+	result.Detail = detailedOut
 	return result, nil
 }
 
@@ -193,7 +193,7 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 			"All nodes are within resource usage thresholds",
 			healthcheck.ResultKeyNoChange,
 		)
-		result = result.WithDetail(output)
+		result.Detail = output
 		return result, nil
 	}
 
@@ -227,7 +227,7 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 
 	result.AddRecommendation("Consider adding more nodes or optimizing workload placement")
 
-	result = result.WithDetail(output)
+	result.Detail = output
 	return result, nil
 }
 

@@ -155,12 +155,14 @@ Benefits of using Resource Quotas and Limit Ranges:
 
 	// If all namespaces have both resource quotas and limit ranges, the check passes
 	if namespacesWithBoth == totalUserNamespaces {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			fmt.Sprintf("All %d user namespaces have both resource quotas and limit ranges configured", totalUserNamespaces),
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(quotasDescription), nil
+		)
+		result.Detail = quotasDescription
+		return result, nil
 	}
 
 	// Create result based on the percentage of namespaces with resource quotas and limit ranges
@@ -218,7 +220,7 @@ Benefits of using Resource Quotas and Limit Ranges:
 		strings.Join(namespacesWithoutBoth, "\n- "),
 		quotasDescription)
 
-	result.WithDetail(detail)
+	result.Detail = detail
 
 	return result, nil
 }

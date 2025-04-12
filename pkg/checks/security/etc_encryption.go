@@ -49,12 +49,14 @@ func (c *EtcdEncryptionCheck) Run() (healthcheck.Result, error) {
 
 	// Check if encryption is enabled (aescbc or aesgcm)
 	if encryptionType == "aescbc" || encryptionType == "aesgcm" {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			fmt.Sprintf("ETCD encryption is enabled with type: %s", encryptionType),
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
 
 	// Create result with recommendation to enable encryption
@@ -68,7 +70,7 @@ func (c *EtcdEncryptionCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Enable etcd encryption to protect sensitive data")
 	result.AddRecommendation("Follow the documentation at https://docs.openshift.com/container-platform/latest/security/encrypting-etcd.html")
 
-	result.WithDetail(detailedOut)
+	result.Detail = detailedOut
 
 	return result, nil
 }
@@ -140,14 +142,16 @@ func (c *EtcdBackupCheck) Run() (healthcheck.Result, error) {
 
 	// If backup jobs are found, the check passes
 	if len(etcdBackupJobs) > 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			fmt.Sprintf("Found %d CronJobs that might be backing up etcd", len(etcdBackupJobs)),
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(fmt.Sprintf("Possible etcd backup jobs:\n%s\n\nETCD Cluster Operator status:\n%s",
+		)
+		result.Detail = fmt.Sprintf("Possible etcd backup jobs:\n%s\n\nETCD Cluster Operator status:\n%s",
 			strings.Join(etcdBackupJobs, "\n"),
-			etcdCOOut)), nil
+			etcdCOOut)
+		return result, nil
 	}
 
 	// Create result with recommendation to set up etcd backup
@@ -161,7 +165,7 @@ func (c *EtcdBackupCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Set up regular etcd backups to protect against data loss")
 	result.AddRecommendation("Follow the documentation at https://docs.openshift.com/container-platform/latest/backup_and_restore/control_plane_backup_and_restore/backing-up-etcd.html")
 
-	result.WithDetail(fmt.Sprintf("ETCD Cluster Operator status:\n%s", etcdCOOut))
+	result.Detail = fmt.Sprintf("ETCD Cluster Operator status:\n%s", etcdCOOut)
 
 	return result, nil
 }
@@ -266,16 +270,18 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 
 		// Add detailed information
 		fullDetail := fmt.Sprintf("ETCD Operator Information:\n%s\n\nETCD Pods Information:\n%s", detailedOut, etcdPodsOut)
-		result.WithDetail(fullDetail)
+		result.Detail = fullDetail
 
 		return result, nil
 	}
 
 	// If everything looks good, return OK
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		"ETCD cluster is healthy",
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(fmt.Sprintf("ETCD Operator Information:\n%s\n\nETCD Pods Information:\n%s", detailedOut, etcdPodsOut)), nil
+	)
+	result.Detail = fmt.Sprintf("ETCD Operator Information:\n%s\n\nETCD Pods Information:\n%s", detailedOut, etcdPodsOut)
+	return result, nil
 }
