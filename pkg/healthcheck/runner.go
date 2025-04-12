@@ -232,23 +232,18 @@ func (r *Runner) runCheck(ctx context.Context, check Check) (Result, error) {
 	// Wait for the check to complete or timeout
 	select {
 	case result := <-resultCh:
-		// Create a temporary variable to get a pointer for WithExecutionTime method
-		tmpResult := result
-		result = tmpResult.WithExecutionTime(time.Since(startTime))
+		// Add execution time to the result
+		result = result.WithExecutionTime(time.Since(startTime))
 		return result, nil
 
 	case err := <-errCh:
 		result := NewResult(check.ID(), StatusCritical, fmt.Sprintf("Check failed: %v", err), ResultKeyRequired)
-		// Create a temporary variable to get a pointer for WithExecutionTime method
-		tmpResult := result
-		result = tmpResult.WithExecutionTime(time.Since(startTime))
+		result = result.WithExecutionTime(time.Since(startTime))
 		return result, err
 
 	case <-ctx.Done():
 		result := NewResult(check.ID(), StatusCritical, "Check timed out", ResultKeyRequired)
-		// Create a temporary variable to get a pointer for WithExecutionTime method
-		tmpResult := result
-		result = tmpResult.WithExecutionTime(time.Since(startTime))
+		result = result.WithExecutionTime(time.Since(startTime))
 		return result, ctx.Err()
 	}
 }

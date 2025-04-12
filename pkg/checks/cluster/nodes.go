@@ -80,12 +80,14 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 	}
 
 	if len(notReadyNodes) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			fmt.Sprintf("All %d nodes are ready", len(nodes.Items)),
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
 	// Create result with not ready nodes information
@@ -100,8 +102,7 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Check node logs using 'oc adm node-logs <node-name>'")
 	result.AddRecommendation("Check node diagnostics using 'oc debug node/<node-name>'")
 
-	result.WithDetail(detailedOut)
-
+	result = result.WithDetail(detailedOut)
 	return result, nil
 }
 
@@ -173,25 +174,27 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 		// Parse CPU usage
 		cpuUsage := strings.TrimSuffix(fields[2], "%")
 		cpuUsageValue, err := parsePercentage(cpuUsage)
-		if err == nil && cpuUsageValue > c.cpuThreshold {
+		if err == nil && cpuUsageValue > float64(c.cpuThreshold) {
 			highCpuNodes = append(highCpuNodes, fmt.Sprintf("%s (%.2f%%)", nodeName, cpuUsageValue))
 		}
 
 		// Parse memory usage
 		memoryUsage := strings.TrimSuffix(fields[4], "%")
 		memoryUsageValue, err := parsePercentage(memoryUsage)
-		if err == nil && memoryUsageValue > c.memoryThreshold {
+		if err == nil && memoryUsageValue > float64(c.memoryThreshold) {
 			highMemoryNodes = append(highMemoryNodes, fmt.Sprintf("%s (%.2f%%)", nodeName, memoryUsageValue))
 		}
 	}
 
 	if len(highCpuNodes) == 0 && len(highMemoryNodes) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			"All nodes are within resource usage thresholds",
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(output), nil
+		)
+		result = result.WithDetail(output)
+		return result, nil
 	}
 
 	// Create result with high usage nodes information
@@ -224,8 +227,7 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 
 	result.AddRecommendation("Consider adding more nodes or optimizing workload placement")
 
-	result.WithDetail(output)
-
+	result = result.WithDetail(output)
 	return result, nil
 }
 

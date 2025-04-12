@@ -84,12 +84,14 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 	}
 
 	if len(schedulableControlNodes) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			"All control plane nodes are properly configured to prevent regular workloads",
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
 	// Create result with schedulable control node information
@@ -105,8 +107,7 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Add NoSchedule taints to control plane nodes using 'oc adm taint nodes <node-name> node-role.kubernetes.io/master=:NoSchedule'")
 	result.AddRecommendation("Alternatively, mark control plane nodes as unschedulable using 'oc adm cordon <node-name>'")
 
-	result.WithDetail(detailedOut)
-
+	result = result.WithDetail(detailedOut)
 	return result, nil
 }
 
@@ -162,12 +163,14 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 	}
 
 	if len(nodes.Items) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"No dedicated infrastructure nodes found",
 			healthcheck.ResultKeyRecommended,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
 	// Check if infrastructure nodes have the correct taints to prevent regular workloads
@@ -189,12 +192,14 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 	}
 
 	if len(untaintedInfraNodes) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			fmt.Sprintf("Found %d properly configured infrastructure nodes", len(nodes.Items)),
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
 	// Create result with untainted infrastructure node information
@@ -209,8 +214,7 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Infrastructure nodes should be dedicated to infrastructure components")
 	result.AddRecommendation("Add NoSchedule taints to infrastructure nodes using 'oc adm taint nodes <node-name> node-role.kubernetes.io/infra=:NoSchedule'")
 
-	result.WithDetail(detailedOut)
-
+	result = result.WithDetail(detailedOut)
 	return result, nil
 }
 
@@ -285,20 +289,24 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 	}
 
 	if strings.TrimSpace(degradedOut) == "True" {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"Infrastructure machine config pool is degraded",
 			healthcheck.ResultKeyRequired,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		"Dedicated infrastructure machine config pool is properly configured",
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(detailedOut), nil
+	)
+	result = result.WithDetail(detailedOut)
+	return result, nil
 }
 
 // WorkloadOffInfraNodesCheck checks if workloads are scheduled on infrastructure nodes
@@ -417,12 +425,14 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 
 	// If no user workloads are running on infrastructure nodes, the check passes
 	if len(podsOnInfraNodes) == 0 {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			"No user workloads are running on infrastructure nodes",
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
 	// Create result with workloads on infrastructure nodes information
@@ -442,8 +452,7 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 		strings.Join(podsOnInfraNodes, "\n"),
 		detailedOut)
 
-	result.WithDetail(detail)
-
+	result = result.WithDetail(detail)
 	return result, nil
 }
 
@@ -487,31 +496,37 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 
 	templateName := strings.TrimSpace(out)
 	if templateName == "" {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"No custom default project template is configured",
 			healthcheck.ResultKeyRecommended,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
 	// Check if the template exists
 	templateOut, err := utils.RunCommand("oc", "get", "template", templateName, "-n", "openshift-config")
 	if err != nil {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			fmt.Sprintf("Default project template '%s' is configured but not found", templateName),
 			healthcheck.ResultKeyRequired,
-		).WithDetail(fmt.Sprintf("%s\n\n%s", detailedOut, err.Error())), nil
+		)
+		result = result.WithDetail(fmt.Sprintf("%s\n\n%s", detailedOut, err.Error()))
+		return result, nil
 	}
 
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		fmt.Sprintf("Custom default project template '%s' is configured", templateName),
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(fmt.Sprintf("%s\n\nTemplate:\n%s", detailedOut, templateOut)), nil
+	)
+	result = result.WithDetail(fmt.Sprintf("%s\n\nTemplate:\n%s", detailedOut, templateOut))
+	return result, nil
 }
 
 // DefaultNodeSelectorCheck checks if a default node selector is configured
@@ -554,20 +569,24 @@ func (c *DefaultNodeSelectorCheck) Run() (healthcheck.Result, error) {
 
 	nodeSelector := strings.TrimSpace(out)
 	if nodeSelector == "" {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusWarning,
 			"No default node selector is configured",
 			healthcheck.ResultKeyRecommended,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		fmt.Sprintf("Default node selector is configured: %s", nodeSelector),
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(detailedOut), nil
+	)
+	result = result.WithDetail(detailedOut)
+	return result, nil
 }
 
 // KubeadminUserCheck checks if the kubeadmin user still exists
@@ -612,12 +631,14 @@ func (c *KubeadminUserCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// If we got here, the kubeadmin secret exists
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusWarning,
 		"The kubeadmin user still exists and should be removed for security reasons",
 		healthcheck.ResultKeyRecommended,
-	).WithDetail(out), nil
+	)
+	result = result.WithDetail(out)
+	return result, nil
 }
 
 // InfrastructureProviderCheck checks the infrastructure provider configuration
@@ -660,20 +681,24 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 
 	providerType := strings.TrimSpace(out)
 	if providerType == "" {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusCritical,
 			"No infrastructure provider type detected",
 			healthcheck.ResultKeyRequired,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		fmt.Sprintf("Infrastructure provider type: %s", providerType),
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(detailedOut), nil
+	)
+	result = result.WithDetail(detailedOut)
+	return result, nil
 }
 
 // InstallationTypeCheck checks the installation type of OpenShift
@@ -716,12 +741,14 @@ func (c *InstallationTypeCheck) Run() (healthcheck.Result, error) {
 
 	infrastructureName := strings.TrimSpace(out)
 	if infrastructureName == "" {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusCritical,
 			"No infrastructure name detected",
 			healthcheck.ResultKeyRequired,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
 	// Try to determine the installation type from the infrastructure name
@@ -734,10 +761,12 @@ func (c *InstallationTypeCheck) Run() (healthcheck.Result, error) {
 		installationType = "Unknown"
 	}
 
-	return healthcheck.NewResult(
+	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusOK,
 		fmt.Sprintf("Installation type: %s", installationType),
 		healthcheck.ResultKeyNoChange,
-	).WithDetail(fmt.Sprintf("Infrastructure Name: %s\n\n%s", infrastructureName, detailedOut)), nil
+	)
+	result = result.WithDetail(fmt.Sprintf("Infrastructure Name: %s\n\n%s", infrastructureName, detailedOut))
+	return result, nil
 }

@@ -187,12 +187,14 @@ func (r *Result) AddMetadata(key, value string) {
 
 // WithDetail adds detailed information to the result
 func (r *Result) WithDetail(detail string) Result {
-	r.Detail = detail
-	return *r
+	result := *r // Create a copy
+	result.Detail = detail
+	return result
 }
 
 // WithExecutionTime sets the execution time for the result
 func (r *Result) WithExecutionTime(duration time.Duration) Result {
-	r.ExecutionTime = duration
-	return *r
+	result := *r // Create a copy
+	result.ExecutionTime = duration
+	return result
 }

@@ -94,12 +94,14 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 	}
 
 	if allAvailable {
-		return healthcheck.NewResult(
+		result := healthcheck.NewResult(
 			c.ID(),
 			healthcheck.StatusOK,
 			"All cluster operators are available",
 			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
+		)
+		result = result.WithDetail(detailedOut)
+		return result, nil
 	}
 
 	// Create result with unavailable operators information
@@ -114,7 +116,6 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Check operator logs using 'oc logs deployment/<operator-name> -n <operator-namespace>'")
 	result.AddRecommendation("Consult the OpenShift documentation or Red Hat support")
 
-	result.WithDetail(detailedOut)
-
+	result = result.WithDetail(detailedOut)
 	return result, nil
 }
