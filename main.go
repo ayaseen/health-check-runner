@@ -16,7 +16,7 @@ The purpose of this application is to provide administrators and developers with
 package main
 
 import (
-	"gitlab.consulting.redhat.com/meta/health-check-runner/cmd"
+	"github.com/ayaseen/health-check-runner/cmd"
 )
 
 func main() {

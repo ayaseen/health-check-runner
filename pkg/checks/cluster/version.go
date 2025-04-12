@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 )
 
 // ClusterVersionCheck checks if the cluster is running the latest version

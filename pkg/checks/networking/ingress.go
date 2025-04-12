@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/healthcheck"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/utils"
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
 // IngressControllerCheck checks the ingress controller configuration

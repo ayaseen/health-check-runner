@@ -1,13 +1,13 @@
 package checks
 
 import (
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/checks/applications"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/checks/cluster"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/checks/monitoring"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/checks/networking"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/checks/security"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/checks/storage"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/checks/applications"
+	"github.com/ayaseen/health-check-runner/pkg/checks/cluster"
+	"github.com/ayaseen/health-check-runner/pkg/checks/monitoring"
+	"github.com/ayaseen/health-check-runner/pkg/checks/networking"
+	"github.com/ayaseen/health-check-runner/pkg/checks/security"
+	"github.com/ayaseen/health-check-runner/pkg/checks/storage"
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 )
 
 // GetOpenShiftChecks returns all OpenShift-specific health checks

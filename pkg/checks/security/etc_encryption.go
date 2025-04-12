@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/healthcheck"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/utils"
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
 // EtcdEncryptionCheck checks if etcd encryption is enabled

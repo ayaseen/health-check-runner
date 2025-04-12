@@ -20,8 +20,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/health-check-runner/pkg/checks"
-	"github.com/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/checks"
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 	"github.com/spf13/cobra"
 )
 

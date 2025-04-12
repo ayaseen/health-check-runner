@@ -8,8 +8,8 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/healthcheck"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/utils"
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
 // ProbesCheck checks if applications have readiness and liveness probes configured

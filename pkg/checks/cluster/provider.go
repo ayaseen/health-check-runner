@@ -1,7 +1,7 @@
 package cluster
 
 import (
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 )
 
 // GetChecks returns all cluster-related health checks

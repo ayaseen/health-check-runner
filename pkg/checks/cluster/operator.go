@@ -9,8 +9,8 @@ import (
 	"github.com/openshift/client-go/config/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/healthcheck"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/utils"
+	"github.com/health-check-runner/pkg/healthcheck"
+	"github.com/health-check-runner/pkg/utils"
 )
 
 // ClusterOperatorsCheck checks if all cluster operators are available

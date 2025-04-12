@@ -9,8 +9,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/healthcheck"
-	"gitlab.consulting.redhat.com/meta/health-check-runner/pkg/utils"
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
 const (
