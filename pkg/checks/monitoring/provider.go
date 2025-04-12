@@ -8,12 +8,14 @@ import (
 func GetChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Add monitoring-related checks here
-	// In a real implementation, there would be actual monitoring checks
-	// For example:
-	// checks = append(checks, NewPrometheusCheck())
-	// checks = append(checks, NewAlertManagerCheck())
-	// checks = append(checks, NewGrafanaCheck())
+	// Add Prometheus check
+	checks = append(checks, NewPrometheusCheck())
+
+	// Add AlertManager check
+	checks = append(checks, NewAlertManagerCheck())
+
+	// Add Grafana check
+	checks = append(checks, NewGrafanaCheck())
 
 	return checks
 }

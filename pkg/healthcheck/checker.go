@@ -186,13 +186,13 @@ func (r *Result) AddMetadata(key, value string) {
 }
 
 // WithDetail adds detailed information to the result
-func (r *Result) WithDetail(detail string) *Result {
+func (r *Result) WithDetail(detail string) Result {
 	r.Detail = detail
-	return r
+	return *r
 }
 
 // WithExecutionTime sets the execution time for the result
-func (r *Result) WithExecutionTime(duration time.Duration) *Result {
+func (r *Result) WithExecutionTime(duration time.Duration) Result {
 	r.ExecutionTime = duration
-	return r
+	return *r
 }

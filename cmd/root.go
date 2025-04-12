@@ -157,17 +157,18 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&failFast, "fail-fast", false, "Stop on first critical failure")
 }
 
-// validateFlags validates the command line flags
+// validateFlags validates the command line flags with improved validation
 func validateFlags() error {
 	// Validate check type
 	validCheckTypes := map[string]bool{
 		"openshift":   true,
 		"application": true,
+		"storage":     true,
 		"all":         true,
 	}
 
 	if !validCheckTypes[checkType] {
-		return fmt.Errorf("invalid check type: %s (must be one of: openshift, application, all)", checkType)
+		return fmt.Errorf("invalid check type: %s (must be one of: openshift, application, storage, all)", checkType)
 	}
 
 	// Validate report format
@@ -187,10 +188,32 @@ func validateFlags() error {
 		return fmt.Errorf("timeout must be greater than or equal to 0")
 	}
 
+	// Validate category filters
+	validCategories := map[string]bool{
+		"Cluster":        true,
+		"Security":       true,
+		"Networking":     true,
+		"Storage":        true,
+		"Applications":   true,
+		"Monitoring":     true,
+		"Infrastructure": true,
+	}
+
+	for _, category := range categoryFilter {
+		if !validCategories[category] {
+			return fmt.Errorf("invalid category: %s (must be one of: Cluster, Security, Networking, Storage, Applications, Monitoring, Infrastructure)", category)
+		}
+	}
+
+	// Validate output directory
+	if outputDir == "" {
+		return fmt.Errorf("output directory cannot be empty")
+	}
+
 	return nil
 }
 
-// printSummary prints a summary of the health check results
+// printSummary prints a summary of the health check results with improved formatting
 func printSummary(runner *healthcheck.Runner) {
 	counts := runner.CountByStatus()
 
@@ -203,38 +226,93 @@ func printSummary(runner *healthcheck.Runner) {
 	}
 
 	fmt.Printf("Total checks: %d\n", totalChecks)
-	fmt.Printf("OK: %d\n", counts[healthcheck.StatusOK])
-	fmt.Printf("Warning: %d\n", counts[healthcheck.StatusWarning])
-	fmt.Printf("Critical: %d\n", counts[healthcheck.StatusCritical])
-	fmt.Printf("Unknown: %d\n", counts[healthcheck.StatusUnknown])
-	fmt.Printf("Not Applicable: %d\n", counts[healthcheck.StatusNotApplicable])
 
-	if counts[healthcheck.StatusWarning] > 0 || counts[healthcheck.StatusCritical] > 0 {
+	// Print statuses in a consistent order
+	statuses := []healthcheck.Status{
+		healthcheck.StatusOK,
+		healthcheck.StatusWarning,
+		healthcheck.StatusCritical,
+		healthcheck.StatusUnknown,
+		healthcheck.StatusNotApplicable,
+	}
+
+	for _, status := range statuses {
+		count, exists := counts[status]
+		if exists {
+			// Add color to the output if it's a terminal
+			switch status {
+			case healthcheck.StatusOK:
+				fmt.Printf("\033[32mOK\033[0m: %d\n", count)
+			case healthcheck.StatusWarning:
+				fmt.Printf("\033[33mWarning\033[0m: %d\n", count)
+			case healthcheck.StatusCritical:
+				fmt.Printf("\033[31mCritical\033[0m: %d\n", count)
+			case healthcheck.StatusUnknown:
+				fmt.Printf("\033[37mUnknown\033[0m: %d\n", count)
+			case healthcheck.StatusNotApplicable:
+				fmt.Printf("Not Applicable: %d\n", count)
+			}
+		}
+	}
+
+	// Check for issues to report
+	warningResults := runner.GetResultsByStatus()[healthcheck.StatusWarning]
+	criticalResults := runner.GetResultsByStatus()[healthcheck.StatusCritical]
+
+	if len(warningResults) > 0 || len(criticalResults) > 0 {
 		fmt.Println("\nIssues found:")
 
-		for _, status := range []healthcheck.Status{healthcheck.StatusCritical, healthcheck.StatusWarning} {
-			results := runner.GetResultsByStatus()[status]
-
-			for _, result := range results {
+		// Print critical issues first
+		if len(criticalResults) > 0 {
+			fmt.Println("\nCritical issues:")
+			for _, result := range criticalResults {
 				// Find the check name
 				var checkName string
-				for _, check := range runner.GetResults() {
-					if check.CheckID == result.CheckID {
-						// Search for the check in the runner
-						for _, c := range runner.(*healthcheck.Runner).GetChecks() {
-							if c.ID() == result.CheckID {
-								checkName = c.Name()
-								break
-							}
-						}
+				for _, check := range runner.GetChecks() {
+					if check.ID() == result.CheckID {
+						checkName = check.Name()
 						break
 					}
 				}
+				fmt.Printf("\033[31m[Critical]\033[0m %s: %s\n", checkName, result.Message)
 
-				fmt.Printf("[%s] %s: %s\n", status, checkName, result.Message)
+				// Print recommendations for critical issues
+				if len(result.Recommendations) > 0 {
+					fmt.Println("  Recommendations:")
+					for _, rec := range result.Recommendations {
+						fmt.Printf("  - %s\n", rec)
+					}
+				}
+			}
+		}
+
+		// Then print warnings
+		if len(warningResults) > 0 {
+			fmt.Println("\nWarnings:")
+			for _, result := range warningResults {
+				// Find the check name
+				var checkName string
+				for _, check := range runner.GetChecks() {
+					if check.ID() == result.CheckID {
+						checkName = check.Name()
+						break
+					}
+				}
+				fmt.Printf("\033[33m[Warning]\033[0m %s: %s\n", checkName, result.Message)
+
+				// Print recommendations for warning issues
+				if len(result.Recommendations) > 0 {
+					fmt.Println("  Recommendations:")
+					for _, rec := range result.Recommendations {
+						fmt.Printf("  - %s\n", rec)
+					}
+				}
 			}
 		}
 	} else {
-		fmt.Println("\nNo issues found.")
+		fmt.Println("\n\033[32mNo issues found.\033[0m")
 	}
+
+	// Print report location
+	fmt.Printf("\nFor more details, refer to the generated report.\n")
 }

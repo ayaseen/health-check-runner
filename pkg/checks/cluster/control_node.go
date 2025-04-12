@@ -535,7 +535,7 @@ func NewDefaultNodeSelectorCheck() *DefaultNodeSelectorCheck {
 func (c *DefaultNodeSelectorCheck) Run() (healthcheck.Result, error) {
 	// Check if a default node selector is configured
 	out, err := utils.RunCommand("oc", "get", "scheduler", "cluster",
-		"-o", "jsonpath={.spec.defaultNodeSelector}")
+		"-o", `jsonpath={.spec.defaultNodeSelector}`)
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
@@ -568,86 +568,6 @@ func (c *DefaultNodeSelectorCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("Default node selector is configured: %s", nodeSelector),
 		healthcheck.ResultKeyNoChange,
 	).WithDetail(detailedOut), nil
-}
-
-// ClusterDefaultSCCCheck checks if the default security context constraint has been modified
-type ClusterDefaultSCCCheck struct {
-	healthcheck.BaseCheck
-}
-
-// NewClusterDefaultSCCCheck creates a new default SCC check
-func NewClusterDefaultSCCCheck() *ClusterDefaultSCCCheck {
-	return &ClusterDefaultSCCCheck{
-		BaseCheck: healthcheck.NewBaseCheck(
-			"cluster-default-scc",
-			"Default Security Context Constraint",
-			"Checks if the default security context constraint has been modified",
-			healthcheck.CategoryCluster,
-		),
-	}
-}
-
-// Run executes the health check
-func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
-	// Get detailed information about the default SCC
-	detailedOut, err := utils.RunCommand("oc", "get", "scc", "restricted", "-o", "yaml")
-	if err != nil {
-		return healthcheck.NewResult(
-			c.ID(),
-			healthcheck.StatusCritical,
-			"Failed to retrieve restricted SCC",
-			healthcheck.ResultKeyRequired,
-		), fmt.Errorf("error retrieving restricted SCC: %v", err)
-	}
-
-	// This check would normally perform a more complex analysis of the SCC
-	// For now, we'll just look for key indicators that the SCC has been modified
-	indicators := []string{
-		"allowHostDirVolumePlugin: true",
-		"allowHostIPC: true",
-		"allowHostNetwork: true",
-		"allowHostPID: true",
-		"allowHostPorts: true",
-		"allowPrivilegedContainer: true",
-	}
-
-	modified := false
-	var modifiedFields []string
-
-	for _, indicator := range indicators {
-		if strings.Contains(detailedOut, indicator) {
-			modified = true
-			parts := strings.Split(indicator, ":")
-			if len(parts) > 0 {
-				modifiedFields = append(modifiedFields, strings.TrimSpace(parts[0]))
-			}
-		}
-	}
-
-	if !modified {
-		return healthcheck.NewResult(
-			c.ID(),
-			healthcheck.StatusOK,
-			"Default security context constraint (restricted) has not been significantly modified",
-			healthcheck.ResultKeyNoChange,
-		).WithDetail(detailedOut), nil
-	}
-
-	result := healthcheck.NewResult(
-		c.ID(),
-		healthcheck.StatusWarning,
-		fmt.Sprintf("Default security context constraint (restricted) has been modified: %s",
-			strings.Join(modifiedFields, ", ")),
-		healthcheck.ResultKeyRecommended,
-	)
-
-	result.AddRecommendation("Do not modify the default SCCs, as they may be reset during cluster upgrades")
-	result.AddRecommendation("Instead, create custom SCCs for specific needs")
-	result.AddRecommendation("Follow the documentation at https://docs.openshift.com/container-platform/latest/authentication/managing-security-context-constraints.html")
-
-	result.WithDetail(detailedOut)
-
-	return result, nil
 }
 
 // KubeadminUserCheck checks if the kubeadmin user still exists

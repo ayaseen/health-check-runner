@@ -1,13 +1,24 @@
 package cluster
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 )
 
 // GetChecks returns all cluster-related health checks
 func GetChecks() []healthcheck.Check {
 	// Retrieve the latest OpenShift version
-	latestVersion := getLatestOpenShiftVersion()
+	latestVersion, err := getLatestOpenShiftVersion()
+	if err != nil {
+		// Fall back to a hardcoded version if there's an error
+		latestVersion = "4.14.0"
+	}
 
 	var checks []healthcheck.Check
 
@@ -32,8 +43,7 @@ func GetChecks() []healthcheck.Check {
 	// Add infrastructure machine config pool check
 	checks = append(checks, NewInfraMachineConfigPoolCheck())
 
-	// Add cluster default SCC check
-	checks = append(checks, NewClusterDefaultSCCCheck())
+	// Cluster default SCC check moved to security package
 
 	// Add infrastructure provider check
 	checks = append(checks, NewInfrastructureProviderCheck())
@@ -56,9 +66,50 @@ func GetChecks() []healthcheck.Check {
 	return checks
 }
 
-// getLatestOpenShiftVersion returns the latest OpenShift version
-func getLatestOpenShiftVersion() string {
-	// This would ideally check the Red Hat site for the latest version
-	// For now, we'll return a hardcoded version
-	return "4.14.0"
+// VersionInfo represents the version information from the Red Hat API
+type VersionInfo struct {
+	LatestReleases struct {
+		Stable string `json:"stable"`
+	} `json:"latest_releases"`
+}
+
+// getLatestOpenShiftVersion attempts to get the latest OpenShift version from Red Hat
+func getLatestOpenShiftVersion() (string, error) {
+	// Define API URL
+	apiUrl := "https://api.openshift.com/api/upgrades_info/v1/graph"
+
+	// Create a client with timeout
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	// Make the request
+	resp, err := client.Get(apiUrl)
+	if err != nil {
+		return "", fmt.Errorf("failed to get latest version: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	// Parse the JSON response
+	var versionInfo VersionInfo
+	if err := json.Unmarshal(body, &versionInfo); err != nil {
+		return "", fmt.Errorf("failed to parse version info: %v", err)
+	}
+
+	// Extract and validate the version
+	version := versionInfo.LatestReleases.Stable
+	if version == "" {
+		return "", fmt.Errorf("empty version received from API")
+	}
+
+	// Clean the version string (remove leading 'v' if present)
+	version = strings.TrimPrefix(version, "v")
+
+	return version, nil
 }

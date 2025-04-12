@@ -63,6 +63,11 @@ func (r *Runner) AddChecks(checks []Check) {
 	}
 }
 
+// GetChecks returns all registered health checks
+func (r *Runner) GetChecks() []Check {
+	return r.checks
+}
+
 // Run executes all registered health checks
 func (r *Runner) Run() error {
 	if len(r.checks) == 0 {
@@ -143,6 +148,11 @@ func (r *Runner) runSequential(checks []Check) {
 		r.results[check.ID()] = result
 		r.mu.Unlock()
 
+		// Print verbose output if enabled
+		if r.config.VerboseOutput {
+			fmt.Printf("[%s] %s: %s\n", result.Status, check.Name(), result.Message)
+		}
+
 		// Increment progress bar if enabled
 		if !r.config.SkipProgressBar && r.progressBar != nil {
 			_ = r.progressBar.Add(1)
@@ -185,6 +195,11 @@ func (r *Runner) runParallel(checks []Check) {
 			r.results[c.ID()] = result
 			r.mu.Unlock()
 
+			// Print verbose output if enabled
+			if r.config.VerboseOutput {
+				fmt.Printf("[%s] %s: %s\n", result.Status, c.Name(), result.Message)
+			}
+
 			// Increment progress bar if enabled
 			if !r.config.SkipProgressBar && r.progressBar != nil {
 				_ = r.progressBar.Add(1)
@@ -217,17 +232,23 @@ func (r *Runner) runCheck(ctx context.Context, check Check) (Result, error) {
 	// Wait for the check to complete or timeout
 	select {
 	case result := <-resultCh:
-		result.WithExecutionTime(time.Since(startTime))
+		// Create a temporary variable to get a pointer for WithExecutionTime method
+		tmpResult := result
+		result = tmpResult.WithExecutionTime(time.Since(startTime))
 		return result, nil
 
 	case err := <-errCh:
 		result := NewResult(check.ID(), StatusCritical, fmt.Sprintf("Check failed: %v", err), ResultKeyRequired)
-		result.WithExecutionTime(time.Since(startTime))
+		// Create a temporary variable to get a pointer for WithExecutionTime method
+		tmpResult := result
+		result = tmpResult.WithExecutionTime(time.Since(startTime))
 		return result, err
 
 	case <-ctx.Done():
 		result := NewResult(check.ID(), StatusCritical, "Check timed out", ResultKeyRequired)
-		result.WithExecutionTime(time.Since(startTime))
+		// Create a temporary variable to get a pointer for WithExecutionTime method
+		tmpResult := result
+		result = tmpResult.WithExecutionTime(time.Since(startTime))
 		return result, ctx.Err()
 	}
 }

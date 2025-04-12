@@ -2,7 +2,9 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,6 +14,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/yaml"
 )
 
 // GetClusterConfig returns the Kubernetes client configuration
@@ -28,6 +31,11 @@ func GetClusterConfig() (*rest.Config, error) {
 				return nil, fmt.Errorf("failed to get user home directory: %v", err)
 			}
 			kubeconfig = filepath.Join(home, ".kube", "config")
+		}
+
+		// Check if the kubeconfig file exists
+		if !FileExists(kubeconfig) {
+			return nil, fmt.Errorf("kubeconfig file not found at %s", kubeconfig)
 		}
 
 		// Build config from kubeconfig file
@@ -64,7 +72,8 @@ func RunCommand(name string, args ...string) (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("command failed: %v, stderr: %s", err, stderr.String())
+		return "", fmt.Errorf("command '%s %s' failed: %v, stderr: %s",
+			name, strings.Join(args, " "), err, stderr.String())
 	}
 
 	return stdout.String(), nil
@@ -72,48 +81,30 @@ func RunCommand(name string, args ...string) (string, error) {
 
 // RunCommandWithTimeout executes a command with a timeout and returns its output
 func RunCommandWithTimeout(timeout int, name string, args ...string) (string, error) {
-	// Create command
-	cmd := exec.Command(name, args...)
+	// Create a context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	// Create command with context
+	cmd := exec.CommandContext(ctx, name, args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	// Create a channel to signal command completion
-	done := make(chan error, 1)
+	// Run the command
+	err := cmd.Run()
 
-	// Start the command
-	err := cmd.Start()
-	if err != nil {
-		return "", fmt.Errorf("failed to start command: %v", err)
-	}
-
-	// Wait for the command in a goroutine
-	go func() {
-		done <- cmd.Wait()
-	}()
-
-	// Create a timer for timeout
-	timer := make(chan bool, 1)
-	if timeout > 0 {
-		go func() {
-			time.Sleep(time.Duration(timeout) * time.Second)
-			timer <- true
-		}()
-	}
-
-	// Wait for either command completion or timeout
-	select {
-	case <-timer:
-		// Timeout occurred, kill the command
-		cmd.Process.Kill()
+	// Check if the context deadline exceeded
+	if ctx.Err() == context.DeadlineExceeded {
 		return "", fmt.Errorf("command timed out after %d seconds", timeout)
-	case err := <-done:
-		// Command completed
-		if err != nil {
-			return "", fmt.Errorf("command failed: %v, stderr: %s", err, stderr.String())
-		}
-		return stdout.String(), nil
 	}
+
+	if err != nil {
+		return "", fmt.Errorf("command '%s %s' failed: %v, stderr: %s",
+			name, strings.Join(args, " "), err, stderr.String())
+	}
+
+	return stdout.String(), nil
 }
 
 // FileExists checks if a file exists
@@ -150,8 +141,11 @@ func IsOCCommandAvailable() bool {
 
 // IsAuthenticatedToCluster checks if authentication to the cluster is working
 func IsAuthenticatedToCluster() bool {
-	_, err := RunCommand("oc", "whoami")
-	return err == nil
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "oc", "whoami")
+	return cmd.Run() == nil
 }
 
 // GetOpenShiftVersion returns the OpenShift version
@@ -184,9 +178,74 @@ func GetOpenShiftMajorMinorVersion() (string, error) {
 	return fmt.Sprintf("%s.%s", parts[0], parts[1]), nil
 }
 
+// ParseYAML parses YAML data into the given object
+func ParseYAML(data []byte, obj interface{}) error {
+	return yaml.Unmarshal(data, obj)
+}
+
+// RunCommandWithInput runs a command with the given input on stdin
+func RunCommandWithInput(input string, name string, args ...string) (string, error) {
+	cmd := exec.Command(name, args...)
+
+	// Set up pipes
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return "", fmt.Errorf("failed to create stdin pipe: %v", err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	// Start the command
+	if err := cmd.Start(); err != nil {
+		return "", fmt.Errorf("failed to start command: %v", err)
+	}
+
+	// Write input to stdin
+	_, err = io.WriteString(stdin, input)
+	if err != nil {
+		return "", fmt.Errorf("failed to write to stdin: %v", err)
+	}
+	stdin.Close()
+
+	// Wait for the command to complete
+	if err := cmd.Wait(); err != nil {
+		return "", fmt.Errorf("command failed: %v, stderr: %s", err, stderr.String())
+	}
+
+	return stdout.String(), nil
+}
+
 // CompressDirectory compresses a directory to a zip file
 func CompressDirectory(sourcePath, destPath string, password string) error {
-	// Implementation would go here
-	// This is a placeholder for now
-	return nil
+	// This would require a more complex implementation with a zip library
+	// For now, we'll implement a simplified version using external commands
+	if password != "" {
+		// With password requires additional libraries
+		return fmt.Errorf("password-protected zip not implemented")
+	}
+
+	// Check if source directory exists
+	if !DirExists(sourcePath) {
+		return fmt.Errorf("source directory %s does not exist", sourcePath)
+	}
+
+	// Ensure parent directory of destination exists
+	destDir := filepath.Dir(destPath)
+	if err := CreateDirIfNotExists(destDir); err != nil {
+		return fmt.Errorf("failed to create destination directory: %v", err)
+	}
+
+	// Use the zip command if available
+	_, err := exec.LookPath("zip")
+	if err == nil {
+		_, err := RunCommand("zip", "-r", destPath, ".")
+		if err != nil {
+			return fmt.Errorf("failed to create zip archive: %v", err)
+		}
+		return nil
+	}
+
+	return fmt.Errorf("zip command not available, compression not implemented")
 }
