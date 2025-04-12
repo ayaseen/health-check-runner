@@ -279,24 +279,3 @@ Recommended alternatives:
 
 	return result, nil
 }
-
-// isSystemPod checks if a pod is a system component based on its labels
-func isSystemPod(labels map[string]string) bool {
-	// Check if the pod has certain labels that indicate it's a system component
-	if _, ok := labels["app.kubernetes.io/part-of"]; ok {
-		if labels["app.kubernetes.io/part-of"] == "openshift" {
-			return true
-		}
-	}
-
-	// Check for other common system component labels
-	if _, ok := labels["app"]; ok {
-		if strings.Contains(labels["app"], "operator") ||
-			strings.Contains(labels["app"], "controller") ||
-			strings.Contains(labels["app"], "webhook") {
-			return true
-		}
-	}
-
-	return false
-}

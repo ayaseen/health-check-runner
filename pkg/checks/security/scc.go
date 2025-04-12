@@ -283,8 +283,8 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 	return result, nil
 }
 
-// GetChecks returns all security-related health checks
-func GetChecks() []healthcheck.Check {
+// GetSecurityChecks returns security-related health checks (renamed from GetChecks)
+func GetSecurityChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
 	// Add default SCC check

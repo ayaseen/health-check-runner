@@ -8,14 +8,16 @@ import (
 func GetChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Add Prometheus check
-	checks = append(checks, NewPrometheusCheck())
+	// Add monitoring stack checks
+	checks = append(checks, NewMonitoringStorageCheck())
+	checks = append(checks, NewUserWorkloadMonitoringCheck())
 
-	// Add AlertManager check
-	checks = append(checks, NewAlertManagerCheck())
-
-	// Add Grafana check
-	checks = append(checks, NewGrafanaCheck())
+	// Add logging checks
+	checks = append(checks, NewLoggingInstallCheck())
+	checks = append(checks, NewLoggingHealthCheck())
+	checks = append(checks, NewLoggingStorageCheck())
+	checks = append(checks, NewLoggingForwarderCheck())
+	checks = append(checks, NewLoggingPlacementCheck())
 
 	return checks
 }

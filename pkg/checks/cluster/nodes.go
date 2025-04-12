@@ -199,7 +199,7 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 
 	// Create result with high usage nodes information
 	var message string
-	resultKey := healthcheck.ResultKeyWarning
+	resultKey := healthcheck.ResultKeyAdvisory
 
 	if len(highCpuNodes) > 0 && len(highMemoryNodes) > 0 {
 		message = fmt.Sprintf("%d nodes with high CPU usage and %d nodes with high memory usage",
