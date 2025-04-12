@@ -3,13 +3,9 @@ package cluster
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // InfrastructureNodesCheck checks if dedicated infrastructure nodes are configured

@@ -37,31 +37,24 @@ func GetChecks() []healthcheck.Check {
 	// Add control node schedulable check
 	checks = append(checks, NewControlNodeSchedulableCheck())
 
-	// Add infrastructure nodes check
+	// Add infrastructure nodes check - from infra_nodes.go
 	checks = append(checks, NewInfrastructureNodesCheck())
 
-	// Add infrastructure machine config pool check
+	// Add infrastructure machine config pool check - from infra_config_pool.go
 	checks = append(checks, NewInfraMachineConfigPoolCheck())
 
 	// Cluster default SCC check moved to security package
 
-	// Add infrastructure provider check
+	// Add infrastructure provider check - from infrastructure_provider.go
 	checks = append(checks, NewInfrastructureProviderCheck())
 
 	// Add installation type check
 	checks = append(checks, NewInstallationTypeCheck())
 
-	// Add default project template check
-	checks = append(checks, NewDefaultProjectTemplateCheck())
-
-	// Add default node selector check
-	checks = append(checks, NewDefaultNodeSelectorCheck())
-
-	// Add kubeadmin user check
-	checks = append(checks, NewKubeadminUserCheck())
-
 	// Add workload off infra nodes check
 	checks = append(checks, NewWorkloadOffInfraNodesCheck())
+
+	// Note: DefaultProjectTemplateCheck and KubeadminUserCheck moved to security package
 
 	return checks
 }

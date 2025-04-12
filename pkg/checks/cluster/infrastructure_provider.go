@@ -49,11 +49,7 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed infrastructure configuration"
 	}
 
-	// Get OpenShift version for documentation links
-	version, verErr := utils.GetOpenShiftMajorMinorVersion()
-	if verErr != nil {
-		version = "4.10" // Default to a known version if we can't determine
-	}
+	// Removed the unused variable 'version' that was retrieved here
 
 	providerType := strings.TrimSpace(out)
 	if providerType == "" {

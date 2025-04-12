@@ -167,8 +167,5 @@ func GetNetworkingChecks() []healthcheck.Check {
 	// Add network policy check
 	checks = append(checks, NewNetworkPolicyCheck())
 
-	// Add other networking checks here
-	checks = append(checks, NewIngressControllerCheck())
-
 	return checks
 }

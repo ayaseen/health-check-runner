@@ -14,10 +14,10 @@ func GetChecks() []healthcheck.Check {
 	// Add privileged containers check - our new implementation with different name
 	checks = append(checks, NewPrivilegedContainersCheck())
 
-	// Add default project template check
+	// Add default project template check - moved from cluster package
 	checks = append(checks, NewDefaultProjectTemplateCheck())
 
-	// Add kubeadmin user check
+	// Add kubeadmin user check - moved from cluster package
 	checks = append(checks, NewKubeadminUserCheck())
 
 	return checks
