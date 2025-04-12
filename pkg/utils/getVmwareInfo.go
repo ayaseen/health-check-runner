@@ -3,14 +3,14 @@ Author: Amjad Yaseen
 Email: ayaseen@redhat.com
 Date: 2023-03-06
 
-This application performs health checks on OpenShift to provide visibility into various functionalities. It verifies the following aspects:
+This applications performs health checks on OpenShift to provide visibility into various functionalities. It verifies the following aspects:
 
 - OpenShift configurations: Verify OpenShift configuration meets the standard and best practices.
 - Security: It examines the security measures in place, such as authentication and authorization configurations.
 - Application Probes: It tests the health and readiness probes of deployed applications to ensure they are functioning correctly.
 - Resource Usage: It monitors resource consumption of OpenShift clusters, including CPU, memory, and storage.
 
-The purpose of this application is to provide administrators and developers with an overview of OpenShift's health and functionality, helping them identify potential issues and ensure the smooth operation of their OpenShift environment.
+The purpose of this applications is to provide administrators and developers with an overview of OpenShift's health and functionality, helping them identify potential issues and ensure the smooth operation of their OpenShift environment.
 */
 
 package utils
@@ -101,7 +101,7 @@ func GetCredentials() (string, string, error) {
 
 func GetServer() (string, error) {
 	// Run the 'oc' command to retrieve the ConfigMap in YAML format
-	cmd := exec.Command("oc", "get", "configmap", "cloud-provider-config", "-o", "yaml", "-n", "openshift-config")
+	cmd := exec.Command("oc", "get", "configmap", "cloud-provider-config", "-o", "yaml", "-n", "healthcheck-config")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to run 'oc' command: %v", err)
@@ -123,7 +123,7 @@ func GetServer() (string, error) {
 
 func GetDatacenter() (string, error) {
 	// Run the 'oc' command to retrieve the ConfigMap in YAML format
-	cmd := exec.Command("oc", "get", "configmap", "cloud-provider-config", "-o", "yaml", "-n", "openshift-config")
+	cmd := exec.Command("oc", "get", "configmap", "cloud-provider-config", "-o", "yaml", "-n", "healthcheck-config")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to run 'oc' command: %v", err)
@@ -141,7 +141,7 @@ func GetDatacenter() (string, error) {
 
 func GetDataStore() (string, error) {
 	// Run the 'oc' command to retrieve the ConfigMap in YAML format
-	cmd := exec.Command("oc", "get", "configmap", "cloud-provider-config", "-o", "yaml", "-n", "openshift-config")
+	cmd := exec.Command("oc", "get", "configmap", "cloud-provider-config", "-o", "yaml", "-n", "healthcheck-config")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to run 'oc' command: %v", err)
