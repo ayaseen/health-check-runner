@@ -19,5 +19,8 @@ func GetChecks() []healthcheck.Check {
 	checks = append(checks, NewLoggingForwarderCheck())
 	checks = append(checks, NewLoggingPlacementCheck())
 
+	// Add service monitor check
+	checks = append(checks, NewServiceMonitorCheck())
+
 	return checks
 }

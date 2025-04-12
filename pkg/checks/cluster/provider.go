@@ -54,6 +54,9 @@ func GetChecks() []healthcheck.Check {
 	// Add workload off infra nodes check
 	checks = append(checks, NewWorkloadOffInfraNodesCheck())
 
+	// Add proxy settings check
+	checks = append(checks, NewProxySettingsCheck())
+
 	// Note: DefaultProjectTemplateCheck and KubeadminUserCheck moved to security package
 
 	return checks

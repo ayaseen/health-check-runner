@@ -20,5 +20,11 @@ func GetChecks() []healthcheck.Check {
 	// Add kubeadmin user check - moved from cluster package
 	checks = append(checks, NewKubeadminUserCheck())
 
+	// Add identity provider check
+	checks = append(checks, NewIdentityProviderCheck())
+
+	// Add self-provisioner check
+	checks = append(checks, NewSelfProvisionerCheck())
+
 	return checks
 }
