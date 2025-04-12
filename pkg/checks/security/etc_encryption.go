@@ -271,10 +271,6 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 		return result, nil
 	}
 
-	// Check additional etcd health metrics
-	// In a real implementation, this would involve more detailed checks
-	// For now, we'll just check if the etcd service is running and the pods are healthy
-
 	// If everything looks good, return OK
 	return healthcheck.NewResult(
 		c.ID(),
@@ -282,3 +278,4 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 		"ETCD cluster is healthy",
 		healthcheck.ResultKeyNoChange,
 	).WithDetail(fmt.Sprintf("ETCD Operator Information:\n%s\n\nETCD Pods Information:\n%s", detailedOut, etcdPodsOut)), nil
+}

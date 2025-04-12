@@ -1,8 +1,11 @@
 package security
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -199,7 +202,7 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 
 	// This would normally involve a complex parsing of the JSON to find privileged containers
 	// For simplicity, we'll use a grep command to find containers with privileged security context
-	privilegedPodsOut, err := utils.RunCommandWithPipe("echo", out, "grep", "-A 5", "privileged: true")
+	privilegedPodsOut, err := RunCommandWithPipe("echo", out, "grep", "-A 5", "privileged: true")
 	if err != nil {
 		// This might not be a critical error, as it could just mean no privileged pods exist
 		if strings.Contains(err.Error(), "exit status 1") && privilegedPodsOut == "" {
@@ -231,7 +234,7 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 
 	// Get additional information about the pods with elevated privileges
 	namespacesCmd := "echo \"" + privilegedPodsOut + "\" | grep -B 5 'namespace' | grep -o 'namespace\": \"[^\"]*' | cut -d'\"' -f3 | sort | uniq"
-	namespacesOut, err := utils.RunCommandWithShell(namespacesCmd)
+	namespacesOut, err := RunCommandWithShell(namespacesCmd)
 	if err != nil {
 		// Non-critical error, we can continue
 		namespacesOut = "Failed to get namespaces"
@@ -290,20 +293,70 @@ func GetChecks() []healthcheck.Check {
 
 	// Add other security checks here
 	checks = append(checks, NewEtcdEncryptionCheck())
+	checks = append(checks, NewEtcdBackupCheck())
+	checks = append(checks, NewEtcdHealthCheck())
 
 	return checks
 }
 
 // RunCommandWithPipe runs a command with the output of another command as input
-func (utils) RunCommandWithPipe(cmd1Name string, cmd1Input string, cmd2Name string, cmd2Args ...string) (string, error) {
-	// This is a placeholder for a function that would run a pipe command
-	// In a real implementation, this would use os/exec to create a pipe between commands
-	return "", fmt.Errorf("not implemented")
+func RunCommandWithPipe(cmd1Name string, cmd1Input string, cmd2Name string, cmd2Args ...string) (string, error) {
+	// Create a command with the input as stdin
+	cmd1 := exec.Command(cmd1Name, cmd1Input)
+
+	// Create the second command
+	cmd2 := exec.Command(cmd2Name, cmd2Args...)
+
+	// Connect the first command's output to the second command's input
+	pipeReader, pipeWriter, err := os.Pipe()
+	if err != nil {
+		return "", fmt.Errorf("failed to create pipe: %v", err)
+	}
+
+	cmd1.Stdout = pipeWriter
+	cmd2.Stdin = pipeReader
+
+	// Prepare to capture the output of cmd2
+	var output bytes.Buffer
+	cmd2.Stdout = &output
+
+	// Start the first command
+	if err := cmd1.Start(); err != nil {
+		return "", fmt.Errorf("failed to start first command: %v", err)
+	}
+
+	// Start the second command
+	if err := cmd2.Start(); err != nil {
+		return "", fmt.Errorf("failed to start second command: %v", err)
+	}
+
+	// Wait for both commands to complete
+	if err := cmd1.Wait(); err != nil {
+		return "", fmt.Errorf("first command failed: %v", err)
+	}
+
+	pipeWriter.Close()
+
+	if err := cmd2.Wait(); err != nil {
+		return "", fmt.Errorf("second command failed: %v", err)
+	}
+
+	return output.String(), nil
 }
 
 // RunCommandWithShell runs a command through the shell
-func (utils) RunCommandWithShell(command string) (string, error) {
-	// This is a placeholder for a function that would run a shell command
-	// In a real implementation, this would use os/exec to run the command through the shell
-	return "", fmt.Errorf("not implemented")
+func RunCommandWithShell(command string) (string, error) {
+	// Run the command through the shell
+	cmd := exec.Command("sh", "-c", command)
+
+	// Prepare to capture the output
+	var output bytes.Buffer
+	cmd.Stdout = &output
+
+	// Run the command
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("shell command failed: %v", err)
+	}
+
+	return output.String(), nil
 }

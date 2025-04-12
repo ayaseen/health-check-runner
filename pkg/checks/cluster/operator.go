@@ -9,8 +9,8 @@ import (
 	"github.com/openshift/client-go/config/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/health-check-runner/pkg/healthcheck"
-	"github.com/health-check-runner/pkg/utils"
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
 // ClusterOperatorsCheck checks if all cluster operators are available
@@ -74,7 +74,7 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 		available := false
 
 		for _, condition := range co.Status.Conditions {
-			if condition.Type == configv1.OperatorAvailable && condition.Status == "True" {
+			if condition.Type == configv1.OperatorAvailable && condition.Status == configv1.ConditionTrue {
 				available = true
 				break
 			}
