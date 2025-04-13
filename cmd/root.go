@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 	"os"
 	"time"
 
@@ -121,8 +122,23 @@ The application runs a variety of checks and generates a formatted report with t
 			os.Exit(1)
 		}
 
-		// Print report path
-		fmt.Printf("\nReport generated at: %s\n", reportPath)
+		// Password for ZIP encryption
+		const password = "7e5eed48001f9a407bbb87b29c32871b"
+
+		// Compress the report with password protection
+		zipPath, err := utils.CompressWithPassword(reportPath, password)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to compress report: %v\n", err)
+			fmt.Printf("\nReport generated at: %s\n", reportPath)
+		} else {
+			fmt.Printf("\nCompressed report generated at: %s\n", zipPath)
+			fmt.Printf("Password: %s\n", password)
+
+			// Delete the original report
+			if err := os.Remove(reportPath); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Failed to delete original report: %v\n", err)
+			}
+		}
 
 		// Print summary
 		printSummary(runner)
