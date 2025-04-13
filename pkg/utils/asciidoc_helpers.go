@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 )
 
 // AsciiDocFormatOptions defines options for AsciiDoc formatting
@@ -17,17 +17,17 @@ type AsciiDocFormatOptions struct {
 }
 
 // GetStatusColor returns the color for a status in AsciiDoc format
-func GetStatusColor(status healthcheck.Status) string {
+func GetStatusColor(status types.Status) string {
 	switch status {
-	case healthcheck.StatusOK:
+	case types.StatusOK:
 		return "#00FF00" // Green
-	case healthcheck.StatusWarning:
+	case types.StatusWarning:
 		return "#FEFE20" // Yellow
-	case healthcheck.StatusCritical:
+	case types.StatusCritical:
 		return "#FF0000" // Red
-	case healthcheck.StatusUnknown:
+	case types.StatusUnknown:
 		return "#FFFFFF" // White
-	case healthcheck.StatusNotApplicable:
+	case types.StatusNotApplicable:
 		return "#A6B9BF" // Gray
 	default:
 		return "#FFFFFF" // White
@@ -35,19 +35,19 @@ func GetStatusColor(status healthcheck.Status) string {
 }
 
 // GetResultKeyColor returns the color for a result key in AsciiDoc format
-func GetResultKeyColor(resultKey healthcheck.ResultKey) string {
+func GetResultKeyColor(resultKey types.ResultKey) string {
 	switch resultKey {
-	case healthcheck.ResultKeyNoChange:
+	case types.ResultKeyNoChange:
 		return "#00FF00" // Green
-	case healthcheck.ResultKeyRecommended:
+	case types.ResultKeyRecommended:
 		return "#FEFE20" // Yellow
-	case healthcheck.ResultKeyRequired:
+	case types.ResultKeyRequired:
 		return "#FF0000" // Red
-	case healthcheck.ResultKeyAdvisory:
+	case types.ResultKeyAdvisory:
 		return "#80E5FF" // Light Blue
-	case healthcheck.ResultKeyNotApplicable:
+	case types.ResultKeyNotApplicable:
 		return "#A6B9BF" // Gray
-	case healthcheck.ResultKeyEvaluate:
+	case types.ResultKeyEvaluate:
 		return "#FFFFFF" // White
 	default:
 		return "#FFFFFF" // White
@@ -55,26 +55,26 @@ func GetResultKeyColor(resultKey healthcheck.ResultKey) string {
 }
 
 // FormatStatusCell formats a status as an AsciiDoc table cell with appropriate coloring
-func FormatStatusCell(status healthcheck.Status) string {
+func FormatStatusCell(status types.Status) string {
 	color := GetStatusColor(status)
 	return fmt.Sprintf("|{set:cellbgcolor:%s}\n%s\n|{set:cellbgcolor!}", color, status)
 }
 
 // FormatResultKeyCell formats a result key as an AsciiDoc table cell with appropriate coloring
-func FormatResultKeyCell(resultKey healthcheck.ResultKey) string {
+func FormatResultKeyCell(resultKey types.ResultKey) string {
 	color := GetResultKeyColor(resultKey)
 	switch resultKey {
-	case healthcheck.ResultKeyNoChange:
+	case types.ResultKeyNoChange:
 		return fmt.Sprintf("|{set:cellbgcolor:%s}\nNo Change\n|{set:cellbgcolor!}", color)
-	case healthcheck.ResultKeyRecommended:
+	case types.ResultKeyRecommended:
 		return fmt.Sprintf("|{set:cellbgcolor:%s}\nChanges Recommended\n|{set:cellbgcolor!}", color)
-	case healthcheck.ResultKeyRequired:
+	case types.ResultKeyRequired:
 		return fmt.Sprintf("|{set:cellbgcolor:%s}\nChanges Required\n|{set:cellbgcolor!}", color)
-	case healthcheck.ResultKeyAdvisory:
+	case types.ResultKeyAdvisory:
 		return fmt.Sprintf("|{set:cellbgcolor:%s}\nAdvisory\n|{set:cellbgcolor!}", color)
-	case healthcheck.ResultKeyNotApplicable:
+	case types.ResultKeyNotApplicable:
 		return fmt.Sprintf("|{set:cellbgcolor:%s}\nNot Applicable\n|{set:cellbgcolor!}", color)
-	case healthcheck.ResultKeyEvaluate:
+	case types.ResultKeyEvaluate:
 		return fmt.Sprintf("|{set:cellbgcolor:%s}\nTo Be Evaluated\n|{set:cellbgcolor!}", color)
 	default:
 		return fmt.Sprintf("|{set:cellbgcolor:%s}\nUnknown\n|{set:cellbgcolor!}", color)
@@ -82,40 +82,39 @@ func FormatResultKeyCell(resultKey healthcheck.ResultKey) string {
 }
 
 // GetChanges returns a formatted AsciiDoc table for a result key
-// This replicates the original GetChanges function from the original codebase
-func GetChanges(resultKey healthcheck.ResultKey) string {
-	options := map[healthcheck.ResultKey]string{
-		healthcheck.ResultKeyRequired: `[cols="^"] 
+func GetChanges(resultKey types.ResultKey) string {
+	options := map[types.ResultKey]string{
+		types.ResultKeyRequired: `[cols="^"] 
 |===
 |
 {set:cellbgcolor:#FF0000}
 Changes Required
 |===`,
-		healthcheck.ResultKeyRecommended: `[cols="^"] 
+		types.ResultKeyRecommended: `[cols="^"] 
 |===
 |
 {set:cellbgcolor:#FEFE20}
 Changes Recommended
 |===`,
-		healthcheck.ResultKeyNoChange: `[cols="^"] 
+		types.ResultKeyNoChange: `[cols="^"] 
 |===
 |
 {set:cellbgcolor:#00FF00}
 No Change
 |===`,
-		healthcheck.ResultKeyAdvisory: `[cols="^"] 
+		types.ResultKeyAdvisory: `[cols="^"] 
 |===
 |
 {set:cellbgcolor:#80E5FF}
 Advisory
 |===`,
-		healthcheck.ResultKeyEvaluate: `[cols="^"] 
+		types.ResultKeyEvaluate: `[cols="^"] 
 |===
 |
 {set:cellbgcolor:#FFFFFF}
 To Be Evaluated
 |===`,
-		healthcheck.ResultKeyNotApplicable: `[cols="^"] 
+		types.ResultKeyNotApplicable: `[cols="^"] 
 |===
 |
 {set:cellbgcolor:#A6B9BF}
@@ -125,36 +124,35 @@ Not Applicable
 
 	result, ok := options[resultKey]
 	if !ok {
-		return options[healthcheck.ResultKeyEvaluate]
+		return options[types.ResultKeyEvaluate]
 	}
 	return result
 }
 
 // GetKeyChanges returns a formatted AsciiDoc table cell for a result key
-// This replicates the original GetKeyChanges function from the original codebase
-func GetKeyChanges(resultKey healthcheck.ResultKey) string {
-	options := map[healthcheck.ResultKey]string{
-		healthcheck.ResultKeyRequired: `| 
+func GetKeyChanges(resultKey types.ResultKey) string {
+	options := map[types.ResultKey]string{
+		types.ResultKeyRequired: `| 
 {set:cellbgcolor:#FF0000}
 Changes Required
 `,
-		healthcheck.ResultKeyRecommended: `| 
+		types.ResultKeyRecommended: `| 
 {set:cellbgcolor:#FEFE20}
 Changes Recommended
 `,
-		healthcheck.ResultKeyNoChange: `| 
+		types.ResultKeyNoChange: `| 
 {set:cellbgcolor:#00FF00}
 No Change
 `,
-		healthcheck.ResultKeyAdvisory: `| 
+		types.ResultKeyAdvisory: `| 
 {set:cellbgcolor:#80E5FF}
 Advisory
 `,
-		healthcheck.ResultKeyNotApplicable: `| 
+		types.ResultKeyNotApplicable: `| 
 {set:cellbgcolor:#A6B9BF}
 Not Applicable
 `,
-		healthcheck.ResultKeyEvaluate: `| 
+		types.ResultKeyEvaluate: `| 
 {set:cellbgcolor:#FFFFFF}
 To Be Evaluated
 `,
@@ -162,7 +160,7 @@ To Be Evaluated
 
 	result, ok := options[resultKey]
 	if !ok {
-		return options[healthcheck.ResultKeyEvaluate]
+		return options[types.ResultKeyEvaluate]
 	}
 	return result
 }
@@ -200,7 +198,7 @@ func GenerateAsciiDocReportHeader(title string) string {
 }
 
 // GenerateAsciiDocCheckSection generates a detailed section for a health check
-func GenerateAsciiDocCheckSection(check healthcheck.Check, result healthcheck.Result, version string) string {
+func GenerateAsciiDocCheckSection(check types.Check, result types.Result, version string) string {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("== %s\n\n", check.Name()))
@@ -231,7 +229,7 @@ func GenerateAsciiDocCheckSection(check healthcheck.Check, result healthcheck.Re
 }
 
 // GenerateAsciiDocSummaryTable generates the summary table for all checks
-func GenerateAsciiDocSummaryTable(checks []healthcheck.Check, results map[string]healthcheck.Result) string {
+func GenerateAsciiDocSummaryTable(checks []types.Check, results map[string]types.Result) string {
 	var sb strings.Builder
 
 	sb.WriteString("= Summary\n\n")
@@ -261,18 +259,21 @@ func GenerateAsciiDocSummaryTable(checks []healthcheck.Check, results map[string
 }
 
 // GenerateAsciiDocCategorySections generates sections for each category
-func GenerateAsciiDocCategorySections(categorizedChecks map[healthcheck.Category][]healthcheck.Check, results map[string]healthcheck.Result) string {
+func GenerateAsciiDocCategorySections(
+	categorizedChecks map[types.Category][]types.Check,
+	results map[string]types.Result,
+) string {
 	var sb strings.Builder
 
 	// Sort categories
-	categories := []healthcheck.Category{
-		healthcheck.CategoryCluster,
-		healthcheck.CategorySecurity,
-		healthcheck.CategoryNetworking,
-		healthcheck.CategoryStorage,
-		healthcheck.CategoryApplications,
-		healthcheck.CategoryMonitoring,
-		healthcheck.CategoryInfrastructure,
+	categories := []types.Category{
+		types.CategoryCluster,
+		types.CategorySecurity,
+		types.CategoryNetworking,
+		types.CategoryStorage,
+		types.CategoryApplications,
+		types.CategoryMonitoring,
+		types.CategoryInfrastructure,
 	}
 
 	for _, category := range categories {
@@ -305,50 +306,6 @@ func GenerateAsciiDocCategorySections(categorizedChecks map[healthcheck.Category
 
 		sb.WriteString("|===\n\n")
 	}
-
-	return sb.String()
-}
-
-// GenerateFullAsciiDocReport generates a complete AsciiDoc report for all health checks
-func GenerateFullAsciiDocReport(title string, checks []healthcheck.Check, results map[string]healthcheck.Result) string {
-	var sb strings.Builder
-
-	// Get OpenShift version for documentation links
-	version, err := GetOpenShiftMajorMinorVersion()
-	if err != nil {
-		version = "4.10" // Default to a known version if we can't determine
-	}
-
-	// Generate report header
-	sb.WriteString(GenerateAsciiDocReportHeader(title))
-
-	// Generate summary table
-	sb.WriteString(GenerateAsciiDocSummaryTable(checks, results))
-
-	// Organize checks by category
-	categorizedChecks := make(map[healthcheck.Category][]healthcheck.Check)
-	for _, check := range checks {
-		category := check.Category()
-		categorizedChecks[category] = append(categorizedChecks[category], check)
-	}
-
-	// Generate category sections
-	sb.WriteString(GenerateAsciiDocCategorySections(categorizedChecks, results))
-
-	// Generate detailed sections for each check
-	sb.WriteString("<<<\n\n{set:cellbgcolor!}\n\n")
-	for _, check := range checks {
-		result, exists := results[check.ID()]
-		if !exists {
-			continue
-		}
-
-		sb.WriteString(GenerateAsciiDocCheckSection(check, result, version))
-		sb.WriteString("\n\n")
-	}
-
-	// Reset bgcolor for future tables
-	sb.WriteString("// Reset bgcolor for future tables\n[grid=none,frame=none]\n|===\n|{set:cellbgcolor!}\n|===\n\n")
 
 	return sb.String()
 }

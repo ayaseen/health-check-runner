@@ -326,4 +326,17 @@ func SafeReadFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-// SafeWriteFile writes data to
+// SafeWriteFile writes data to a file with proper error handling
+func SafeWriteFile(path string, data []byte, perm os.FileMode) error {
+	// Ensure parent directory exists
+	dir := filepath.Dir(path)
+	if err := CreateDirIfNotExists(dir); err != nil {
+		return fmt.Errorf("failed to create directory for file %s: %w", path, err)
+	}
+
+	if err := os.WriteFile(path, data, perm); err != nil {
+		return fmt.Errorf("failed to write file %s: %w", path, err)
+	}
+
+	return nil
+}

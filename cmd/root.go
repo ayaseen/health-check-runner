@@ -17,12 +17,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ayaseen/health-check-runner/pkg/utils"
 	"os"
 	"time"
 
 	"github.com/ayaseen/health-check-runner/pkg/checks"
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -60,10 +61,10 @@ The application runs a variety of checks and generates a formatted report with t
 		}
 
 		// Parse category filters
-		var categories []healthcheck.Category
+		var categories []types.Category
 		if len(categoryFilter) > 0 {
 			for _, cat := range categoryFilter {
-				categories = append(categories, healthcheck.Category(cat))
+				categories = append(categories, types.Category(cat))
 			}
 		}
 
@@ -102,7 +103,7 @@ The application runs a variety of checks and generates a formatted report with t
 
 		// Create reporter configuration
 		reporterConfig := healthcheck.ReportConfig{
-			Format:                 healthcheck.ReportFormat(reportFormat),
+			Format:                 types.ReportFormat(reportFormat),
 			OutputDir:              outputDir,
 			Filename:               "health-check-report",
 			IncludeTimestamp:       true,
@@ -161,7 +162,7 @@ func init() {
 	// will be global for your application.
 
 	// Define flags
-	rootCmd.PersistentFlags().StringVar(&checkType, "check", "openshift", "Type of health check to run (openshift, application, all)")
+	rootCmd.PersistentFlags().StringVar(&checkType, "check", "all", "Type of health check to run (openshift, application, all)")
 	rootCmd.PersistentFlags().StringVar(&outputDir, "output-dir", "resources", "Directory where reports will be saved")
 	rootCmd.PersistentFlags().StringVar(&reportFormat, "format", "asciidoc", "Report format (asciidoc, html, json, summary)")
 	rootCmd.PersistentFlags().BoolVar(&includeDetails, "details", true, "Include detailed results in the report")
@@ -244,12 +245,12 @@ func printSummary(runner *healthcheck.Runner) {
 	fmt.Printf("Total checks: %d\n", totalChecks)
 
 	// Print statuses in a consistent order
-	statuses := []healthcheck.Status{
-		healthcheck.StatusOK,
-		healthcheck.StatusWarning,
-		healthcheck.StatusCritical,
-		healthcheck.StatusUnknown,
-		healthcheck.StatusNotApplicable,
+	statuses := []types.Status{
+		types.StatusOK,
+		types.StatusWarning,
+		types.StatusCritical,
+		types.StatusUnknown,
+		types.StatusNotApplicable,
 	}
 
 	for _, status := range statuses {
@@ -257,23 +258,23 @@ func printSummary(runner *healthcheck.Runner) {
 		if exists {
 			// Add color to the output if it's a terminal
 			switch status {
-			case healthcheck.StatusOK:
+			case types.StatusOK:
 				fmt.Printf("\033[32mOK\033[0m: %d\n", count)
-			case healthcheck.StatusWarning:
+			case types.StatusWarning:
 				fmt.Printf("\033[33mWarning\033[0m: %d\n", count)
-			case healthcheck.StatusCritical:
+			case types.StatusCritical:
 				fmt.Printf("\033[31mCritical\033[0m: %d\n", count)
-			case healthcheck.StatusUnknown:
+			case types.StatusUnknown:
 				fmt.Printf("\033[37mUnknown\033[0m: %d\n", count)
-			case healthcheck.StatusNotApplicable:
+			case types.StatusNotApplicable:
 				fmt.Printf("Not Applicable: %d\n", count)
 			}
 		}
 	}
 
 	// Check for issues to report
-	warningResults := runner.GetResultsByStatus()[healthcheck.StatusWarning]
-	criticalResults := runner.GetResultsByStatus()[healthcheck.StatusCritical]
+	warningResults := runner.GetResultsByStatus()[types.StatusWarning]
+	criticalResults := runner.GetResultsByStatus()[types.StatusCritical]
 
 	if len(warningResults) > 0 || len(criticalResults) > 0 {
 		fmt.Println("\nIssues found:")

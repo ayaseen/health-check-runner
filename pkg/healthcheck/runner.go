@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/schollz/progressbar/v3"
 )
 
@@ -15,7 +16,7 @@ type Config struct {
 	OutputDir string
 
 	// CategoryFilter limits checks to specific categories
-	CategoryFilter []Category
+	CategoryFilter []types.Category
 
 	// Timeout is the maximum time allowed for a check
 	Timeout time.Duration
@@ -159,7 +160,7 @@ func (r *Runner) runSequential(checks []Check) {
 		}
 
 		// Handle fail-fast if configured
-		if r.config.FailFast && result.Status == StatusCritical && err != nil {
+		if r.config.FailFast && result.Status == types.StatusCritical && err != nil {
 			break
 		}
 	}
@@ -237,12 +238,12 @@ func (r *Runner) runCheck(ctx context.Context, check Check) (Result, error) {
 		return result, nil
 
 	case err := <-errCh:
-		result := NewResult(check.ID(), StatusCritical, fmt.Sprintf("Check failed: %v", err), ResultKeyRequired)
+		result := NewResult(check.ID(), types.StatusCritical, fmt.Sprintf("Check failed: %v", err), types.ResultKeyRequired)
 		result = result.WithExecutionTime(time.Since(startTime))
 		return result, err
 
 	case <-ctx.Done():
-		result := NewResult(check.ID(), StatusCritical, "Check timed out", ResultKeyRequired)
+		result := NewResult(check.ID(), types.StatusCritical, "Check timed out", types.ResultKeyRequired)
 		result = result.WithExecutionTime(time.Since(startTime))
 		return result, ctx.Err()
 	}
@@ -254,8 +255,8 @@ func (r *Runner) GetResults() map[string]Result {
 }
 
 // GetResultsByCategory returns health check results grouped by category
-func (r *Runner) GetResultsByCategory() map[Category][]Result {
-	resultsByCategory := make(map[Category][]Result)
+func (r *Runner) GetResultsByCategory() map[types.Category][]Result {
+	resultsByCategory := make(map[types.Category][]Result)
 
 	for _, check := range r.checks {
 		if result, exists := r.results[check.ID()]; exists {
@@ -268,8 +269,8 @@ func (r *Runner) GetResultsByCategory() map[Category][]Result {
 }
 
 // GetResultsByStatus returns health check results grouped by status
-func (r *Runner) GetResultsByStatus() map[Status][]Result {
-	resultsByStatus := make(map[Status][]Result)
+func (r *Runner) GetResultsByStatus() map[types.Status][]Result {
+	resultsByStatus := make(map[types.Status][]Result)
 
 	for _, result := range r.results {
 		resultsByStatus[result.Status] = append(resultsByStatus[result.Status], result)
@@ -279,8 +280,8 @@ func (r *Runner) GetResultsByStatus() map[Status][]Result {
 }
 
 // CountByStatus returns the count of results by status
-func (r *Runner) CountByStatus() map[Status]int {
-	counts := make(map[Status]int)
+func (r *Runner) CountByStatus() map[types.Status]int {
+	counts := make(map[types.Status]int)
 
 	for _, result := range r.results {
 		counts[result.Status]++

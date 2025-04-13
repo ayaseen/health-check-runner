@@ -8,30 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ayaseen/health-check-runner/pkg/utils"
-)
-
-// ReportFormat defines the format of the generated report
-type ReportFormat string
-
-const (
-	// FormatAsciiDoc generates an AsciiDoc report
-	FormatAsciiDoc ReportFormat = "asciidoc"
-
-	// FormatHTML generates an HTML report
-	FormatHTML ReportFormat = "html"
-
-	// FormatJSON generates a JSON report
-	FormatJSON ReportFormat = "json"
-
-	// FormatSummary generates a brief summary
-	FormatSummary ReportFormat = "summary"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 )
 
 // ReportConfig defines the configuration for report generation
 type ReportConfig struct {
 	// Format is the report format to generate
-	Format ReportFormat
+	Format types.ReportFormat
 
 	// OutputDir is where the report will be saved
 	OutputDir string
@@ -87,17 +70,17 @@ func (r *Reporter) Generate() (string, error) {
 	var err error
 
 	switch r.config.Format {
-	case FormatAsciiDoc:
+	case types.FormatAsciiDoc:
 		if r.config.UseEnhancedAsciiDoc {
 			content, err = r.generateEnhancedAsciiDoc()
 		} else {
 			content, err = r.generateAsciiDoc()
 		}
-	case FormatHTML:
+	case types.FormatHTML:
 		content, err = r.generateHTML()
-	case FormatJSON:
+	case types.FormatJSON:
 		content, err = r.generateJSON()
-	case FormatSummary:
+	case types.FormatSummary:
 		content, err = r.generateSummary()
 	default:
 		return "", fmt.Errorf("unsupported report format: %s", r.config.Format)
@@ -108,12 +91,12 @@ func (r *Reporter) Generate() (string, error) {
 	}
 
 	// Write content to file
-	filepath := filepath.Join(r.config.OutputDir, filename)
-	if err := os.WriteFile(filepath, []byte(content), 0644); err != nil {
+	outputPath := filepath.Join(r.config.OutputDir, filename)
+	if err := os.WriteFile(outputPath, []byte(content), 0644); err != nil {
 		return "", fmt.Errorf("failed to write report: %w", err)
 	}
 
-	return filepath, nil
+	return outputPath, nil
 }
 
 // getFilename returns the filename for the report
@@ -136,13 +119,13 @@ func (r *Reporter) getFilename() string {
 	ext := filepath.Ext(filename)
 	if ext == "" {
 		switch r.config.Format {
-		case FormatAsciiDoc:
+		case types.FormatAsciiDoc:
 			filename += ".adoc"
-		case FormatHTML:
+		case types.FormatHTML:
 			filename += ".html"
-		case FormatJSON:
+		case types.FormatJSON:
 			filename += ".json"
-		case FormatSummary:
+		case types.FormatSummary:
 			filename += ".txt"
 		}
 	}
@@ -165,7 +148,7 @@ func (r *Reporter) generateAsciiDoc() (string, error) {
 	counts := r.runner.CountByStatus()
 	sb.WriteString("[cols=\"1,1\", options=\"header\"]\n|===\n|Status|Count\n\n")
 
-	for _, status := range []Status{StatusOK, StatusWarning, StatusCritical, StatusUnknown, StatusNotApplicable} {
+	for _, status := range []types.Status{types.StatusOK, types.StatusWarning, types.StatusCritical, types.StatusUnknown, types.StatusNotApplicable} {
 		count := counts[status]
 		sb.WriteString(fmt.Sprintf("|%s|%d\n", status, count))
 	}
@@ -229,13 +212,174 @@ func (r *Reporter) generateAsciiDoc() (string, error) {
 
 // generateEnhancedAsciiDoc generates an enhanced AsciiDoc report
 func (r *Reporter) generateEnhancedAsciiDoc() (string, error) {
-	checks := r.runner.GetChecks()
-	results := r.runner.GetResults()
+	// This function would typically use the utils.GenerateFullAsciiDocReport function,
+	// but we're moving away from that to fix the cyclic dependency.
+	// Implement a simplified version here directly.
 
-	// Generate the full report using the enhanced template format
-	content := utils.GenerateFullAsciiDocReport(r.config.Title, checks, results)
+	var sb strings.Builder
 
-	return content, nil
+	// Title
+	sb.WriteString(fmt.Sprintf("= %s\n\n", r.config.Title))
+	sb.WriteString("ifdef::env-github[]\n:tip-caption: :bulb:\n:note-caption: :information_source:\n:important-caption: :heavy_exclamation_mark:\n:caution-caption: :fire:\n:warning-caption: :warning:\nendif::[]\n\n")
+
+	// Key for status colors
+	sb.WriteString("= Key\n\n")
+	sb.WriteString("[cols=\"1,3\", options=header]\n|===\n|Value\n|Description\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#FF0000}\nChanges Required\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("Indicates Changes Required for system stability, subscription compliance, or other reason.\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#FEFE20}\nChanges Recommended\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("Indicates Changes Recommended to align with recommended practices, but not urgently required\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#A6B9BF}\nN/A\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("No advise given on line item. For line items which are data-only to provide context.\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#80E5FF}\nAdvisory\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("No change required or recommended, but additional information provided.\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#00FF00}\nNo Change\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("No change required. In alignment with recommended practices.\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#FFFFFF}\nTo Be Evaluated\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("Not yet evaluated. Will appear only in draft copies.\n|===\n\n")
+
+	// Summary table
+	sb.WriteString("= Summary\n\n")
+	sb.WriteString("[cols=\"1,2,2,3\", options=header]\n|===\n|*Category*\n|*Item Evaluated*\n|*Observed Result*\n|*Recommendation*\n\n")
+
+	for _, check := range r.runner.checks {
+		if result, exists := r.runner.results[check.ID()]; exists {
+			// Category
+			sb.WriteString("|\n{set:cellbgcolor!}\n" + string(check.Category()) + "\n\n")
+
+			// Item Evaluated
+			sb.WriteString("a|\n<<" + check.Name() + ">>\n\n")
+
+			// Observed Result
+			sb.WriteString("|\n" + result.Message + "\n\n")
+
+			// Recommendation - using a function similar to GetKeyChanges
+			sb.WriteString(r.formatKeyChange(result.ResultKey) + "\n\n")
+		}
+	}
+
+	sb.WriteString("|===\n\n")
+
+	// Detailed checks
+	for _, check := range r.runner.checks {
+		if result, exists := r.runner.results[check.ID()]; exists {
+			sb.WriteString(fmt.Sprintf("== %s\n\n", check.Name()))
+			sb.WriteString(r.formatChange(result.ResultKey) + "\n\n")
+
+			if result.Detail != "" {
+				sb.WriteString("[source,bash]\n----\n")
+				sb.WriteString(result.Detail)
+				sb.WriteString("\n----\n\n")
+			}
+
+			sb.WriteString("**Observation**\n\n")
+			sb.WriteString(result.Message + "\n\n")
+
+			sb.WriteString("**Recommendation**\n\n")
+			if len(result.Recommendations) > 0 {
+				for _, rec := range result.Recommendations {
+					sb.WriteString(rec + "\n\n")
+				}
+			} else {
+				sb.WriteString("None.\n\n")
+			}
+
+			sb.WriteString("**Reference Link(s)**\n\n")
+			sb.WriteString("* https://access.redhat.com/documentation/en-us/openshift_container_platform/latest/\n\n")
+		}
+	}
+
+	return sb.String(), nil
+}
+
+// formatChange returns a formatted AsciiDoc table for a result key
+func (r *Reporter) formatChange(resultKey types.ResultKey) string {
+	options := map[types.ResultKey]string{
+		types.ResultKeyRequired: `[cols="^"] 
+|===
+|
+{set:cellbgcolor:#FF0000}
+Changes Required
+|===`,
+		types.ResultKeyRecommended: `[cols="^"] 
+|===
+|
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+|===`,
+		types.ResultKeyNoChange: `[cols="^"] 
+|===
+|
+{set:cellbgcolor:#00FF00}
+No Change
+|===`,
+		types.ResultKeyAdvisory: `[cols="^"] 
+|===
+|
+{set:cellbgcolor:#80E5FF}
+Advisory
+|===`,
+		types.ResultKeyEvaluate: `[cols="^"] 
+|===
+|
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+|===`,
+		types.ResultKeyNotApplicable: `[cols="^"] 
+|===
+|
+{set:cellbgcolor:#A6B9BF}
+Not Applicable
+|===`,
+	}
+
+	result, ok := options[resultKey]
+	if !ok {
+		return options[types.ResultKeyEvaluate]
+	}
+	return result
+}
+
+// formatKeyChange returns a formatted AsciiDoc table cell for a result key
+func (r *Reporter) formatKeyChange(resultKey types.ResultKey) string {
+	options := map[types.ResultKey]string{
+		types.ResultKeyRequired: `| 
+{set:cellbgcolor:#FF0000}
+Changes Required
+`,
+		types.ResultKeyRecommended: `| 
+{set:cellbgcolor:#FEFE20}
+Changes Recommended
+`,
+		types.ResultKeyNoChange: `| 
+{set:cellbgcolor:#00FF00}
+No Change
+`,
+		types.ResultKeyAdvisory: `| 
+{set:cellbgcolor:#80E5FF}
+Advisory
+`,
+		types.ResultKeyNotApplicable: `| 
+{set:cellbgcolor:#A6B9BF}
+Not Applicable
+`,
+		types.ResultKeyEvaluate: `| 
+{set:cellbgcolor:#FFFFFF}
+To Be Evaluated
+`,
+	}
+
+	result, ok := options[resultKey]
+	if !ok {
+		return options[types.ResultKeyEvaluate]
+	}
+	return result
 }
 
 // writeAsciiDocResultsTable writes a table of results in AsciiDoc format
@@ -302,7 +446,7 @@ func (r *Reporter) generateHTML() (string, error) {
 	counts := r.runner.CountByStatus()
 	sb.WriteString("<table>\n<tr><th>Status</th><th>Count</th></tr>\n")
 
-	for _, status := range []Status{StatusOK, StatusWarning, StatusCritical, StatusUnknown, StatusNotApplicable} {
+	for _, status := range []types.Status{types.StatusOK, types.StatusWarning, types.StatusCritical, types.StatusUnknown, types.StatusNotApplicable} {
 		count := counts[status]
 		sb.WriteString(fmt.Sprintf("<tr><td class=\"status-%s\">%s</td><td>%d</td></tr>\n", status, status, count))
 	}
@@ -486,19 +630,19 @@ func (r *Reporter) generateSummary() (string, error) {
 	// Add counts by status
 	counts := r.runner.CountByStatus()
 
-	for _, status := range []Status{StatusOK, StatusWarning, StatusCritical, StatusUnknown, StatusNotApplicable} {
+	for _, status := range []types.Status{types.StatusOK, types.StatusWarning, types.StatusCritical, types.StatusUnknown, types.StatusNotApplicable} {
 		count := counts[status]
 		statusStr := string(status)
 
 		if r.config.ColorOutput {
 			switch status {
-			case StatusOK:
+			case types.StatusOK:
 				statusStr = "\033[32m" + statusStr + "\033[0m" // Green
-			case StatusWarning:
+			case types.StatusWarning:
 				statusStr = "\033[33m" + statusStr + "\033[0m" // Yellow
-			case StatusCritical:
+			case types.StatusCritical:
 				statusStr = "\033[31m" + statusStr + "\033[0m" // Red
-			case StatusUnknown:
+			case types.StatusUnknown:
 				statusStr = "\033[37m" + statusStr + "\033[0m" // Light gray
 			}
 		}
@@ -513,15 +657,15 @@ func (r *Reporter) generateSummary() (string, error) {
 
 	for _, check := range r.runner.checks {
 		if result, exists := r.runner.results[check.ID()]; exists {
-			if result.Status == StatusWarning || result.Status == StatusCritical {
+			if result.Status == types.StatusWarning || result.Status == types.StatusCritical {
 				issueCount++
 
 				statusStr := string(result.Status)
 				if r.config.ColorOutput {
 					switch result.Status {
-					case StatusWarning:
+					case types.StatusWarning:
 						statusStr = "\033[33m" + statusStr + "\033[0m" // Yellow
-					case StatusCritical:
+					case types.StatusCritical:
 						statusStr = "\033[31m" + statusStr + "\033[0m" // Red
 					}
 				}

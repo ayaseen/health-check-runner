@@ -2,121 +2,9 @@ package healthcheck
 
 import (
 	"time"
+
+	"github.com/ayaseen/health-check-runner/pkg/types"
 )
-
-// Status represents the result status of a health check
-type Status string
-
-const (
-	// StatusOK indicates everything is working correctly
-	StatusOK Status = "OK"
-
-	// StatusWarning indicates a potential issue that should be addressed
-	StatusWarning Status = "Warning"
-
-	// StatusCritical indicates a critical issue that requires immediate attention
-	StatusCritical Status = "Critical"
-
-	// StatusUnknown indicates the status could not be determined
-	StatusUnknown Status = "Unknown"
-
-	// StatusNotApplicable indicates the check does not apply to this environment
-	StatusNotApplicable Status = "NotApplicable"
-)
-
-// ResultKey represents the level of importance for a result in a report summary
-type ResultKey string
-
-const (
-	// ResultKeyNoChange indicates no changes are needed
-	ResultKeyNoChange ResultKey = "nochange"
-
-	// ResultKeyRecommended indicates changes are recommended
-	ResultKeyRecommended ResultKey = "recommended"
-
-	// ResultKeyRequired indicates changes are required
-	ResultKeyRequired ResultKey = "required"
-
-	// ResultKeyAdvisory indicates additional information
-	ResultKeyAdvisory ResultKey = "advisory"
-
-	// ResultKeyNotApplicable indicates the check does not apply
-	ResultKeyNotApplicable ResultKey = "na"
-
-	// ResultKeyEvaluate indicates the result needs evaluation
-	ResultKeyEvaluate ResultKey = "eval"
-)
-
-// Category represents a category of health checks
-type Category string
-
-const (
-	// CategoryCluster is for cluster-level checks
-	CategoryCluster Category = "Cluster"
-
-	// CategorySecurity is for security-related checks
-	CategorySecurity Category = "Security"
-
-	// CategoryNetworking is for networking-related checks
-	CategoryNetworking Category = "Networking"
-
-	// CategoryStorage is for storage-related checks
-	CategoryStorage Category = "Storage"
-
-	// CategoryApplications is for application-related checks
-	CategoryApplications Category = "Applications"
-
-	// CategoryMonitoring is for monitoring-related checks
-	CategoryMonitoring Category = "Monitoring"
-
-	// CategoryInfrastructure is for infrastructure-related checks
-	CategoryInfrastructure Category = "Infrastructure"
-)
-
-// Result represents the result of a health check
-type Result struct {
-	// CheckID is the unique identifier of the health check
-	CheckID string
-
-	// Status indicates the result status (OK, Warning, Critical, etc.)
-	Status Status
-
-	// Message is a brief description of the result
-	Message string
-
-	// ResultKey indicates the importance of the result in a report
-	ResultKey ResultKey
-
-	// Detail provides detailed information about the result
-	Detail string
-
-	// Recommendations are suggestions to address any issues
-	Recommendations []string
-
-	// ExecutionTime is how long the check took to run
-	ExecutionTime time.Duration
-
-	// Metadata is additional contextual information
-	Metadata map[string]string
-}
-
-// Check defines the interface for a health check
-type Check interface {
-	// ID returns a unique identifier for the check
-	ID() string
-
-	// Name returns a human-readable name for the check
-	Name() string
-
-	// Description returns a description of what the check does
-	Description() string
-
-	// Category returns the category the check belongs to
-	Category() Category
-
-	// Run executes the health check and returns the result
-	Run() (Result, error)
-}
 
 // BaseCheck provides a basic implementation of a health check
 type BaseCheck struct {
@@ -130,7 +18,7 @@ type BaseCheck struct {
 	description string
 
 	// category is the category the check belongs to
-	category Category
+	category types.Category
 }
 
 // ID returns the unique identifier for the check
@@ -149,12 +37,12 @@ func (b *BaseCheck) Description() string {
 }
 
 // Category returns the category the check belongs to
-func (b *BaseCheck) Category() Category {
+func (b *BaseCheck) Category() types.Category {
 	return b.category
 }
 
 // NewBaseCheck creates a new BaseCheck
-func NewBaseCheck(id, name, description string, category Category) BaseCheck {
+func NewBaseCheck(id, name, description string, category types.Category) BaseCheck {
 	return BaseCheck{
 		id:          id,
 		name:        name,
@@ -163,8 +51,35 @@ func NewBaseCheck(id, name, description string, category Category) BaseCheck {
 	}
 }
 
+// Result represents the result of a health check with execution time as duration
+type Result struct {
+	// CheckID is the unique identifier of the health check
+	CheckID string
+
+	// Status indicates the result status (OK, Warning, Critical, etc.)
+	Status types.Status
+
+	// Message is a brief description of the result
+	Message string
+
+	// ResultKey indicates the importance of the result in a report
+	ResultKey types.ResultKey
+
+	// Detail provides detailed information about the result
+	Detail string
+
+	// Recommendations are suggestions to address any issues
+	Recommendations []string
+
+	// ExecutionTime is how long the check took to run
+	ExecutionTime time.Duration
+
+	// Metadata is additional contextual information
+	Metadata map[string]string
+}
+
 // NewResult creates a new Result
-func NewResult(checkID string, status Status, message string, resultKey ResultKey) Result {
+func NewResult(checkID string, status types.Status, message string, resultKey types.ResultKey) Result {
 	return Result{
 		CheckID:         checkID,
 		Status:          status,
@@ -197,4 +112,26 @@ func (r *Result) WithExecutionTime(duration time.Duration) Result {
 	result := *r // Create a copy
 	result.ExecutionTime = duration
 	return result
+}
+
+// ToTypesResult converts a Result to types.Result
+func (r *Result) ToTypesResult() types.Result {
+	return types.Result{
+		CheckID:         r.CheckID,
+		Status:          r.Status,
+		Message:         r.Message,
+		ResultKey:       r.ResultKey,
+		Detail:          r.Detail,
+		Recommendations: r.Recommendations,
+		ExecutionTime:   r.ExecutionTime.String(),
+		Metadata:        r.Metadata,
+	}
+}
+
+// Check defines the interface for a health check
+type Check interface {
+	types.Check
+
+	// Run executes the health check and returns the result
+	Run() (Result, error)
 }
