@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 	"github.com/ayaseen/health-check-runner/pkg/types"
 )
 
 // GenerateEnhancedAsciiDocReport generates a comprehensive AsciiDoc report similar to the provided sample
-func GenerateEnhancedAsciiDocReport(title string, checks []healthcheck.Check, results map[string]healthcheck.Result) string {
+func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results map[string]types.Result) string {
 	var sb strings.Builder
 
 	// Add key section with color coding and descriptions
@@ -23,16 +22,16 @@ func GenerateEnhancedAsciiDocReport(title string, checks []healthcheck.Check, re
 	sb.WriteString("Indicates Changes Recommended to align with recommended practices, but not urgently required\n\n")
 
 	sb.WriteString("|\n{set:cellbgcolor:#A6B9BF}\nN/A\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("No advise given on line item. For line items which are data-only to provide context.\n\n")
+	sb.WriteString("No advise given on line item.  For line items which are data-only to provide context.\n\n")
 
 	sb.WriteString("|\n{set:cellbgcolor:#80E5FF}\nAdvisory\n|\n{set:cellbgcolor!}\n")
 	sb.WriteString("No change required or recommended, but additional information provided.\n\n")
 
 	sb.WriteString("|\n{set:cellbgcolor:#00FF00}\nNo Change\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("No change required. In alignment with recommended practices.\n\n")
+	sb.WriteString("No change required.  In alignment with recommended practices.\n\n")
 
 	sb.WriteString("|\n{set:cellbgcolor:#FFFFFF}\nTo Be Evaluated\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("Not yet evaluated. Will appear only in draft copies.\n|===\n\n")
+	sb.WriteString("Not yet evaluated.  Will appear only in draft copies.\n|===\n\n")
 
 	// Generate summary section with all checks
 	sb.WriteString("= Summary\n\n")
@@ -149,7 +148,7 @@ func GenerateEnhancedAsciiDocReport(title string, checks []healthcheck.Check, re
 					sb.WriteString(rec + "\n\n")
 				}
 			} else {
-				sb.WriteString("None.\n\n")
+				sb.WriteString("None\n\n")
 			}
 
 			// Add reference links
@@ -225,8 +224,8 @@ func getResultKeyDisplayText(resultKey types.ResultKey) string {
 }
 
 // groupChecksByCategory organizes checks by their category
-func groupChecksByCategory(checks []healthcheck.Check, results map[string]healthcheck.Result) map[types.Category][]healthcheck.Check {
-	categorized := make(map[types.Category][]healthcheck.Check)
+func groupChecksByCategory(checks []types.Check, results map[string]types.Result) map[types.Category][]types.Check {
+	categorized := make(map[types.Category][]types.Check)
 
 	for _, check := range checks {
 		if _, exists := results[check.ID()]; exists {
@@ -238,15 +237,15 @@ func groupChecksByCategory(checks []healthcheck.Check, results map[string]health
 	return categorized
 }
 
-// getCategoryOrder returns the preferred order of categories
+// getCategoryOrder returns the preferred order of categories (matching old format)
 func getCategoryOrder() []types.Category {
 	return []types.Category{
 		types.CategoryInfrastructure,
 		types.CategoryNetworking,
 		types.CategoryStorage,
 		types.CategoryCluster,
-		types.CategoryApplications,
 		types.CategorySecurity,
+		types.CategoryApplications,
 		types.CategoryMonitoring,
 	}
 }
