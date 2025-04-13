@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -24,7 +25,7 @@ func NewNodeStatusCheck() *NodeStatusCheck {
 			"node-status",
 			"Node Status",
 			"Checks if all nodes are ready",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 	}
 }
@@ -36,9 +37,9 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -48,9 +49,9 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve nodes",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving nodes: %v", err)
 	}
 
@@ -82,9 +83,9 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 	if len(notReadyNodes) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			fmt.Sprintf("All %d nodes are ready", len(nodes.Items)),
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -93,9 +94,9 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 	// Create result with not ready nodes information
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusCritical,
+		types.StatusCritical,
 		fmt.Sprintf("%d nodes are not ready: %s", len(notReadyNodes), strings.Join(notReadyNodes, ", ")),
-		healthcheck.ResultKeyRequired,
+		types.ResultKeyRequired,
 	)
 
 	result.AddRecommendation("Investigate why the nodes are not ready")
@@ -120,7 +121,7 @@ func NewNodeUsageCheck() *NodeUsageCheck {
 			"node-usage",
 			"Node Usage",
 			"Checks if nodes are within CPU and memory usage thresholds",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 		cpuThreshold:    80, // 80% CPU usage threshold
 		memoryThreshold: 80, // 80% memory usage threshold
@@ -134,9 +135,9 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get node usage information",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting node usage: %v", err)
 	}
 
@@ -145,9 +146,9 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 	if len(lines) < 2 {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to parse node usage information",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("unexpected format of 'oc adm top nodes' output")
 	}
 
@@ -189,9 +190,9 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 	if len(highCpuNodes) == 0 && len(highMemoryNodes) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"All nodes are within resource usage thresholds",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = output
 		return result, nil
@@ -199,7 +200,7 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 
 	// Create result with high usage nodes information
 	var message string
-	resultKey := healthcheck.ResultKeyAdvisory
+	resultKey := types.ResultKeyAdvisory
 
 	if len(highCpuNodes) > 0 && len(highMemoryNodes) > 0 {
 		message = fmt.Sprintf("%d nodes with high CPU usage and %d nodes with high memory usage",
@@ -212,7 +213,7 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		message,
 		resultKey,
 	)

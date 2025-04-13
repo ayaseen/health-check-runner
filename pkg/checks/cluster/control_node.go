@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +24,7 @@ func NewControlNodeSchedulableCheck() *ControlNodeSchedulableCheck {
 			"control-node-schedulable",
 			"Control Plane Node Schedulability",
 			"Checks if control plane nodes are marked as unschedulable for regular workloads",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 	}
 }
@@ -35,9 +36,9 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -49,9 +50,9 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve control plane nodes",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving control plane nodes: %v", err)
 	}
 
@@ -86,9 +87,9 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 	if len(schedulableControlNodes) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"All control plane nodes are properly configured to prevent regular workloads",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -97,10 +98,10 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 	// Create result with schedulable control node information
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		fmt.Sprintf("%d control plane nodes allow scheduling of regular workloads: %s",
 			len(schedulableControlNodes), strings.Join(schedulableControlNodes, ", ")),
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Control plane nodes should be dedicated to control plane components for better reliability")
@@ -123,7 +124,7 @@ func NewWorkloadOffInfraNodesCheck() *WorkloadOffInfraNodesCheck {
 			"workload-off-infra-nodes",
 			"Workloads on Infrastructure Nodes",
 			"Checks if user workloads are scheduled on infrastructure nodes",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 	}
 }
@@ -135,9 +136,9 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -149,9 +150,9 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve infrastructure nodes",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving infrastructure nodes: %v", err)
 	}
 
@@ -159,9 +160,9 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 	if len(infraNodes.Items) == 0 {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"No dedicated infrastructure nodes found in the cluster",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		), nil
 	}
 
@@ -174,9 +175,9 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve namespaces",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving namespaces: %v", err)
 	}
 
@@ -229,9 +230,9 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 	if len(podsOnInfraNodes) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"No user workloads are running on infrastructure nodes",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -240,9 +241,9 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 	// Create result with workloads on infrastructure nodes information
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		fmt.Sprintf("%d user workloads are running on infrastructure nodes", len(podsOnInfraNodes)),
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Infrastructure nodes should be dedicated to infrastructure components")
@@ -270,7 +271,7 @@ func NewInstallationTypeCheck() *InstallationTypeCheck {
 			"installation-type",
 			"Installation Type",
 			"Checks the installation type of OpenShift",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 	}
 }
@@ -283,9 +284,9 @@ func (c *InstallationTypeCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check installation type",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking installation type: %v", err)
 	}
 
@@ -300,9 +301,9 @@ func (c *InstallationTypeCheck) Run() (healthcheck.Result, error) {
 	if infrastructureName == "" {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"No infrastructure name detected",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -320,9 +321,9 @@ func (c *InstallationTypeCheck) Run() (healthcheck.Result, error) {
 
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("Installation type: %s", installationType),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = fmt.Sprintf("Infrastructure Name: %s\n\n%s", infrastructureName, detailedOut)
 	return result, nil

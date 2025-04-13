@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -20,7 +21,7 @@ func NewEtcdBackupCheck() *EtcdBackupCheck {
 			"etcd-backup",
 			"ETCD Backup",
 			"Checks if etcd backup is configured",
-			healthcheck.CategorySecurity,
+			types.CategorySecurity,
 		),
 	}
 }
@@ -34,17 +35,17 @@ func (c *EtcdBackupCheck) Run() (healthcheck.Result, error) {
 		if strings.Contains(err.Error(), "No resources found") {
 			return healthcheck.NewResult(
 				c.ID(),
-				healthcheck.StatusWarning,
+				types.StatusWarning,
 				"No CronJobs found that might be backing up etcd",
-				healthcheck.ResultKeyRecommended,
+				types.ResultKeyRecommended,
 			), nil
 		}
 
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get CronJobs",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting CronJobs: %v", err)
 	}
 
@@ -77,9 +78,9 @@ func (c *EtcdBackupCheck) Run() (healthcheck.Result, error) {
 	if len(etcdBackupJobs) > 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			fmt.Sprintf("Found %d CronJobs that might be backing up etcd", len(etcdBackupJobs)),
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = fmt.Sprintf("Possible etcd backup jobs:\n%s\n\nETCD Cluster Operator status:\n%s",
 			strings.Join(etcdBackupJobs, "\n"),
@@ -90,9 +91,9 @@ func (c *EtcdBackupCheck) Run() (healthcheck.Result, error) {
 	// Create result with recommendation to set up etcd backup
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		"No CronJobs found that might be backing up etcd",
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Set up regular etcd backups to protect against data loss")

@@ -2,6 +2,7 @@ package networking
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -20,7 +21,7 @@ func NewCNINetworkPluginCheck() *CNINetworkPluginCheck {
 			"cni-network-plugin",
 			"CNI Network Plugin",
 			"Checks if the cluster is using the recommended CNI network plugin",
-			healthcheck.CategoryNetworking,
+			types.CategoryNetworking,
 		),
 	}
 }
@@ -32,9 +33,9 @@ func (c *CNINetworkPluginCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get CNI network plugin type",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting CNI network plugin type: %v", err)
 	}
 
@@ -51,9 +52,9 @@ func (c *CNINetworkPluginCheck) Run() (healthcheck.Result, error) {
 	if cniType == "OVNKubernetes" {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			fmt.Sprintf("Cluster is using the recommended CNI network plugin: %s", cniType),
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -62,9 +63,9 @@ func (c *CNINetworkPluginCheck) Run() (healthcheck.Result, error) {
 	// Create result with recommendation to use OVNKubernetes
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		fmt.Sprintf("Cluster is using CNI network plugin: %s (recommended: OVNKubernetes)", cniType),
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	// Add recommendations based on the current CNI type
@@ -92,7 +93,7 @@ func NewNetworkPolicyCheck() *NetworkPolicyCheck {
 			"network-policy",
 			"Network Policy",
 			"Checks if network policies are configured for traffic control",
-			healthcheck.CategoryNetworking,
+			types.CategoryNetworking,
 		),
 	}
 }
@@ -107,9 +108,9 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 			// No network policies found
 			result := healthcheck.NewResult(
 				c.ID(),
-				healthcheck.StatusWarning,
+				types.StatusWarning,
 				"No network policies found in the cluster",
-				healthcheck.ResultKeyRecommended,
+				types.ResultKeyRecommended,
 			)
 			result.Detail = "No network policies configured"
 			return result, nil
@@ -117,9 +118,9 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get network policies",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting network policies: %v", err)
 	}
 
@@ -128,9 +129,9 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 	if len(lines) <= 1 { // Only header line or empty
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"No network policies found in the cluster",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 		result.Detail = "No network policies configured"
 		return result, nil
@@ -147,9 +148,9 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 	// Create result based on the number of policies found
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("Found %d network policies in the cluster", policyCount),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 
 	result.Detail = out

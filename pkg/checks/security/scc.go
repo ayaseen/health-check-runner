@@ -3,6 +3,7 @@ package security
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,7 +43,7 @@ func NewClusterDefaultSCCCheck() *ClusterDefaultSCCCheck {
 			"cluster-default-scc",
 			"Default Security Context Constraint",
 			"Checks if the default security context constraint has been modified",
-			healthcheck.CategorySecurity,
+			types.CategorySecurity,
 		),
 	}
 }
@@ -54,9 +55,9 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get cluster config",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting cluster config: %v", err)
 	}
 
@@ -65,9 +66,9 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to create Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error creating Kubernetes client: %v", err)
 	}
 
@@ -84,9 +85,9 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve restricted SCC",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving restricted SCC: %v", err)
 	}
 
@@ -144,9 +145,9 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 	if !modified {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"Default security context constraint (restricted) has not been modified",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -155,9 +156,9 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 	// Create result with modified SCC information
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		fmt.Sprintf("Default security context constraint (restricted) has been modified: %s", strings.Join(modifiedFields, ", ")),
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Do not modify the default SCCs, as they may be reset during cluster upgrades")

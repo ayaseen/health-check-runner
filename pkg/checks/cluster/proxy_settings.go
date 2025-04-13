@@ -3,6 +3,7 @@ package cluster
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -30,7 +31,7 @@ func NewProxySettingsCheck() *ProxySettingsCheck {
 			"proxy-settings",
 			"OpenShift Proxy Settings",
 			"Checks the proxy configuration for the OpenShift cluster",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 	}
 }
@@ -45,9 +46,9 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 		// that the proxy is not configured
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"OpenShift Proxy is not configured",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		), nil
 	}
 
@@ -56,9 +57,9 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 	if err := json.Unmarshal([]byte(out), &proxyConfig); err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to parse proxy configuration",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error parsing proxy configuration: %v", err)
 	}
 
@@ -73,9 +74,9 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 	if proxyConfig.Spec.HTTPProxy == "" && proxyConfig.Spec.HTTPSProxy == "" && proxyConfig.Spec.NoProxy == "" {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"OpenShift Proxy is not configured",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -87,9 +88,9 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 	if !isComplete {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"OpenShift Proxy configuration is incomplete",
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		)
 		result.AddRecommendation("Configure both HTTP and HTTPS proxies, and set appropriate NoProxy values")
 		result.Detail = detailedOut
@@ -114,9 +115,9 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 	if len(missingDomains) > 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("OpenShift Proxy is configured but NoProxy is missing important domains: %s", strings.Join(missingDomains, ", ")),
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		)
 		result.AddRecommendation(fmt.Sprintf("Add these domains to NoProxy: %s", strings.Join(missingDomains, ", ")))
 		result.Detail = detailedOut
@@ -126,9 +127,9 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 	// All checks passed
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"OpenShift Proxy is properly configured",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil

@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -20,7 +21,7 @@ func NewInfrastructureProviderCheck() *InfrastructureProviderCheck {
 			"infrastructure-provider",
 			"Infrastructure Provider",
 			"Checks the infrastructure provider configuration",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 	}
 }
@@ -35,9 +36,9 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 		if err != nil {
 			return healthcheck.NewResult(
 				c.ID(),
-				healthcheck.StatusCritical,
+				types.StatusCritical,
 				"Failed to get infrastructure provider",
-				healthcheck.ResultKeyRequired,
+				types.ResultKeyRequired,
 			), fmt.Errorf("error getting infrastructure provider: %v", err)
 		}
 	}
@@ -55,9 +56,9 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 	if providerType == "" {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"No infrastructure provider type detected",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -65,9 +66,9 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("Infrastructure provider type: %s", providerType),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil

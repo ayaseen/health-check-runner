@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
@@ -21,7 +22,7 @@ func NewProbesCheck() *ProbesCheck {
 			"application-probes",
 			"Application Probes",
 			"Checks if applications have readiness and liveness probes configured",
-			healthcheck.CategoryApplications,
+			types.CategoryApplications,
 		),
 	}
 }
@@ -33,9 +34,9 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -45,9 +46,9 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve namespaces",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving namespaces: %v", err)
 	}
 
@@ -236,9 +237,9 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 	if totalWorkloads == 0 {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"No user workloads found in the cluster",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		), nil
 	}
 
@@ -267,36 +268,36 @@ Benefits of using probes:
 	if workloadsWithoutReadinessProbe == 0 && workloadsWithoutLivenessProbe == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			fmt.Sprintf("All %d user workloads have readiness and liveness probes configured", totalWorkloads),
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = probeDescription
 		return result, nil
 	}
 
 	// Create result with missing probes information
-	var status healthcheck.Status
-	var resultKey healthcheck.ResultKey
+	var status types.Status
+	var resultKey types.ResultKey
 	var message string
 
 	// Determine result status based on percentage of workloads without probes
 	if bothProbesPercentage > 50 {
 		// Critical if more than half of workloads are missing both probes
-		status = healthcheck.StatusWarning
-		resultKey = healthcheck.ResultKeyRecommended
+		status = types.StatusWarning
+		resultKey = types.ResultKeyRecommended
 		message = fmt.Sprintf("%.1f%% of user workloads (%d out of %d) are missing both readiness and liveness probes",
 			bothProbesPercentage, workloadsWithoutBothProbes, totalWorkloads)
 	} else if readinessProbePercentage > 30 || livenessProbePercentage > 30 {
 		// Warning if more than 30% of workloads are missing either probe
-		status = healthcheck.StatusWarning
-		resultKey = healthcheck.ResultKeyRecommended
+		status = types.StatusWarning
+		resultKey = types.ResultKeyRecommended
 		message = fmt.Sprintf("Many user workloads are missing probes: %.1f%% missing readiness probes, %.1f%% missing liveness probes",
 			readinessProbePercentage, livenessProbePercentage)
 	} else {
 		// Otherwise, just an advisory
-		status = healthcheck.StatusWarning
-		resultKey = healthcheck.ResultKeyAdvisory
+		status = types.StatusWarning
+		resultKey = types.ResultKeyAdvisory
 		message = fmt.Sprintf("Some user workloads are missing probes: %d missing readiness probes, %d missing liveness probes",
 			workloadsWithoutReadinessProbe, workloadsWithoutLivenessProbe)
 	}

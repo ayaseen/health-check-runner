@@ -111,6 +111,7 @@ The application runs a variety of checks and generates a formatted report with t
 			Title:                  "OpenShift Health Check Report",
 			GroupByCategory:        true,
 			ColorOutput:            true,
+			UseEnhancedAsciiDoc:    true,
 		}
 
 		// Create reporter

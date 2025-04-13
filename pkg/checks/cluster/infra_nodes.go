@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -20,7 +21,7 @@ func NewInfrastructureNodesCheck() *InfrastructureNodesCheck {
 			"infrastructure-nodes",
 			"Infrastructure Nodes",
 			"Checks if dedicated infrastructure nodes are configured",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 	}
 }
@@ -32,9 +33,9 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -46,9 +47,9 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve infrastructure nodes",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving infrastructure nodes: %v", err)
 	}
 
@@ -70,9 +71,9 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 	if infraNodeCount == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"No dedicated infrastructure nodes found",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Configure dedicated infrastructure nodes")
@@ -87,9 +88,9 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 	if infraNodeCount < 3 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("Only %d infrastructure node(s) found, at least 3 are recommended", infraNodeCount),
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("In a production deployment, it is recommended that you deploy at least three infrastructure nodes")
@@ -121,9 +122,9 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 	if !allTainted {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("Found %d infrastructure nodes but not all are properly tainted", infraNodeCount),
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Add appropriate taints to infrastructure nodes to prevent regular workloads from being scheduled on them")
@@ -135,9 +136,9 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("Found %d properly configured infrastructure nodes", infraNodeCount),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil

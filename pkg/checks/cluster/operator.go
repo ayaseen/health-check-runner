@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	configv1 "github.com/openshift/api/config/v1"
@@ -25,7 +26,7 @@ func NewClusterOperatorsCheck() *ClusterOperatorsCheck {
 			"cluster-operators",
 			"Cluster Operators",
 			"Checks if all cluster operators are available",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 	}
 }
@@ -37,9 +38,9 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get cluster config",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting cluster config: %v", err)
 	}
 
@@ -48,9 +49,9 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to create OpenShift client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error creating OpenShift client: %v", err)
 	}
 
@@ -60,9 +61,9 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve cluster operators",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving cluster operators: %v", err)
 	}
 
@@ -96,9 +97,9 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 	if allAvailable {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"All cluster operators are available",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -107,9 +108,9 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 	// Create result with unavailable operators information
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusCritical,
+		types.StatusCritical,
 		fmt.Sprintf("Some cluster operators are not available: %s", strings.Join(unavailableOps, ", ")),
-		healthcheck.ResultKeyRequired,
+		types.ResultKeyRequired,
 	)
 
 	result.AddRecommendation("Investigate why the operators are not available")

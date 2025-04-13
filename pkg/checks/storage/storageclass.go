@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +27,7 @@ func NewStorageClassCheck() *StorageClassCheck {
 			"storage-classes",
 			"Storage Classes",
 			"Checks if appropriate storage classes are configured",
-			healthcheck.CategoryStorage,
+			types.CategoryStorage,
 		),
 	}
 }
@@ -38,9 +39,9 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get cluster config",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting cluster config: %v", err)
 	}
 
@@ -49,9 +50,9 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to create Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error creating Kubernetes client: %v", err)
 	}
 
@@ -68,9 +69,9 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve storage classes",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving storage classes: %v", err)
 	}
 
@@ -85,9 +86,9 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 	if len(storageClasses.Items) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"No storage classes found",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -129,9 +130,9 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 	if defaultStorageClass == "" {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"No default storage class is configured",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Configure a default storage class for dynamic provisioning")
@@ -147,9 +148,9 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 	if !hasRWXStorageClass {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("Default storage class '%s' is configured, but no ReadWriteMany (RWX) capable storage class found", defaultStorageClass),
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		)
 
 		result.AddRecommendation("Consider adding a storage class that supports ReadWriteMany access mode for shared storage needs")
@@ -162,9 +163,9 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 	// All looks good
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("Default storage class '%s' is configured and RWX-capable storage is available", defaultStorageClass),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil
@@ -182,7 +183,7 @@ func NewPersistentVolumeCheck() *PersistentVolumeCheck {
 			"persistent-volumes",
 			"Persistent Volumes",
 			"Checks the health of persistent volumes",
-			healthcheck.CategoryStorage,
+			types.CategoryStorage,
 		),
 	}
 }
@@ -194,9 +195,9 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -206,9 +207,9 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve persistent volumes",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving persistent volumes: %v", err)
 	}
 
@@ -239,9 +240,9 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 	if len(failedPVs) > 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("Found %d failed persistent volumes", len(failedPVs)),
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		)
 
 		result.AddRecommendation("Investigate and fix the failed persistent volumes")
@@ -264,9 +265,9 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 	if len(pendingPVs) > 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("Found %d pending persistent volumes", len(pendingPVs)),
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		)
 
 		result.AddRecommendation("Check why persistent volumes are in pending state")
@@ -285,9 +286,9 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 	if len(releasedPVs) > 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("Found %d released persistent volumes that could be reclaimed", len(releasedPVs)),
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		)
 
 		result.AddRecommendation("Consider reclaiming or deleting released volumes that are no longer needed")
@@ -300,9 +301,9 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 	// If we get here, all PVs are in a good state
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("All %d persistent volumes are healthy", len(pvs.Items)),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil
@@ -320,7 +321,7 @@ func NewStoragePerformanceCheck() *StoragePerformanceCheck {
 			"storage-performance",
 			"Storage Performance",
 			"Assesses storage performance characteristics",
-			healthcheck.CategoryStorage,
+			types.CategoryStorage,
 		),
 	}
 }
@@ -338,9 +339,9 @@ func (c *StoragePerformanceCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve storage classes",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving storage classes: %v", err)
 	}
 
@@ -352,9 +353,9 @@ func (c *StoragePerformanceCheck) Run() (healthcheck.Result, error) {
 	if !hasPerformanceClasses {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"No storage classes with explicit performance characteristics found",
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		)
 
 		result.AddRecommendation("Consider defining storage classes with different performance tiers")
@@ -367,9 +368,9 @@ func (c *StoragePerformanceCheck) Run() (healthcheck.Result, error) {
 
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"Storage classes with performance characteristics are available",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil

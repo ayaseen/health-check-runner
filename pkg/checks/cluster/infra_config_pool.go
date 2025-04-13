@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -20,7 +21,7 @@ func NewInfraMachineConfigPoolCheck() *InfraMachineConfigPoolCheck {
 			"infra-machine-config-pool",
 			"Infrastructure Machine Config Pool",
 			"Checks if a dedicated infrastructure machine config pool exists",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 	}
 }
@@ -32,9 +33,9 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get machine config pools",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting machine config pools: %v", err)
 	}
 
@@ -57,9 +58,9 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 	if !hasInfraPool {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"No dedicated infrastructure machine config pool found",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Create a dedicated infrastructure machine config pool")
@@ -76,9 +77,9 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 		// Not a critical error if we can't check the status
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"Infrastructure machine config pool exists but status could not be determined",
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -87,9 +88,9 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 	if strings.TrimSpace(mcpStatus) == "True" {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"Infrastructure machine config pool is degraded",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -97,9 +98,9 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"Dedicated infrastructure machine config pool is properly configured",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil

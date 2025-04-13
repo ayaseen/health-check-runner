@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -20,7 +21,7 @@ func NewKubeadminUserCheck() *KubeadminUserCheck {
 			"kubeadmin-user",
 			"Kubeadmin User",
 			"Checks if the kubeadmin user still exists",
-			healthcheck.CategorySecurity,
+			types.CategorySecurity,
 		),
 	}
 }
@@ -43,9 +44,9 @@ func (c *KubeadminUserCheck) Run() (healthcheck.Result, error) {
 	if kubeadminExists {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"The kubeadmin user still exists and should be removed for security reasons",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		)
 
 		result.AddRecommendation("This user is for temporary post-installation steps and should be removed to avoid potential security breaches")
@@ -58,9 +59,9 @@ func (c *KubeadminUserCheck) Run() (healthcheck.Result, error) {
 	// Kubeadmin user has been removed
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"The kubeadmin user has been removed",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = "Secret 'kubeadmin' not found in 'kube-system' namespace"
 	return result, nil

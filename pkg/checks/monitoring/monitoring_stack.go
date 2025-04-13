@@ -3,6 +3,7 @@ package monitoring
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
@@ -35,7 +36,7 @@ func NewMonitoringStorageCheck() *MonitoringStorageCheck {
 			"monitoring-storage",
 			"Monitoring Storage",
 			"Checks if OpenShift monitoring components have persistent storage configured",
-			healthcheck.CategoryMonitoring,
+			types.CategoryMonitoring,
 		),
 	}
 }
@@ -47,9 +48,9 @@ func (c *MonitoringStorageCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -58,9 +59,9 @@ func (c *MonitoringStorageCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get openshift-monitoring namespace",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting openshift-monitoring namespace: %v", err)
 	}
 
@@ -101,9 +102,9 @@ func (c *MonitoringStorageCheck) Run() (healthcheck.Result, error) {
 	if !configMapExists || !hasStorage {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"OpenShift monitoring components do not have persistent storage configured",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Configure persistent storage for monitoring components")
@@ -117,9 +118,9 @@ func (c *MonitoringStorageCheck) Run() (healthcheck.Result, error) {
 	// Storage is properly configured
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"OpenShift monitoring components have persistent storage configured",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil
@@ -137,7 +138,7 @@ func NewUserWorkloadMonitoringCheck() *UserWorkloadMonitoringCheck {
 			"user-workload-monitoring",
 			"User Workload Monitoring",
 			"Checks if monitoring for user-defined projects is enabled",
-			healthcheck.CategoryMonitoring,
+			types.CategoryMonitoring,
 		),
 	}
 }
@@ -149,9 +150,9 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -160,9 +161,9 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get openshift-monitoring namespace",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting openshift-monitoring namespace: %v", err)
 	}
 
@@ -209,9 +210,9 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 	if (configMapExists && userWorkloadEnabled) || userWorkloadNamespaceExists {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"User workload monitoring is enabled",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -220,9 +221,9 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 	// User workload monitoring is not enabled
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		"User workload monitoring is not enabled",
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Enable monitoring for user-defined projects")

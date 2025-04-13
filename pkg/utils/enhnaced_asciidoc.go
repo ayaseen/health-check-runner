@@ -1,0 +1,252 @@
+package utils
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
+)
+
+// GenerateEnhancedAsciiDocReport generates a comprehensive AsciiDoc report similar to the provided sample
+func GenerateEnhancedAsciiDocReport(title string, checks []healthcheck.Check, results map[string]healthcheck.Result) string {
+	var sb strings.Builder
+
+	// Add key section with color coding and descriptions
+	sb.WriteString("= Key\n\n")
+	sb.WriteString("[cols=\"1,3\", options=header]\n|===\n|Value\n|Description\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#FF0000}\nChanges Required\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("Indicates Changes Required for system stability, subscription compliance, or other reason.\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#FEFE20}\nChanges Recommended\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("Indicates Changes Recommended to align with recommended practices, but not urgently required\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#A6B9BF}\nN/A\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("No advise given on line item. For line items which are data-only to provide context.\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#80E5FF}\nAdvisory\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("No change required or recommended, but additional information provided.\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#00FF00}\nNo Change\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("No change required. In alignment with recommended practices.\n\n")
+
+	sb.WriteString("|\n{set:cellbgcolor:#FFFFFF}\nTo Be Evaluated\n|\n{set:cellbgcolor!}\n")
+	sb.WriteString("Not yet evaluated. Will appear only in draft copies.\n|===\n\n")
+
+	// Generate summary section with all checks
+	sb.WriteString("= Summary\n\n")
+	sb.WriteString("\n[cols=\"1,2,2,3\", options=header]\n|===\n|*Category*\n|*Item Evaluated*\n|*Observed Result*\n|*Recommendation*\n\n")
+
+	// Group checks by category for the summary
+	checksByCategory := groupChecksByCategory(checks, results)
+
+	// Add all checks to the summary section
+	for _, category := range getCategoryOrder() {
+		categoryChecks, exists := checksByCategory[category]
+		if !exists {
+			continue
+		}
+
+		for _, check := range categoryChecks {
+			result, exists := results[check.ID()]
+			if !exists {
+				continue
+			}
+
+			// Category column
+			sb.WriteString("|\n{set:cellbgcolor!}\n" + string(check.Category()) + "\n\n")
+
+			// Item Evaluated column with link to detailed section
+			sb.WriteString("a|\n<<" + check.Name() + ">>\n\n")
+
+			// Observed Result column
+			sb.WriteString("| " + result.Message + " \n\n")
+
+			// Recommendation column with proper coloring
+			sb.WriteString(formatResultKeyForTable(result.ResultKey) + "\n\n")
+		}
+	}
+
+	sb.WriteString("|===\n\n")
+
+	// Add detailed category sections
+	for _, category := range getCategoryOrder() {
+		categoryChecks, exists := checksByCategory[category]
+		if !exists {
+			continue
+		}
+
+		// Add page break before category
+		sb.WriteString("<<<\n\n{set:cellbgcolor!}\n\n")
+
+		// Category heading
+		sb.WriteString("# " + string(category) + "\n\n")
+
+		// Start category table
+		sb.WriteString("[cols=\"1,2,2,3\", options=header]\n|===\n|*Category*\n|*Item Evaluated*\n|*Observed Result*\n|*Recommendation*\n\n")
+
+		// Add all checks for this category
+		for _, check := range categoryChecks {
+			result, exists := results[check.ID()]
+			if !exists {
+				continue
+			}
+
+			// Category column
+			sb.WriteString("|\n{set:cellbgcolor!}\n" + string(check.Category()) + "\n\n")
+
+			// Item Evaluated column with link to detailed section
+			sb.WriteString("a|\n<<" + check.Name() + ">>\n\n")
+
+			// Observed Result column
+			sb.WriteString("| " + result.Message + " \n\n")
+
+			// Recommendation column with proper coloring
+			sb.WriteString(formatResultKeyForTable(result.ResultKey) + "\n\n")
+		}
+
+		sb.WriteString("|===\n\n")
+	}
+
+	// Add detailed sections for each check
+	for _, category := range getCategoryOrder() {
+		categoryChecks, exists := checksByCategory[category]
+		if !exists {
+			continue
+		}
+
+		for _, check := range categoryChecks {
+			result, exists := results[check.ID()]
+			if !exists {
+				continue
+			}
+
+			// Add page break before detailed section
+			sb.WriteString("<<<\n\n")
+
+			// Add section header with check name
+			sb.WriteString("== " + check.Name() + "\n\n")
+
+			// Add result key formatted as a table
+			sb.WriteString(formatResultKeyAsCenteredTable(result.ResultKey) + "\n\n")
+
+			// Add detailed output if available
+			if result.Detail != "" {
+				sb.WriteString("[source, bash]\n----\n")
+				sb.WriteString(result.Detail)
+				sb.WriteString("\n----\n\n")
+			}
+
+			// Add observation section
+			sb.WriteString("**Observation**\n\n")
+			sb.WriteString(result.Message + "\n\n")
+
+			// Add recommendation section
+			sb.WriteString("**Recommendation**\n\n")
+			if len(result.Recommendations) > 0 {
+				for _, rec := range result.Recommendations {
+					sb.WriteString(rec + "\n\n")
+				}
+			} else {
+				sb.WriteString("None.\n\n")
+			}
+
+			// Add reference links
+			sb.WriteString("*Reference Link(s)*\n\n")
+			version, err := GetOpenShiftMajorMinorVersion()
+			if err != nil {
+				version = "4.14" // Default
+			}
+			sb.WriteString(fmt.Sprintf("* https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/\n", version))
+		}
+	}
+
+	// Reset bgcolor for future tables
+	sb.WriteString("\n\n// Reset bgcolor for future tables\n[grid=none,frame=none]\n|===\n|{set:cellbgcolor!}\n|===\n\n")
+
+	return sb.String()
+}
+
+// formatResultKeyForTable formats a result key for display in a table cell
+func formatResultKeyForTable(resultKey types.ResultKey) string {
+	cellColor := getResultKeyColor(resultKey)
+	displayText := getResultKeyDisplayText(resultKey)
+
+	return fmt.Sprintf("|\n{set:cellbgcolor:%s}\n%s\n", cellColor, displayText)
+}
+
+// formatResultKeyAsCenteredTable formats a result key as a centered table
+func formatResultKeyAsCenteredTable(resultKey types.ResultKey) string {
+	cellColor := getResultKeyColor(resultKey)
+	displayText := getResultKeyDisplayText(resultKey)
+
+	return fmt.Sprintf("[cols=\"^\"]\n|===\n|\n{set:cellbgcolor:%s}\n%s\n|===", cellColor, displayText)
+}
+
+// getResultKeyColor returns the color for a result key
+func getResultKeyColor(resultKey types.ResultKey) string {
+	switch resultKey {
+	case types.ResultKeyRequired:
+		return "#FF0000" // Red
+	case types.ResultKeyRecommended:
+		return "#FEFE20" // Yellow
+	case types.ResultKeyNoChange:
+		return "#00FF00" // Green
+	case types.ResultKeyAdvisory:
+		return "#80E5FF" // Light Blue
+	case types.ResultKeyNotApplicable:
+		return "#A6B9BF" // Gray
+	case types.ResultKeyEvaluate:
+		return "#FFFFFF" // White
+	default:
+		return "#FFFFFF" // White
+	}
+}
+
+// getResultKeyDisplayText returns the display text for a result key
+func getResultKeyDisplayText(resultKey types.ResultKey) string {
+	switch resultKey {
+	case types.ResultKeyRequired:
+		return "Changes Required"
+	case types.ResultKeyRecommended:
+		return "Changes Recommended"
+	case types.ResultKeyNoChange:
+		return "No Change"
+	case types.ResultKeyAdvisory:
+		return "Advisory"
+	case types.ResultKeyNotApplicable:
+		return "Not Applicable"
+	case types.ResultKeyEvaluate:
+		return "To Be Evaluated"
+	default:
+		return "To Be Evaluated"
+	}
+}
+
+// groupChecksByCategory organizes checks by their category
+func groupChecksByCategory(checks []healthcheck.Check, results map[string]healthcheck.Result) map[types.Category][]healthcheck.Check {
+	categorized := make(map[types.Category][]healthcheck.Check)
+
+	for _, check := range checks {
+		if _, exists := results[check.ID()]; exists {
+			category := check.Category()
+			categorized[category] = append(categorized[category], check)
+		}
+	}
+
+	return categorized
+}
+
+// getCategoryOrder returns the preferred order of categories
+func getCategoryOrder() []types.Category {
+	return []types.Category{
+		types.CategoryInfrastructure,
+		types.CategoryNetworking,
+		types.CategoryStorage,
+		types.CategoryCluster,
+		types.CategoryApplications,
+		types.CategorySecurity,
+		types.CategoryMonitoring,
+	}
+}

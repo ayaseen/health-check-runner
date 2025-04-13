@@ -1,0 +1,1694 @@
+= OpenShift Health Check Report
+
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+== Summary
+
+[cols="1,1", options="header"]
+|===
+|Status|Count
+
+|OK|15
+|Warning|16
+|Critical|0
+|Unknown|0
+|NotApplicable|6
+|===
+
+== Health Check Results
+
+=== Cluster
+
+[cols="1,3,1,3", options="header"]
+|===
+|Check|Result|Status|Recommendations
+
+|Cluster Version|Cluster version 4.17.23 is up to date|OK|None
+|Cluster Operators|All cluster operators are available|OK|None
+|Node Status|All 4 nodes are ready|OK|None
+|Node Usage|All nodes are within resource usage thresholds|OK|None
+|Control Plane Node Schedulability|All control plane nodes are properly configured to prevent regular workloads|OK|None
+|Infrastructure Nodes|No dedicated infrastructure nodes found|Warning|* Configure dedicated infrastructure nodes
+* Infrastructure nodes allow you to isolate infrastructure workloads to prevent incurring billing costs against subscription counts and to separate maintenance and management
+* Refer to https://access.redhat.com/solutions/5034771
+
+|Infrastructure Machine Config Pool|No dedicated infrastructure machine config pool found|Warning|* Create a dedicated infrastructure machine config pool
+* In a production deployment, it is recommended that you deploy at least three machine sets to hold infrastructure components
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/machine_management/index#creating-infrastructure-machinesets
+
+|Infrastructure Provider|Infrastructure provider type: AWS|OK|None
+|Installation Type|Installation type: Unknown|OK|None
+|Workloads on Infrastructure Nodes|No dedicated infrastructure nodes found in the cluster|NotApplicable|None
+|OpenShift Proxy Settings|OpenShift Proxy is not configured|NotApplicable|None
+|===
+
+=== Security
+
+[cols="1,3,1,3", options="header"]
+|===
+|Check|Result|Status|Recommendations
+
+|Default Security Context Constraint|Default security context constraint (restricted) has not been modified|OK|None
+|Elevated Privileges|No user workloads using privileged containers were found|OK|None
+|ETCD Encryption|ETCD encryption is not enabled|Warning|* Enable etcd encryption to protect sensitive data
+* Follow the documentation at https://docs.openshift.com/container-platform/latest/security/encrypting-etcd.html
+
+|ETCD Backup|No CronJobs found that might be backing up etcd|Warning|* Set up regular etcd backups to protect against data loss
+* Follow the documentation at https://docs.openshift.com/container-platform/latest/backup_and_restore/control_plane_backup_and_restore/backing-up-etcd.html
+
+|ETCD Health|ETCD cluster is healthy|OK|None
+|Default Project Template|No default project template is configured|Warning|* Configure a default project template to enforce consistent settings across new projects
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/building_applications/index#configuring-project-creation
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/building_applications/index#quotas-setting-per-project
+
+|Kubeadmin User|The kubeadmin user has been removed|OK|None
+|Identity Provider Configuration|Identity providers are configured (HTPasswd), but no LDAP provider found|Warning|* Configure a central identity provider (LDAP) for better integration with existing identity management systems
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider
+
+|Self Provisioner|Self-provisioner role binding includes system:authenticated:oauth, allowing uncontrolled namespace creation|Warning|* Remove the self-provisioner role from the system:authenticated:oauth group
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/building_applications/index#disabling-project-self-provisioning_configuring-project-creation
+
+|===
+
+=== Networking
+
+[cols="1,3,1,3", options="header"]
+|===
+|Check|Result|Status|Recommendations
+
+|CNI Network Plugin|Cluster is using the recommended CNI network plugin: OVNKubernetes|OK|None
+|Network Policy|No network policies found in the cluster|Warning|None
+|Ingress Controller|Ingress controller has 2 configuration issues|Warning|* Configure the ingress controller to run on dedicated infrastructure nodes
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/networking/index#nw-ingress-controller-configuration-parameters_configuring-ingress
+* Increase the number of ingress controller replicas to at least 3 for high availability
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/networking/index#configuring-ingress
+
+|===
+
+=== Monitoring
+
+[cols="1,3,1,3", options="header"]
+|===
+|Check|Result|Status|Recommendations
+
+|Monitoring Storage|OpenShift monitoring components do not have persistent storage configured|Warning|* Configure persistent storage for monitoring components
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/monitoring/configuring-the-monitoring-stack
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/monitoring/index#configuring_persistent_storage_configuring-the-monitoring-stack
+
+|User Workload Monitoring|User workload monitoring is enabled|OK|None
+|OpenShift Logging Installation|OpenShift Logging is not installed|Warning|None
+|OpenShift Logging Health|OpenShift Logging is not installed|NotApplicable|None
+|OpenShift Logging Storage|OpenShift Logging is not installed|NotApplicable|None
+|Log Forwarding|OpenShift Logging is not installed|NotApplicable|None
+|Logging Component Placement|OpenShift Logging is not installed|NotApplicable|None
+|Service Monitors|No ServiceMonitors found for application metrics monitoring|Warning|* Create ServiceMonitors for your applications to collect custom metrics
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/monitoring/index#specifying-how-a-service-is-monitored
+
+|===
+
+=== Applications
+
+[cols="1,3,1,3", options="header"]
+|===
+|Check|Result|Status|Recommendations
+
+|Application Probes|Many user workloads are missing probes: 100.0% missing readiness probes, 50.0% missing liveness probes|Warning|* Configure readiness and liveness probes for all user workloads
+* Follow the Kubernetes documentation on pod lifecycle and probes: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+
+|Resource Quotas|Only 0.0% of user namespaces (0 out of 2) have both resource quotas and limit ranges configured|Warning|* Configure resource quotas and limit ranges for all user namespaces
+* Follow the Kubernetes documentation on resource quotas: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+* Follow the Kubernetes documentation on limit ranges: https://kubernetes.io/docs/concepts/policy/limit-range/
+
+|EmptyDir Volumes|No user workloads are using emptyDir volumes|OK|None
+|===
+
+=== Storage
+
+[cols="1,3,1,3", options="header"]
+|===
+|Check|Result|Status|Recommendations
+
+|Storage Classes|Default storage class 'gp3-csi' is configured, but no ReadWriteMany (RWX) capable storage class found|Warning|* Consider adding a storage class that supports ReadWriteMany access mode for shared storage needs
+
+|Persistent Volumes|All 0 persistent volumes are healthy|OK|None
+|Storage Performance|No storage classes with explicit performance characteristics found|Warning|* Consider defining storage classes with different performance tiers
+* Label storage classes with performance characteristics for better workload placement
+
+|===
+
+== Detailed Results
+
+=== Cluster Version
+
+*ID:* cluster-version
+
+*Description:* Checks if the cluster is running the latest version of OpenShift
+
+*Category:* Cluster
+
+*Status:* OK
+
+*Message:* Cluster version 4.17.23 is up to date
+
+*Details:*
+
+----
+apiVersion: v1
+items:
+- apiVersion: config.openshift.io/v1
+  kind: ClusterVersion
+  metadata:
+    creationTimestamp: "2025-04-13T07:54:32Z"
+    generation: 2
+    name: version
+    resourceVersion: "30890"
+    uid: 34bdd9cd-2ad6-4996-b4cd-21f09f96a111
+  spec:
+    channel: stable-4.17
+    clusterID: 7c74295f-6c40-4d88-9d1f-7da121d26360
+  status:
+    availableUpdates: null
+    capabilities:
+      enabledCapabilities:
+      - Build
+      - CSISnapshot
+      - CloudControllerManager
+      - CloudCredential
+      - Console
+      - DeploymentConfig
+      - ImageRegistry
+      - Ingress
+      - Insights
+      - MachineAPI
+      - NodeTuning
+      - OperatorLifecycleManager
+      - Storage
+      - baremetal
+      - marketplace
+      - openshift-samples
+      knownCapabilities:
+      - Build
+      - CSISnapshot
+      - CloudControllerManager
+      - CloudCredential
+      - Console
+      - DeploymentConfig
+      - ImageRegistry
+      - Ingress
+      - Insights
+      - MachineAPI
+      - NodeTuning
+      - OperatorLifecycleManager
+      - Storage
+      - baremetal
+      - marketplace
+      - openshift-samples
+    conditions:
+    - lastTransitionTime: "2025-04-13T07:54:57Z"
+      status: "True"
+      type: RetrievedUpdates
+    - lastTransitionTime: "2025-04-13T07:54:57Z"
+      message: Capabilities match configured spec
+      reason: AsExpected
+      status: "False"
+      type: ImplicitlyEnabledCapabilities
+    - lastTransitionTime: "2025-04-13T07:54:57Z"
+      message: Payload loaded version="4.17.23" image="quay.io/openshift-release-dev/ocp-release@sha256:7e8b4557c0a15765440c543ab50cd591bb94f0745c20564e5f15d57bf5f76a82"
+        architecture="amd64"
+      reason: PayloadLoaded
+      status: "True"
+      type: ReleaseAccepted
+    - lastTransitionTime: "2025-04-13T08:28:50Z"
+      message: Done applying 4.17.23
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2025-04-13T08:51:50Z"
+      status: "False"
+      type: Failing
+    - lastTransitionTime: "2025-04-13T08:28:50Z"
+      message: Cluster version is 4.17.23
+      status: "False"
+      type: Progressing
+    desired:
+      channels:
+      - candidate-4.17
+      - candidate-4.18
+      - eus-4.18
+      - fast-4.17
+      - fast-4.18
+      - stable-4.17
+      - stable-4.18
+      image: quay.io/openshift-release-dev/ocp-release@sha256:7e8b4557c0a15765440c543ab50cd591bb94f0745c20564e5f15d57bf5f76a82
+      url: https://access.redhat.com/errata/RHSA-2025:3297
+      version: 4.17.23
+    history:
+    - completionTime: "2025-04-13T08:28:50Z"
+      image: quay.io/openshift-release-dev/ocp-release@sha256:7e8b4557c0a15765440c543ab50cd591bb94f0745c20564e5f15d57bf5f76a82
+      startedTime: "2025-04-13T07:54:57Z"
+      state: Completed
+      verified: false
+      version: 4.17.23
+    observedGeneration: 2
+    versionHash: H9tjXrL6NpQ=
+kind: List
+metadata:
+  resourceVersion: ""
+
+----
+
+*Execution Time:* 1.677006333s
+
+'''
+
+=== Cluster Operators
+
+*ID:* cluster-operators
+
+*Description:* Checks if all cluster operators are available
+
+*Category:* Cluster
+
+*Status:* OK
+
+*Message:* All cluster operators are available
+
+*Details:*
+
+----
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE   MESSAGE
+authentication                             4.17.23   True        False         False      80m     
+baremetal                                  4.17.23   True        False         False      125m    
+cloud-controller-manager                   4.17.23   True        False         False      129m    
+cloud-credential                           4.17.23   True        False         False      132m    
+cluster-autoscaler                         4.17.23   True        False         False      125m    
+config-operator                            4.17.23   True        False         False      126m    
+console                                    4.17.23   True        False         False      84m     
+control-plane-machine-set                  4.17.23   True        False         False      125m    
+csi-snapshot-controller                    4.17.23   True        False         False      125m    
+dns                                        4.17.23   True        False         False      125m    
+etcd                                       4.17.23   True        False         False      124m    
+image-registry                             4.17.23   True        False         False      115m    
+ingress                                    4.17.23   True        False         False      106m    
+insights                                   4.17.23   True        False         False      120m    
+kube-apiserver                             4.17.23   True        False         False      115m    
+kube-controller-manager                    4.17.23   True        False         False      123m    
+kube-scheduler                             4.17.23   True        False         False      119m    
+kube-storage-version-migrator              4.17.23   True        False         False      126m    
+machine-api                                4.17.23   True        False         False      115m    
+machine-approver                           4.17.23   True        False         False      126m    
+machine-config                             4.17.23   True        False         False      125m    
+marketplace                                4.17.23   True        False         False      125m    
+monitoring                                 4.17.23   True        False         False      106m    
+network                                    4.17.23   True        False         False      127m    
+node-tuning                                4.17.23   True        False         False      114m    
+openshift-apiserver                        4.17.23   True        False         False      106m    
+openshift-controller-manager               4.17.23   True        False         False      107m    
+openshift-samples                          4.17.23   True        False         False      107m    
+operator-lifecycle-manager                 4.17.23   True        False         False      125m    
+operator-lifecycle-manager-catalog         4.17.23   True        False         False      125m    
+operator-lifecycle-manager-packageserver   4.17.23   True        False         False      117m    
+service-ca                                 4.17.23   True        False         False      126m    
+storage                                    4.17.23   True        False         False      124m    
+
+----
+
+*Execution Time:* 1.746562208s
+
+'''
+
+=== Node Status
+
+*ID:* node-status
+
+*Description:* Checks if all nodes are ready
+
+*Category:* Cluster
+
+*Status:* OK
+
+*Message:* All 4 nodes are ready
+
+*Details:*
+
+----
+NAME                                        STATUS   ROLES                  AGE    VERSION
+ip-10-0-34-160.eu-west-1.compute.internal   Ready    worker                 115m   v1.30.10
+ip-10-0-37-145.eu-west-1.compute.internal   Ready    control-plane,master   130m   v1.30.10
+ip-10-0-46-210.eu-west-1.compute.internal   Ready    worker                 118m   v1.30.10
+ip-10-0-57-153.eu-west-1.compute.internal   Ready    worker                 115m   v1.30.10
+
+----
+
+*Execution Time:* 1.351726167s
+
+'''
+
+=== Node Usage
+
+*ID:* node-usage
+
+*Description:* Checks if nodes are within CPU and memory usage thresholds
+
+*Category:* Cluster
+
+*Status:* OK
+
+*Message:* All nodes are within resource usage thresholds
+
+*Details:*
+
+----
+NAME                                        CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
+ip-10-0-34-160.eu-west-1.compute.internal   309m         1%     2941Mi          4%        
+ip-10-0-37-145.eu-west-1.compute.internal   671m         4%     8109Mi          13%       
+ip-10-0-46-210.eu-west-1.compute.internal   233m         1%     2086Mi          3%        
+ip-10-0-57-153.eu-west-1.compute.internal   436m         2%     2957Mi          4%        
+
+----
+
+*Execution Time:* 1.775248167s
+
+'''
+
+=== Control Plane Node Schedulability
+
+*ID:* control-node-schedulable
+
+*Description:* Checks if control plane nodes are marked as unschedulable for regular workloads
+
+*Category:* Cluster
+
+*Status:* OK
+
+*Message:* All control plane nodes are properly configured to prevent regular workloads
+
+*Details:*
+
+----
+NAME                                        STATUS   ROLES                  AGE    VERSION    INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                                                KERNEL-VERSION                 CONTAINER-RUNTIME
+ip-10-0-37-145.eu-west-1.compute.internal   Ready    control-plane,master   130m   v1.30.10   10.0.37.145   <none>        Red Hat Enterprise Linux CoreOS 417.94.202503241418-0   5.14.0-427.62.1.el9_4.x86_64   cri-o://1.30.11-2.rhaos4.17.git9e4d86d.el9
+
+----
+
+*Execution Time:* 1.361452833s
+
+'''
+
+=== Infrastructure Nodes
+
+*ID:* infrastructure-nodes
+
+*Description:* Checks if dedicated infrastructure nodes are configured
+
+*Category:* Cluster
+
+*Status:* Warning
+
+*Message:* No dedicated infrastructure nodes found
+
+*Recommendations:*
+
+* Configure dedicated infrastructure nodes
+* Infrastructure nodes allow you to isolate infrastructure workloads to prevent incurring billing costs against subscription counts and to separate maintenance and management
+* Refer to https://access.redhat.com/solutions/5034771
+
+*Execution Time:* 1.731092375s
+
+'''
+
+=== Infrastructure Machine Config Pool
+
+*ID:* infra-machine-config-pool
+
+*Description:* Checks if a dedicated infrastructure machine config pool exists
+
+*Category:* Cluster
+
+*Status:* Warning
+
+*Message:* No dedicated infrastructure machine config pool found
+
+*Recommendations:*
+
+* Create a dedicated infrastructure machine config pool
+* In a production deployment, it is recommended that you deploy at least three machine sets to hold infrastructure components
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/machine_management/index#creating-infrastructure-machinesets
+
+*Details:*
+
+----
+NAME     CONFIG                                             UPDATED   UPDATING   DEGRADED   MACHINECOUNT   READYMACHINECOUNT   UPDATEDMACHINECOUNT   DEGRADEDMACHINECOUNT   AGE
+master   rendered-master-43070e1234554ed0b7d22afef78e494a   True      False      False      1              1                   1                     0                      126m
+worker   rendered-worker-c80ef53ecd38c6108f6ec39f470524c1   True      False      False      3              3                   3                     0                      126m
+
+----
+
+*Execution Time:* 2.156025375s
+
+'''
+
+=== Infrastructure Provider
+
+*ID:* infrastructure-provider
+
+*Description:* Checks the infrastructure provider configuration
+
+*Category:* Cluster
+
+*Status:* OK
+
+*Message:* Infrastructure provider type: AWS
+
+*Details:*
+
+----
+apiVersion: config.openshift.io/v1
+kind: Infrastructure
+metadata:
+  creationTimestamp: "2025-04-13T07:54:26Z"
+  generation: 1
+  name: cluster
+  resourceVersion: "518"
+  uid: 799fb4b5-c590-4fd6-bc8a-3961410c0a1c
+spec:
+  cloudConfig:
+    key: config
+    name: cloud-provider-config
+  platformSpec:
+    aws: {}
+    type: AWS
+status:
+  apiServerInternalURI: https://api-int.cluster-6cxmx.6cxmx.sandbox2376.opentlc.com:6443
+  apiServerURL: https://api.cluster-6cxmx.6cxmx.sandbox2376.opentlc.com:6443
+  controlPlaneTopology: SingleReplica
+  cpuPartitioning: None
+  etcdDiscoveryDomain: ""
+  infrastructureName: cluster-6cxmx-7kpxc
+  infrastructureTopology: HighlyAvailable
+  platform: AWS
+  platformStatus:
+    aws:
+      region: eu-west-1
+    type: AWS
+
+----
+
+*Execution Time:* 1.665367709s
+
+'''
+
+=== Installation Type
+
+*ID:* installation-type
+
+*Description:* Checks the installation type of OpenShift
+
+*Category:* Cluster
+
+*Status:* OK
+
+*Message:* Installation type: Unknown
+
+*Details:*
+
+----
+Infrastructure Name: cluster-6cxmx-7kpxc
+
+apiVersion: config.openshift.io/v1
+kind: Infrastructure
+metadata:
+  creationTimestamp: "2025-04-13T07:54:26Z"
+  generation: 1
+  name: cluster
+  resourceVersion: "518"
+  uid: 799fb4b5-c590-4fd6-bc8a-3961410c0a1c
+spec:
+  cloudConfig:
+    key: config
+    name: cloud-provider-config
+  platformSpec:
+    aws: {}
+    type: AWS
+status:
+  apiServerInternalURI: https://api-int.cluster-6cxmx.6cxmx.sandbox2376.opentlc.com:6443
+  apiServerURL: https://api.cluster-6cxmx.6cxmx.sandbox2376.opentlc.com:6443
+  controlPlaneTopology: SingleReplica
+  cpuPartitioning: None
+  etcdDiscoveryDomain: ""
+  infrastructureName: cluster-6cxmx-7kpxc
+  infrastructureTopology: HighlyAvailable
+  platform: AWS
+  platformStatus:
+    aws:
+      region: eu-west-1
+    type: AWS
+
+----
+
+*Execution Time:* 1.693776791s
+
+'''
+
+=== Workloads on Infrastructure Nodes
+
+*ID:* workload-off-infra-nodes
+
+*Description:* Checks if user workloads are scheduled on infrastructure nodes
+
+*Category:* Cluster
+
+*Status:* NotApplicable
+
+*Message:* No dedicated infrastructure nodes found in the cluster
+
+*Execution Time:* 646.8915ms
+
+'''
+
+=== OpenShift Proxy Settings
+
+*ID:* proxy-settings
+
+*Description:* Checks the proxy configuration for the OpenShift cluster
+
+*Category:* Cluster
+
+*Status:* NotApplicable
+
+*Message:* OpenShift Proxy is not configured
+
+*Details:*
+
+----
+apiVersion: config.openshift.io/v1
+kind: Proxy
+metadata:
+  creationTimestamp: "2025-04-13T07:54:28Z"
+  generation: 1
+  name: cluster
+  resourceVersion: "537"
+  uid: 79d324a3-fe9c-40da-a1d5-0857714e5530
+spec:
+  trustedCA:
+    name: ""
+status: {}
+
+----
+
+*Execution Time:* 1.631537542s
+
+'''
+
+=== Default Security Context Constraint
+
+*ID:* cluster-default-scc
+
+*Description:* Checks if the default security context constraint has been modified
+
+*Category:* Security
+
+*Status:* OK
+
+*Message:* Default security context constraint (restricted) has not been modified
+
+*Details:*
+
+----
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: false
+allowedCapabilities: null
+apiVersion: security.openshift.io/v1
+defaultAddCapabilities: null
+fsGroup:
+  type: MustRunAs
+groups: []
+kind: SecurityContextConstraints
+metadata:
+  annotations:
+    include.release.openshift.io/ibm-cloud-managed: "true"
+    include.release.openshift.io/self-managed-high-availability: "true"
+    include.release.openshift.io/single-node-developer: "true"
+    kubernetes.io/description: restricted denies access to all host features and requires
+      pods to be run with a UID, and SELinux context that are allocated to the namespace.
+    release.openshift.io/create-only: "true"
+  creationTimestamp: "2025-04-13T07:54:14Z"
+  generation: 1
+  name: restricted
+  resourceVersion: "409"
+  uid: f8ccecb2-f20f-4054-9aed-2f90953a497c
+priority: null
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+- KILL
+- MKNOD
+- SETUID
+- SETGID
+runAsUser:
+  type: MustRunAsRange
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+users: []
+volumes:
+- configMap
+- csi
+- downwardAPI
+- emptyDir
+- ephemeral
+- persistentVolumeClaim
+- projected
+- secret
+
+----
+
+*Execution Time:* 1.2424825s
+
+'''
+
+=== Elevated Privileges
+
+*ID:* elevated-privileges
+
+*Description:* Checks for workloads running with elevated privileges
+
+*Category:* Security
+
+*Status:* OK
+
+*Message:* No user workloads using privileged containers were found
+
+*Execution Time:* 1.739689958s
+
+'''
+
+=== ETCD Encryption
+
+*ID:* etcd-encryption
+
+*Description:* Checks if etcd encryption is enabled for sensitive data
+
+*Category:* Security
+
+*Status:* Warning
+
+*Message:* ETCD encryption is not enabled
+
+*Recommendations:*
+
+* Enable etcd encryption to protect sensitive data
+* Follow the documentation at https://docs.openshift.com/container-platform/latest/security/encrypting-etcd.html
+
+*Details:*
+
+----
+apiVersion: v1
+items:
+- apiVersion: config.openshift.io/v1
+  kind: APIServer
+  metadata:
+    annotations:
+      include.release.openshift.io/ibm-cloud-managed: "true"
+      include.release.openshift.io/self-managed-high-availability: "true"
+      oauth-apiserver.openshift.io/secure-token-storage: "true"
+      release.openshift.io/create-only: "true"
+    creationTimestamp: "2025-04-13T07:54:58Z"
+    generation: 1
+    name: cluster
+    ownerReferences:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      uid: 34bdd9cd-2ad6-4996-b4cd-21f09f96a111
+    resourceVersion: "808"
+    uid: 372dd50d-975d-4f0c-ae8a-1a6e5efe7f3a
+  spec:
+    audit:
+      profile: Default
+kind: List
+metadata:
+  resourceVersion: ""
+
+----
+
+*Execution Time:* 1.650005541s
+
+'''
+
+=== ETCD Backup
+
+*ID:* etcd-backup
+
+*Description:* Checks if etcd backup is configured
+
+*Category:* Security
+
+*Status:* Warning
+
+*Message:* No CronJobs found that might be backing up etcd
+
+*Recommendations:*
+
+* Set up regular etcd backups to protect against data loss
+* Follow the documentation at https://docs.openshift.com/container-platform/latest/backup_and_restore/control_plane_backup_and_restore/backing-up-etcd.html
+
+*Details:*
+
+----
+ETCD Cluster Operator status:
+NAME   VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE   MESSAGE
+etcd   4.17.23   True        False         False      124m    
+
+----
+
+*Execution Time:* 1.710942458s
+
+'''
+
+=== ETCD Health
+
+*ID:* etcd-health
+
+*Description:* Checks the health of the etcd cluster
+
+*Category:* Security
+
+*Status:* OK
+
+*Message:* ETCD cluster is healthy
+
+*Details:*
+
+----
+ETCD Operator Information:
+apiVersion: config.openshift.io/v1
+kind: ClusterOperator
+metadata:
+  annotations:
+    exclude.release.openshift.io/internal-openshift-hosted: "true"
+    include.release.openshift.io/self-managed-high-availability: "true"
+    include.release.openshift.io/single-node-developer: "true"
+  creationTimestamp: "2025-04-13T07:54:57Z"
+  generation: 1
+  name: etcd
+  ownerReferences:
+  - apiVersion: config.openshift.io/v1
+    controller: true
+    kind: ClusterVersion
+    name: version
+    uid: 34bdd9cd-2ad6-4996-b4cd-21f09f96a111
+  resourceVersion: "30158"
+  uid: 51ec0b92-2098-4379-9708-8cdf5ec6a12a
+spec: {}
+status:
+  conditions:
+  - lastTransitionTime: "2025-04-13T08:19:20Z"
+    message: |-
+      NodeControllerDegraded: All master nodes are ready
+      EtcdMembersDegraded: No unhealthy members found
+    reason: AsExpected
+    status: "False"
+    type: Degraded
+  - lastTransitionTime: "2025-04-13T08:19:20Z"
+    message: |-
+      NodeInstallerProgressing: 1 node is at revision 4
+      EtcdMembersProgressing: No unstarted etcd members found
+    reason: AsExpected
+    status: "False"
+    type: Progressing
+  - lastTransitionTime: "2025-04-13T08:04:10Z"
+    message: |-
+      StaticPodsAvailable: 1 nodes are active; 1 node is at revision 4
+      EtcdMembersAvailable: 1 members are available
+    reason: AsExpected
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-04-13T08:02:10Z"
+    message: All is well
+    reason: AsExpected
+    status: "True"
+    type: Upgradeable
+  - lastTransitionTime: "2025-04-13T08:02:10Z"
+    reason: NoData
+    status: Unknown
+    type: EvaluationConditionsDetected
+  extension: null
+  relatedObjects:
+  - group: operator.openshift.io
+    name: cluster
+    resource: etcds
+  - group: ""
+    name: openshift-config
+    resource: namespaces
+  - group: ""
+    name: openshift-config-managed
+    resource: namespaces
+  - group: ""
+    name: openshift-etcd-operator
+    resource: namespaces
+  - group: ""
+    name: openshift-etcd
+    resource: namespaces
+  versions:
+  - name: raw-internal
+    version: 4.17.23
+  - name: operator
+    version: 4.17.23
+  - name: etcd
+    version: 4.17.23
+
+
+ETCD Pods Information:
+NAME                                             READY   STATUS    RESTARTS   AGE
+etcd-ip-10-0-37-145.eu-west-1.compute.internal   4/4     Running   0          109m
+
+----
+
+*Execution Time:* 2.550000375s
+
+'''
+
+=== Default Project Template
+
+*ID:* default-project-template
+
+*Description:* Checks if a custom default project template is configured
+
+*Category:* Security
+
+*Status:* Warning
+
+*Message:* No default project template is configured
+
+*Recommendations:*
+
+* Configure a default project template to enforce consistent settings across new projects
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/building_applications/index#configuring-project-creation
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/building_applications/index#quotas-setting-per-project
+
+*Details:*
+
+----
+apiVersion: config.openshift.io/v1
+kind: Project
+metadata:
+  annotations:
+    include.release.openshift.io/ibm-cloud-managed: "true"
+    include.release.openshift.io/self-managed-high-availability: "true"
+    release.openshift.io/create-only: "true"
+  creationTimestamp: "2025-04-13T07:55:16Z"
+  generation: 1
+  name: cluster
+  ownerReferences:
+  - apiVersion: config.openshift.io/v1
+    kind: ClusterVersion
+    name: version
+    uid: 34bdd9cd-2ad6-4996-b4cd-21f09f96a111
+  resourceVersion: "1621"
+  uid: f4856665-a2ef-4e1e-92f6-d296169ecaf9
+spec: {}
+
+----
+
+*Execution Time:* 2.481174333s
+
+'''
+
+=== Kubeadmin User
+
+*ID:* kubeadmin-user
+
+*Description:* Checks if the kubeadmin user still exists
+
+*Category:* Security
+
+*Status:* OK
+
+*Message:* The kubeadmin user has been removed
+
+*Details:*
+
+----
+Secret 'kubeadmin' not found in 'kube-system' namespace
+----
+
+*Execution Time:* 1.7196275s
+
+'''
+
+=== Identity Provider Configuration
+
+*ID:* identity-provider
+
+*Description:* Checks if a central identity provider (LDAP) is properly configured and secure
+
+*Category:* Security
+
+*Status:* Warning
+
+*Message:* Identity providers are configured (HTPasswd), but no LDAP provider found
+
+*Recommendations:*
+
+* Configure a central identity provider (LDAP) for better integration with existing identity management systems
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider
+
+*Details:*
+
+----
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  annotations:
+    include.release.openshift.io/ibm-cloud-managed: "true"
+    include.release.openshift.io/self-managed-high-availability: "true"
+    release.openshift.io/create-only: "true"
+  creationTimestamp: "2025-04-13T07:55:14Z"
+  generation: 2
+  name: cluster
+  ownerReferences:
+  - apiVersion: config.openshift.io/v1
+    kind: ClusterVersion
+    name: version
+    uid: 34bdd9cd-2ad6-4996-b4cd-21f09f96a111
+  resourceVersion: "22974"
+  uid: 24233435-e70f-4134-8d65-87494d13bdc5
+spec:
+  identityProviders:
+  - htpasswd:
+      fileData:
+        name: htpasswd
+    mappingMethod: claim
+    name: htpasswd_provider
+    type: HTPasswd
+
+----
+
+*Execution Time:* 2.040628708s
+
+'''
+
+=== Self Provisioner
+
+*ID:* self-provisioner
+
+*Description:* Checks if the self-provisioner role binding is configured to prevent uncontrolled namespace creation
+
+*Category:* Security
+
+*Status:* Warning
+
+*Message:* Self-provisioner role binding includes system:authenticated:oauth, allowing uncontrolled namespace creation
+
+*Recommendations:*
+
+* Remove the self-provisioner role from the system:authenticated:oauth group
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/building_applications/index#disabling-project-self-provisioning_configuring-project-creation
+
+*Details:*
+
+----
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: "2025-04-13T08:04:19Z"
+  name: self-provisioners
+  resourceVersion: "10360"
+  uid: 3a723a90-563d-41fd-97df-074658750793
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: self-provisioner
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:authenticated:oauth
+
+----
+
+*Execution Time:* 2.144535334s
+
+'''
+
+=== CNI Network Plugin
+
+*ID:* cni-network-plugin
+
+*Description:* Checks if the cluster is using the recommended CNI network plugin
+
+*Category:* Networking
+
+*Status:* OK
+
+*Message:* Cluster is using the recommended CNI network plugin: OVNKubernetes
+
+*Details:*
+
+----
+apiVersion: v1
+items:
+- apiVersion: config.openshift.io/v1
+  kind: Network
+  metadata:
+    creationTimestamp: "2025-04-13T07:54:28Z"
+    generation: 3
+    name: cluster
+    resourceVersion: "22751"
+    uid: a5de3c40-77c4-4c7c-9e15-e7f69a0c6404
+  spec:
+    clusterNetwork:
+    - cidr: 10.128.0.0/14
+      hostPrefix: 23
+    externalIP:
+      policy: {}
+    networkDiagnostics:
+      mode: ""
+      sourcePlacement: {}
+      targetPlacement: {}
+    networkType: OVNKubernetes
+    serviceNetwork:
+    - 172.30.0.0/16
+  status:
+    clusterNetwork:
+    - cidr: 10.128.0.0/14
+      hostPrefix: 23
+    clusterNetworkMTU: 8901
+    conditions:
+    - lastTransitionTime: "2025-04-13T08:28:50Z"
+      message: ""
+      observedGeneration: 0
+      reason: AsExpected
+      status: "True"
+      type: NetworkDiagnosticsAvailable
+    networkType: OVNKubernetes
+    serviceNetwork:
+    - 172.30.0.0/16
+kind: List
+metadata:
+  resourceVersion: ""
+
+----
+
+*Execution Time:* 1.643092292s
+
+'''
+
+=== Network Policy
+
+*ID:* network-policy
+
+*Description:* Checks if network policies are configured for traffic control
+
+*Category:* Networking
+
+*Status:* Warning
+
+*Message:* No network policies found in the cluster
+
+*Details:*
+
+----
+No network policies configured
+----
+
+*Execution Time:* 1.1558875s
+
+'''
+
+=== Ingress Controller
+
+*ID:* ingress-controller
+
+*Description:* Checks if the ingress controller is properly configured
+
+*Category:* Networking
+
+*Status:* Warning
+
+*Message:* Ingress controller has 2 configuration issues
+
+*Recommendations:*
+
+* Configure the ingress controller to run on dedicated infrastructure nodes
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/networking/index#nw-ingress-controller-configuration-parameters_configuring-ingress
+* Increase the number of ingress controller replicas to at least 3 for high availability
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/networking/index#configuring-ingress
+
+*Details:*
+
+----
+Issues:
+Ingress controller is not placed on dedicated infrastructure nodes
+Ingress controller has insufficient replicas: 2 (recommended: >= 3)
+
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  creationTimestamp: "2025-04-13T08:02:45Z"
+  finalizers:
+  - ingresscontroller.operator.openshift.io/finalizer-ingresscontroller
+  generation: 2
+  name: default
+  namespace: openshift-ingress-operator
+  resourceVersion: "29011"
+  uid: 4b51055a-aec8-4cea-9045-e97d939c1e14
+spec:
+  clientTLS:
+    clientCA:
+      name: ""
+    clientCertificatePolicy: ""
+  defaultCertificate:
+    name: cert-manager-ingress-cert
+  httpCompression: {}
+  httpEmptyRequestsPolicy: Respond
+  httpErrorCodePages:
+    name: ""
+  replicas: 2
+  tuningOptions:
+    reloadInterval: 0s
+  unsupportedConfigOverrides: null
+status:
+  availableReplicas: 2
+  conditions:
+  - lastTransitionTime: "2025-04-13T08:02:46Z"
+    reason: Valid
+    status: "True"
+    type: Admitted
+  - lastTransitionTime: "2025-04-13T08:21:47Z"
+    message: The deployment has Available status condition set to True
+    reason: DeploymentAvailable
+    status: "True"
+    type: DeploymentAvailable
+  - lastTransitionTime: "2025-04-13T08:21:47Z"
+    message: Minimum replicas requirement is met
+    reason: DeploymentMinimumReplicasMet
+    status: "True"
+    type: DeploymentReplicasMinAvailable
+  - lastTransitionTime: "2025-04-13T08:44:28Z"
+    message: All replicas are available
+    reason: DeploymentReplicasAvailable
+    status: "True"
+    type: DeploymentReplicasAllAvailable
+  - lastTransitionTime: "2025-04-13T08:44:28Z"
+    message: Deployment is not actively rolling out
+    reason: DeploymentNotRollingOut
+    status: "False"
+    type: DeploymentRollingOut
+  - lastTransitionTime: "2025-04-13T08:02:46Z"
+    message: The endpoint publishing strategy supports a managed load balancer
+    reason: WantedByEndpointPublishingStrategy
+    status: "True"
+    type: LoadBalancerManaged
+  - lastTransitionTime: "2025-04-13T08:02:48Z"
+    message: The LoadBalancer service is provisioned
+    reason: LoadBalancerProvisioned
+    status: "True"
+    type: LoadBalancerReady
+  - lastTransitionTime: "2025-04-13T08:02:46Z"
+    message: LoadBalancer is not progressing
+    reason: LoadBalancerNotProgressing
+    status: "False"
+    type: LoadBalancerProgressing
+  - lastTransitionTime: "2025-04-13T08:02:46Z"
+    message: DNS management is supported and zones are specified in the cluster DNS
+      config.
+    reason: Normal
+    status: "True"
+    type: DNSManaged
+  - lastTransitionTime: "2025-04-13T08:03:36Z"
+    message: The record is provisioned in all reported zones.
+    reason: NoFailedZones
+    status: "True"
+    type: DNSReady
+  - lastTransitionTime: "2025-04-13T08:21:47Z"
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-04-13T08:44:28Z"
+    status: "False"
+    type: Progressing
+  - lastTransitionTime: "2025-04-13T08:21:47Z"
+    status: "False"
+    type: Degraded
+  - lastTransitionTime: "2025-04-13T08:02:46Z"
+    message: IngressController is upgradeable.
+    reason: Upgradeable
+    status: "True"
+    type: Upgradeable
+  - lastTransitionTime: "2025-04-13T08:02:46Z"
+    message: No evaluation condition is detected.
+    reason: NoEvaluationCondition
+    status: "False"
+    type: EvaluationConditionsDetected
+  - lastTransitionTime: "2025-04-13T08:21:47Z"
+    message: Canary route checks for the default ingress controller are successful
+    reason: CanaryChecksSucceeding
+    status: "True"
+    type: CanaryChecksSucceeding
+  domain: apps.cluster-6cxmx.6cxmx.sandbox2376.opentlc.com
+  endpointPublishingStrategy:
+    loadBalancer:
+      dnsManagementPolicy: Managed
+      providerParameters:
+        aws:
+          classicLoadBalancer:
+            connectionIdleTimeout: 0s
+          type: Classic
+        type: AWS
+      scope: External
+    type: LoadBalancerService
+  observedGeneration: 2
+  selector: ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default
+  tlsProfile:
+    ciphers:
+    - ECDHE-ECDSA-AES128-GCM-SHA256
+    - ECDHE-RSA-AES128-GCM-SHA256
+    - ECDHE-ECDSA-AES256-GCM-SHA384
+    - ECDHE-RSA-AES256-GCM-SHA384
+    - ECDHE-ECDSA-CHACHA20-POLY1305
+    - ECDHE-RSA-CHACHA20-POLY1305
+    - DHE-RSA-AES128-GCM-SHA256
+    - DHE-RSA-AES256-GCM-SHA384
+    - TLS_AES_128_GCM_SHA256
+    - TLS_AES_256_GCM_SHA384
+    - TLS_CHACHA20_POLY1305_SHA256
+    minTLSVersion: VersionTLS12
+
+----
+
+*Execution Time:* 4.568162291s
+
+'''
+
+=== Monitoring Storage
+
+*ID:* monitoring-storage
+
+*Description:* Checks if OpenShift monitoring components have persistent storage configured
+
+*Category:* Monitoring
+
+*Status:* Warning
+
+*Message:* OpenShift monitoring components do not have persistent storage configured
+
+*Recommendations:*
+
+* Configure persistent storage for monitoring components
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/monitoring/configuring-the-monitoring-stack
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/monitoring/index#configuring_persistent_storage_configuring-the-monitoring-stack
+
+*Details:*
+
+----
+Failed to get detailed monitoring ConfigMap information
+----
+
+*Execution Time:* 1.916885916s
+
+'''
+
+=== User Workload Monitoring
+
+*ID:* user-workload-monitoring
+
+*Description:* Checks if monitoring for user-defined projects is enabled
+
+*Category:* Monitoring
+
+*Status:* OK
+
+*Message:* User workload monitoring is enabled
+
+*Details:*
+
+----
+Failed to get detailed monitoring ConfigMap information
+----
+
+*Execution Time:* 2.023612875s
+
+'''
+
+=== OpenShift Logging Installation
+
+*ID:* logging-install
+
+*Description:* Checks if OpenShift Logging is installed and configured correctly
+
+*Category:* Monitoring
+
+*Status:* Warning
+
+*Message:* OpenShift Logging is not installed
+
+*Execution Time:* 1.341210667s
+
+'''
+
+=== OpenShift Logging Health
+
+*ID:* logging-health
+
+*Description:* Checks if OpenShift Logging components are functioning and healthy
+
+*Category:* Monitoring
+
+*Status:* NotApplicable
+
+*Message:* OpenShift Logging is not installed
+
+*Execution Time:* 1.183443834s
+
+'''
+
+=== OpenShift Logging Storage
+
+*ID:* logging-storage
+
+*Description:* Checks if Elasticsearch has sufficient storage space
+
+*Category:* Monitoring
+
+*Status:* NotApplicable
+
+*Message:* OpenShift Logging is not installed
+
+*Execution Time:* 1.173952042s
+
+'''
+
+=== Log Forwarding
+
+*ID:* logging-forwarder
+
+*Description:* Checks if log forwarding is configured for long-term storage
+
+*Category:* Monitoring
+
+*Status:* NotApplicable
+
+*Message:* OpenShift Logging is not installed
+
+*Execution Time:* 1.17322s
+
+'''
+
+=== Logging Component Placement
+
+*ID:* logging-placement
+
+*Description:* Checks if Elasticsearch pods are scheduled on appropriate nodes
+
+*Category:* Monitoring
+
+*Status:* NotApplicable
+
+*Message:* OpenShift Logging is not installed
+
+*Execution Time:* 1.202290584s
+
+'''
+
+=== Service Monitors
+
+*ID:* service-monitors
+
+*Description:* Checks if ServiceMonitors are configured for monitoring application metrics
+
+*Category:* Monitoring
+
+*Status:* Warning
+
+*Message:* No ServiceMonitors found for application metrics monitoring
+
+*Recommendations:*
+
+* Create ServiceMonitors for your applications to collect custom metrics
+* Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/4.17/html-single/monitoring/index#specifying-how-a-service-is-monitored
+
+*Details:*
+
+----
+ServiceMonitors found:
+
+No user ServiceMonitors found
+
+----
+
+*Execution Time:* 1.500018709s
+
+'''
+
+=== Application Probes
+
+*ID:* application-probes
+
+*Description:* Checks if applications have readiness and liveness probes configured
+
+*Category:* Applications
+
+*Status:* Warning
+
+*Message:* Many user workloads are missing probes: 100.0% missing readiness probes, 50.0% missing liveness probes
+
+*Recommendations:*
+
+* Configure readiness and liveness probes for all user workloads
+* Follow the Kubernetes documentation on pod lifecycle and probes: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+
+*Details:*
+
+----
+Summary:
+- Total user workloads: 2
+- Workloads missing readiness probes: 2 (100.0%)
+- Workloads missing liveness probes: 1 (50.0%)
+- Workloads missing both probes: 1 (50.0%)
+
+Affected namespaces:
+- cert-manager
+
+Affected workloads:
+- Deployment 'cert-manager' in namespace 'cert-manager' is missing readiness probe
+- Deployment 'cert-manager-cainjector' in namespace 'cert-manager' is missing both readiness and liveness probes
+
+
+What are Readiness and Liveness Probes?
+
+Readiness Probe: Determines if a container is ready to accept traffic. When a pod's readiness check fails, it is removed from service load balancers.
+
+Liveness Probe: Determines if a container is still running as expected. When a liveness check fails, Kubernetes will restart the container.
+
+Benefits of using probes:
+- Prevents traffic from being sent to unready containers
+- Automatically restarts unhealthy containers
+- Improves application resilience and availability
+- Facilitates smoother deployments and updates
+- Provides better visibility into application health
+
+----
+
+*Execution Time:* 1.413361084s
+
+'''
+
+=== Resource Quotas
+
+*ID:* resource-quotas
+
+*Description:* Checks if resource quotas and limits are configured
+
+*Category:* Applications
+
+*Status:* Warning
+
+*Message:* Only 0.0% of user namespaces (0 out of 2) have both resource quotas and limit ranges configured
+
+*Recommendations:*
+
+* Configure resource quotas and limit ranges for all user namespaces
+* Follow the Kubernetes documentation on resource quotas: https://kubernetes.io/docs/concepts/policy/resource-quotas/
+* Follow the Kubernetes documentation on limit ranges: https://kubernetes.io/docs/concepts/policy/limit-range/
+
+*Details:*
+
+----
+Summary:
+- Total user namespaces: 2
+- Namespaces with resource quotas: 0 (0.0%)
+- Namespaces with limit ranges: 0 (0.0%)
+- Namespaces with both: 0 (0.0%)
+
+Namespaces without resource quotas:
+- cert-manager
+- cert-manager-operator
+
+Namespaces without limit ranges:
+- cert-manager
+- cert-manager-operator
+
+Namespaces without both:
+- cert-manager
+- cert-manager-operator
+
+
+What are Resource Quotas and Limit Ranges?
+
+Resource Quotas: Define the total amount of resources a namespace can use. They limit the total CPU, memory, and other resources that can be consumed by all pods in a namespace.
+
+Limit Ranges: Define default resource limits and requests for containers in a namespace. They can also enforce minimum and maximum resource usage limits.
+
+Benefits of using Resource Quotas and Limit Ranges:
+- Prevent resource starvation by limiting the total resources a namespace can consume
+- Ensure fair resource allocation across namespaces
+- Protect against runaway applications that might consume all available resources
+- Enforce resource constraints and prevent resource leaks
+- Help with capacity planning and cost management
+
+----
+
+*Execution Time:* 1.417010208s
+
+'''
+
+=== EmptyDir Volumes
+
+*ID:* emptydir-volumes
+
+*Description:* Checks for applications using emptyDir volumes, which are ephemeral and not recommended for persistent data
+
+*Category:* Applications
+
+*Status:* OK
+
+*Message:* No user workloads are using emptyDir volumes
+
+*Execution Time:* 1.643103292s
+
+'''
+
+=== Storage Classes
+
+*ID:* storage-classes
+
+*Description:* Checks if appropriate storage classes are configured
+
+*Category:* Storage
+
+*Status:* Warning
+
+*Message:* Default storage class 'gp3-csi' is configured, but no ReadWriteMany (RWX) capable storage class found
+
+*Recommendations:*
+
+* Consider adding a storage class that supports ReadWriteMany access mode for shared storage needs
+
+*Details:*
+
+----
+Available storage classes:
+gp2-csi, gp3-csi
+
+Detailed output:
+NAME                PROVISIONER       RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+gp2-csi             ebs.csi.aws.com   Delete          WaitForFirstConsumer   true                   126m
+gp3-csi (default)   ebs.csi.aws.com   Delete          WaitForFirstConsumer   true                   126m
+
+----
+
+*Execution Time:* 1.260425542s
+
+'''
+
+=== Persistent Volumes
+
+*ID:* persistent-volumes
+
+*Description:* Checks the health of persistent volumes
+
+*Category:* Storage
+
+*Status:* OK
+
+*Message:* All 0 persistent volumes are healthy
+
+*Execution Time:* 1.1678845s
+
+'''
+
+=== Storage Performance
+
+*ID:* storage-performance
+
+*Description:* Assesses storage performance characteristics
+
+*Category:* Storage
+
+*Status:* Warning
+
+*Message:* No storage classes with explicit performance characteristics found
+
+*Recommendations:*
+
+* Consider defining storage classes with different performance tiers
+* Label storage classes with performance characteristics for better workload placement
+
+*Details:*
+
+----
+Storage Class Details:
+apiVersion: v1
+items:
+- allowVolumeExpansion: true
+  apiVersion: storage.k8s.io/v1
+  kind: StorageClass
+  metadata:
+    creationTimestamp: "2025-04-13T08:02:16Z"
+    name: gp2-csi
+    resourceVersion: "5953"
+    uid: 16e400cf-2bc4-439e-89da-38641f2cf419
+  parameters:
+    encrypted: "true"
+    type: gp2
+  provisioner: ebs.csi.aws.com
+  reclaimPolicy: Delete
+  volumeBindingMode: WaitForFirstConsumer
+- allowVolumeExpansion: true
+  apiVersion: storage.k8s.io/v1
+  kind: StorageClass
+  metadata:
+    annotations:
+      storageclass.kubernetes.io/is-default-class: "true"
+    creationTimestamp: "2025-04-13T08:02:16Z"
+    name: gp3-csi
+    resourceVersion: "5949"
+    uid: 8103f5a6-95c0-4796-9c37-8d2d210e21e9
+  parameters:
+    encrypted: "true"
+    type: gp3
+  provisioner: ebs.csi.aws.com
+  reclaimPolicy: Delete
+  volumeBindingMode: WaitForFirstConsumer
+kind: List
+metadata:
+  resourceVersion: ""
+
+----
+
+*Execution Time:* 1.210304209s
+
+'''
+

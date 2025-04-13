@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ func NewClusterVersionCheck(latestVersion string) *ClusterVersionCheck {
 			"cluster-version",
 			"Cluster Version",
 			"Checks if the cluster is running the latest version of OpenShift",
-			healthcheck.CategoryCluster,
+			types.CategoryCluster,
 		),
 		latestVersion: latestVersion,
 	}
@@ -35,9 +36,9 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get cluster version",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting cluster version: %v", err)
 	}
 
@@ -47,9 +48,9 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 	if currentVersion == "" {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"No cluster version found",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("no cluster version found")
 	}
 
@@ -58,9 +59,9 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get detailed cluster version",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting detailed cluster version: %v", err)
 	}
 
@@ -69,9 +70,9 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to compare versions",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error comparing versions: %v", err)
 	}
 
@@ -79,9 +80,9 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 		// Current version is older than latest version
 		checkResult := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("Cluster version %s is not the latest version (%s)", currentVersion, c.latestVersion),
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		checkResult.AddRecommendation(fmt.Sprintf("Update to the latest version %s", c.latestVersion))
@@ -94,9 +95,9 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 	// Current version is the latest version or newer
 	checkResult := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("Cluster version %s is up to date", currentVersion),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 
 	checkResult.Detail = string(detailedOut)

@@ -2,6 +2,7 @@ package networking
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strconv"
 	"strings"
 
@@ -21,7 +22,7 @@ func NewIngressControllerCheck() *IngressControllerCheck {
 			"ingress-controller",
 			"Ingress Controller",
 			"Checks if the ingress controller is properly configured",
-			healthcheck.CategoryNetworking,
+			types.CategoryNetworking,
 		),
 	}
 }
@@ -35,9 +36,9 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check ingress controller type",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking ingress controller type: %v", err)
 	}
 
@@ -46,9 +47,9 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check ingress controller placement",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking ingress controller placement: %v", err)
 	}
 
@@ -57,9 +58,9 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check ingress controller replicas",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking ingress controller replicas: %v", err)
 	}
 
@@ -68,9 +69,9 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check ingress controller certificate",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking ingress controller certificate: %v", err)
 	}
 
@@ -79,25 +80,25 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 	recommendedActions := []string{}
 
 	// Add type check result
-	if typeResult.Status != healthcheck.StatusOK {
+	if typeResult.Status != types.StatusOK {
 		issues = append(issues, typeResult.Message)
 		recommendedActions = append(recommendedActions, typeResult.Recommendations...)
 	}
 
 	// Add placement check result
-	if placementResult.Status != healthcheck.StatusOK {
+	if placementResult.Status != types.StatusOK {
 		issues = append(issues, placementResult.Message)
 		recommendedActions = append(recommendedActions, placementResult.Recommendations...)
 	}
 
 	// Add replica check result
-	if replicaResult.Status != healthcheck.StatusOK {
+	if replicaResult.Status != types.StatusOK {
 		issues = append(issues, replicaResult.Message)
 		recommendedActions = append(recommendedActions, replicaResult.Recommendations...)
 	}
 
 	// Add certificate check result
-	if certResult.Status != healthcheck.StatusOK {
+	if certResult.Status != types.StatusOK {
 		issues = append(issues, certResult.Message)
 		recommendedActions = append(recommendedActions, certResult.Recommendations...)
 	}
@@ -113,23 +114,23 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 	if len(issues) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"Ingress controller is properly configured",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = detailedOut
 		return result, nil
 	}
 
 	// Create a result with issues and recommendations
-	resultStatus := healthcheck.StatusWarning
-	resultKey := healthcheck.ResultKeyRecommended
+	resultStatus := types.StatusWarning
+	resultKey := types.ResultKeyRecommended
 
 	// If there are critical issues, set status to Critical
 	for _, subResult := range []healthcheck.Result{typeResult, placementResult, replicaResult, certResult} {
-		if subResult.Status == healthcheck.StatusCritical {
-			resultStatus = healthcheck.StatusCritical
-			resultKey = healthcheck.ResultKeyRequired
+		if subResult.Status == types.StatusCritical {
+			resultStatus = types.StatusCritical
+			resultKey = types.ResultKeyRequired
 			break
 		}
 	}
@@ -161,9 +162,9 @@ func (c *IngressControllerCheck) checkControllerType() (healthcheck.Result, erro
 	if err != nil {
 		return healthcheck.NewResult(
 			"ingress-controller-type",
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get ingress controller type",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting ingress controller type: %v", err)
 	}
 
@@ -172,17 +173,17 @@ func (c *IngressControllerCheck) checkControllerType() (healthcheck.Result, erro
 	if ingressType == "default" {
 		return healthcheck.NewResult(
 			"ingress-controller-type",
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"Default OpenShift ingress controller is in use",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		), nil
 	}
 
 	result := healthcheck.NewResult(
 		"ingress-controller-type",
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		fmt.Sprintf("Non-default ingress controller type is in use: %s", ingressType),
-		healthcheck.ResultKeyAdvisory,
+		types.ResultKeyAdvisory,
 	)
 
 	result.AddRecommendation("Ensure the non-default ingress controller meets your requirements")
@@ -197,9 +198,9 @@ func (c *IngressControllerCheck) checkControllerPlacement() (healthcheck.Result,
 	if err != nil {
 		return healthcheck.NewResult(
 			"ingress-controller-placement",
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get ingress controller placement",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting ingress controller placement: %v", err)
 	}
 
@@ -214,17 +215,17 @@ func (c *IngressControllerCheck) checkControllerPlacement() (healthcheck.Result,
 	if strings.Contains(placement, "node-role.kubernetes.io/infra") {
 		return healthcheck.NewResult(
 			"ingress-controller-placement",
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"Ingress controller is placed on infrastructure nodes",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		), nil
 	}
 
 	result := healthcheck.NewResult(
 		"ingress-controller-placement",
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		"Ingress controller is not placed on dedicated infrastructure nodes",
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Configure the ingress controller to run on dedicated infrastructure nodes")
@@ -240,9 +241,9 @@ func (c *IngressControllerCheck) checkControllerReplicas() (healthcheck.Result, 
 	if err != nil {
 		return healthcheck.NewResult(
 			"ingress-controller-replicas",
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get ingress controller replicas",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting ingress controller replicas: %v", err)
 	}
 
@@ -259,9 +260,9 @@ func (c *IngressControllerCheck) checkControllerReplicas() (healthcheck.Result, 
 		// No replica count specified, likely using default (auto-scaling)
 		return healthcheck.NewResult(
 			"ingress-controller-replicas",
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"Ingress controller is using default replica configuration, which may not be optimal",
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		), nil
 	}
 
@@ -269,9 +270,9 @@ func (c *IngressControllerCheck) checkControllerReplicas() (healthcheck.Result, 
 	if err != nil {
 		return healthcheck.NewResult(
 			"ingress-controller-replicas",
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to parse ingress controller replica count",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error parsing ingress controller replicas: %v", err)
 	}
 
@@ -279,17 +280,17 @@ func (c *IngressControllerCheck) checkControllerReplicas() (healthcheck.Result, 
 	if replicas >= 3 {
 		return healthcheck.NewResult(
 			"ingress-controller-replicas",
-			healthcheck.StatusOK,
+			types.StatusOK,
 			fmt.Sprintf("Ingress controller has sufficient replicas: %d", replicas),
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		), nil
 	}
 
 	result := healthcheck.NewResult(
 		"ingress-controller-replicas",
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		fmt.Sprintf("Ingress controller has insufficient replicas: %d (recommended: >= 3)", replicas),
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Increase the number of ingress controller replicas to at least 3 for high availability")
@@ -306,9 +307,9 @@ func (c *IngressControllerCheck) checkControllerCertificate() (healthcheck.Resul
 	if err != nil {
 		return healthcheck.NewResult(
 			"ingress-controller-certificate",
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get ingress controller certificate configuration",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting ingress controller certificate: %v", err)
 	}
 
@@ -324,18 +325,18 @@ func (c *IngressControllerCheck) checkControllerCertificate() (healthcheck.Resul
 	if certificate != "" && certificate != "{}" {
 		return healthcheck.NewResult(
 			"ingress-controller-certificate",
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"Custom certificate is configured for the ingress controller",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		), nil
 	}
 
 	// If no custom certificate is configured, recommend configuring one
 	result := healthcheck.NewResult(
 		"ingress-controller-certificate",
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		"Default (self-signed) certificate is used for the ingress controller",
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Configure a custom certificate for the ingress controller to avoid browser warnings")

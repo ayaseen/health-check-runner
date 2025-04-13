@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -20,7 +21,7 @@ func NewDefaultProjectTemplateCheck() *DefaultProjectTemplateCheck {
 			"default-project-template",
 			"Default Project Template",
 			"Checks if a custom default project template is configured",
-			healthcheck.CategorySecurity,
+			types.CategorySecurity,
 		),
 	}
 }
@@ -32,9 +33,9 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check default project template",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking default project template: %v", err)
 	}
 
@@ -55,9 +56,9 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 	if strings.TrimSpace(out) == "" {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"No default project template is configured",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Configure a default project template to enforce consistent settings across new projects")
@@ -71,9 +72,9 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 	// Default project template is configured
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"Default project template is configured",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil

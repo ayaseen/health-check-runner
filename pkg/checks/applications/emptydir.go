@@ -3,6 +3,7 @@ package applications
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +24,7 @@ func NewEmptyDirVolumeCheck() *EmptyDirVolumeCheck {
 			"emptydir-volumes",
 			"EmptyDir Volumes",
 			"Checks for applications using emptyDir volumes, which are ephemeral and not recommended for persistent data",
-			healthcheck.CategoryApplications,
+			types.CategoryApplications,
 		),
 	}
 }
@@ -35,9 +36,9 @@ func (c *EmptyDirVolumeCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -47,9 +48,9 @@ func (c *EmptyDirVolumeCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve namespaces",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving namespaces: %v", err)
 	}
 
@@ -196,9 +197,9 @@ func (c *EmptyDirVolumeCheck) Run() (healthcheck.Result, error) {
 	if totalWorkloads == 0 {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"No user workloads found in the cluster",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		), nil
 	}
 
@@ -206,9 +207,9 @@ func (c *EmptyDirVolumeCheck) Run() (healthcheck.Result, error) {
 	if workloadsWithEmptyDir == 0 {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"No user workloads are using emptyDir volumes",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		), nil
 	}
 
@@ -234,21 +235,21 @@ Recommended alternatives:
 `
 
 	// Create result based on the percentage of workloads using emptyDir volumes
-	var status healthcheck.Status
-	var resultKey healthcheck.ResultKey
+	var status types.Status
+	var resultKey types.ResultKey
 	var message string
 
 	// Determine result status based on percentage of workloads using emptyDir volumes
 	if emptyDirPercentage > 50 {
 		// Warning if more than half of workloads use emptyDir volumes
-		status = healthcheck.StatusWarning
-		resultKey = healthcheck.ResultKeyRecommended
+		status = types.StatusWarning
+		resultKey = types.ResultKeyRecommended
 		message = fmt.Sprintf("%.1f%% of user workloads (%d out of %d) are using emptyDir volumes",
 			emptyDirPercentage, workloadsWithEmptyDir, totalWorkloads)
 	} else {
 		// Otherwise, just an advisory
-		status = healthcheck.StatusWarning
-		resultKey = healthcheck.ResultKeyAdvisory
+		status = types.StatusWarning
+		resultKey = types.ResultKeyAdvisory
 		message = fmt.Sprintf("%d user workloads are using emptyDir volumes", workloadsWithEmptyDir)
 	}
 

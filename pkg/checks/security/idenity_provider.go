@@ -3,6 +3,7 @@ package security
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -44,7 +45,7 @@ func NewIdentityProviderCheck() *IdentityProviderCheck {
 			"identity-provider",
 			"Identity Provider Configuration",
 			"Checks if a central identity provider (LDAP) is properly configured and secure",
-			healthcheck.CategorySecurity,
+			types.CategorySecurity,
 		),
 	}
 }
@@ -56,9 +57,9 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get OAuth configuration",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting OAuth configuration: %v", err)
 	}
 
@@ -67,9 +68,9 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 	if err := json.Unmarshal([]byte(out), &idpConfig); err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to parse OAuth configuration",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error parsing OAuth configuration: %v", err)
 	}
 
@@ -90,9 +91,9 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 	if len(idpConfig.Spec.IdentityProviders) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"No identity providers are configured",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		)
 		result.AddRecommendation("Configure at least one identity provider for user authentication")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#understanding-identity-provider", version))
@@ -112,9 +113,9 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 		// No LDAP providers, but other providers exist
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("Identity providers are configured (%s), but no LDAP provider found", getProviderTypes(idpConfig.Spec.IdentityProviders)),
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 		result.AddRecommendation("Configure a central identity provider (LDAP) for better integration with existing identity management systems")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider", version))
@@ -144,9 +145,9 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 	if len(insecureProviders) > 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("LDAP providers are configured but some are using insecure connections: %s", strings.Join(insecureProviders, ", ")),
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 		result.AddRecommendation("Configure LDAP providers to use secure connections (ldaps:// or set insecure to false)")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider", version))
@@ -158,9 +159,9 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 	if len(noSearchFilterProviders) > 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("LDAP providers are configured but some are missing search filters: %s", strings.Join(noSearchFilterProviders, ", ")),
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		)
 		result.AddRecommendation("Configure LDAP providers with appropriate search filters to limit the scope of user searches")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider", version))
@@ -171,9 +172,9 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 	// All checks passed
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("LDAP identity providers are properly configured: %s", strings.Join(ldapProviders, ", ")),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil

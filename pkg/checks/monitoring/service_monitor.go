@@ -3,6 +3,7 @@ package monitoring
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -25,7 +26,7 @@ func NewServiceMonitorCheck() *ServiceMonitorCheck {
 			"service-monitors",
 			"Service Monitors",
 			"Checks if ServiceMonitors are configured for monitoring application metrics",
-			healthcheck.CategoryMonitoring,
+			types.CategoryMonitoring,
 		),
 	}
 }
@@ -37,9 +38,9 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client configuration",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client configuration: %v", err)
 	}
 
@@ -48,9 +49,9 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to create Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error creating Kubernetes client: %v", err)
 	}
 
@@ -72,9 +73,9 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 		if !cmExists {
 			result := healthcheck.NewResult(
 				c.ID(),
-				healthcheck.StatusWarning,
+				types.StatusWarning,
 				"User Workload Monitoring is not enabled in the cluster",
-				healthcheck.ResultKeyRecommended,
+				types.ResultKeyRecommended,
 			)
 
 			// Get OpenShift version for documentation links
@@ -92,9 +93,9 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 		// If the user workload monitoring is enabled but we can't get ServiceMonitors, there's a different issue
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to list ServiceMonitors",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error listing ServiceMonitors: %v", err)
 	}
 
@@ -140,9 +141,9 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 	if len(userServiceMonitors) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"No ServiceMonitors found for application metrics monitoring",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Create ServiceMonitors for your applications to collect custom metrics")
@@ -155,9 +156,9 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 	// At least one user ServiceMonitor exists
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("Found %d ServiceMonitors for application metrics monitoring", len(userServiceMonitors)),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 
 	result.Detail = detailedOut.String()

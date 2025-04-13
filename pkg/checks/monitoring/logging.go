@@ -2,6 +2,7 @@ package monitoring
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"regexp"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ func NewLoggingInstallCheck() *LoggingInstallCheck {
 			"logging-install",
 			"OpenShift Logging Installation",
 			"Checks if OpenShift Logging is installed and configured correctly",
-			healthcheck.CategoryMonitoring,
+			types.CategoryMonitoring,
 		),
 	}
 }
@@ -35,9 +36,9 @@ func (c *LoggingInstallCheck) Run() (healthcheck.Result, error) {
 		// If an error occurred, logging might not be installed
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"OpenShift Logging is not installed",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		), nil
 	}
 
@@ -60,9 +61,9 @@ func (c *LoggingInstallCheck) Run() (healthcheck.Result, error) {
 
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"OpenShift Logging is not properly configured",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Deploy the logging subsystem to aggregate logs from your OpenShift Container Platform cluster")
@@ -75,9 +76,9 @@ func (c *LoggingInstallCheck) Run() (healthcheck.Result, error) {
 	// Logging is installed and configured
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"OpenShift Logging is installed and configured",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = detailedOut
 	return result, nil
@@ -95,7 +96,7 @@ func NewLoggingHealthCheck() *LoggingHealthCheck {
 			"logging-health",
 			"OpenShift Logging Health",
 			"Checks if OpenShift Logging components are functioning and healthy",
-			healthcheck.CategoryMonitoring,
+			types.CategoryMonitoring,
 		),
 	}
 }
@@ -107,9 +108,9 @@ func (c *LoggingHealthCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check OpenShift Logging installation",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking logging installation: %v", err)
 	}
 
@@ -117,9 +118,9 @@ func (c *LoggingHealthCheck) Run() (healthcheck.Result, error) {
 	if !isInstalled {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"OpenShift Logging is not installed",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		), nil
 	}
 
@@ -128,9 +129,9 @@ func (c *LoggingHealthCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get logging status",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting logging status: %v", err)
 	}
 
@@ -146,9 +147,9 @@ func (c *LoggingHealthCheck) Run() (healthcheck.Result, error) {
 
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"OpenShift Logging is not healthy (status is yellow or red)",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Investigate the root cause of logging issues")
@@ -161,9 +162,9 @@ func (c *LoggingHealthCheck) Run() (healthcheck.Result, error) {
 	// Logging is healthy
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"OpenShift Logging is healthy",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = out
 	return result, nil
@@ -183,7 +184,7 @@ func NewLoggingStorageCheck() *LoggingStorageCheck {
 			"logging-storage",
 			"OpenShift Logging Storage",
 			"Checks if Elasticsearch has sufficient storage space",
-			healthcheck.CategoryMonitoring,
+			types.CategoryMonitoring,
 		),
 		warningThreshold:  85,
 		criticalThreshold: 95,
@@ -197,9 +198,9 @@ func (c *LoggingStorageCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check OpenShift Logging installation",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking logging installation: %v", err)
 	}
 
@@ -207,9 +208,9 @@ func (c *LoggingStorageCheck) Run() (healthcheck.Result, error) {
 	if !isInstalled {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"OpenShift Logging is not installed",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		), nil
 	}
 
@@ -218,9 +219,9 @@ func (c *LoggingStorageCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Elasticsearch information",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Elasticsearch information: %v", err)
 	}
 
@@ -231,9 +232,9 @@ func (c *LoggingStorageCheck) Run() (healthcheck.Result, error) {
 	if diskUsage == -1 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"Could not determine Elasticsearch storage usage",
-			healthcheck.ResultKeyAdvisory,
+			types.ResultKeyAdvisory,
 		)
 		result.Detail = out
 		return result, nil
@@ -249,9 +250,9 @@ func (c *LoggingStorageCheck) Run() (healthcheck.Result, error) {
 	if diskUsage >= c.criticalThreshold {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			fmt.Sprintf("Elasticsearch disk usage is critical: %d%%", diskUsage),
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		)
 
 		result.AddRecommendation("Expand the available storage for Elasticsearch")
@@ -263,9 +264,9 @@ func (c *LoggingStorageCheck) Run() (healthcheck.Result, error) {
 	} else if diskUsage >= c.warningThreshold {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			fmt.Sprintf("Elasticsearch disk usage is high: %d%%", diskUsage),
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Consider expanding the available storage for Elasticsearch")
@@ -279,9 +280,9 @@ func (c *LoggingStorageCheck) Run() (healthcheck.Result, error) {
 	// Storage usage is normal
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		fmt.Sprintf("Elasticsearch disk usage is normal: %d%%", diskUsage),
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = out
 	return result, nil
@@ -299,7 +300,7 @@ func NewLoggingForwarderCheck() *LoggingForwarderCheck {
 			"logging-forwarder",
 			"Log Forwarding",
 			"Checks if log forwarding is configured for long-term storage",
-			healthcheck.CategoryMonitoring,
+			types.CategoryMonitoring,
 		),
 	}
 }
@@ -311,9 +312,9 @@ func (c *LoggingForwarderCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check OpenShift Logging installation",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking logging installation: %v", err)
 	}
 
@@ -321,9 +322,9 @@ func (c *LoggingForwarderCheck) Run() (healthcheck.Result, error) {
 	if !isInstalled {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"OpenShift Logging is not installed",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		), nil
 	}
 
@@ -333,9 +334,9 @@ func (c *LoggingForwarderCheck) Run() (healthcheck.Result, error) {
 		// ClusterLogForwarder might not exist
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"Log forwarding is not configured",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		), nil
 	}
 
@@ -351,9 +352,9 @@ func (c *LoggingForwarderCheck) Run() (healthcheck.Result, error) {
 	if emptyConfig {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"Log forwarding is configured but has empty pipelines or outputs",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Configure proper log forwarding for long-term storage")
@@ -366,9 +367,9 @@ func (c *LoggingForwarderCheck) Run() (healthcheck.Result, error) {
 	// Log forwarding is properly configured
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"Log forwarding is properly configured",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = out
 	return result, nil
@@ -386,7 +387,7 @@ func NewLoggingPlacementCheck() *LoggingPlacementCheck {
 			"logging-placement",
 			"Logging Component Placement",
 			"Checks if Elasticsearch pods are scheduled on appropriate nodes",
-			healthcheck.CategoryMonitoring,
+			types.CategoryMonitoring,
 		),
 	}
 }
@@ -398,9 +399,9 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to check OpenShift Logging installation",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error checking logging installation: %v", err)
 	}
 
@@ -408,9 +409,9 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 	if !isInstalled {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"OpenShift Logging is not installed",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		), nil
 	}
 
@@ -419,9 +420,9 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Elasticsearch pods",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Elasticsearch pods: %v", err)
 	}
 
@@ -431,9 +432,9 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 		// There are no infra nodes defined, so this check is not applicable
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"No infrastructure nodes found in the cluster",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		), nil
 	}
 
@@ -484,9 +485,9 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 	if !allOnInfraNodes {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusWarning,
+			types.StatusWarning,
 			"Some Elasticsearch pods are not scheduled on infrastructure nodes",
-			healthcheck.ResultKeyRecommended,
+			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Move Elasticsearch pods to infrastructure nodes")
@@ -503,9 +504,9 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 	// All pods are on infra nodes
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"All Elasticsearch pods are scheduled on infrastructure nodes",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = out
 	return result, nil

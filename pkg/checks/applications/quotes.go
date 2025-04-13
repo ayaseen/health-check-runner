@@ -3,6 +3,7 @@ package applications
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +24,7 @@ func NewResourceQuotasCheck() *ResourceQuotasCheck {
 			"resource-quotas",
 			"Resource Quotas",
 			"Checks if resource quotas and limits are configured",
-			healthcheck.CategoryApplications,
+			types.CategoryApplications,
 		),
 	}
 }
@@ -35,9 +36,9 @@ func (c *ResourceQuotasCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Kubernetes client: %v", err)
 	}
 
@@ -47,9 +48,9 @@ func (c *ResourceQuotasCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to retrieve namespaces",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error retrieving namespaces: %v", err)
 	}
 
@@ -126,9 +127,9 @@ func (c *ResourceQuotasCheck) Run() (healthcheck.Result, error) {
 	if totalUserNamespaces == 0 {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusNotApplicable,
+			types.StatusNotApplicable,
 			"No user namespaces found in the cluster",
-			healthcheck.ResultKeyNotApplicable,
+			types.ResultKeyNotApplicable,
 		), nil
 	}
 
@@ -157,36 +158,36 @@ Benefits of using Resource Quotas and Limit Ranges:
 	if namespacesWithBoth == totalUserNamespaces {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			fmt.Sprintf("All %d user namespaces have both resource quotas and limit ranges configured", totalUserNamespaces),
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = quotasDescription
 		return result, nil
 	}
 
 	// Create result based on the percentage of namespaces with resource quotas and limit ranges
-	var status healthcheck.Status
-	var resultKey healthcheck.ResultKey
+	var status types.Status
+	var resultKey types.ResultKey
 	var message string
 
 	// Determine result status based on percentage of namespaces with resource constraints
 	if bothPercentage < 30 {
 		// Critical if less than 30% of namespaces have both resource quotas and limit ranges
-		status = healthcheck.StatusWarning
-		resultKey = healthcheck.ResultKeyRecommended
+		status = types.StatusWarning
+		resultKey = types.ResultKeyRecommended
 		message = fmt.Sprintf("Only %.1f%% of user namespaces (%d out of %d) have both resource quotas and limit ranges configured",
 			bothPercentage, namespacesWithBoth, totalUserNamespaces)
 	} else if quotasPercentage < 50 || limitsPercentage < 50 {
 		// Warning if less than 50% of namespaces have either resource quotas or limit ranges
-		status = healthcheck.StatusWarning
-		resultKey = healthcheck.ResultKeyRecommended
+		status = types.StatusWarning
+		resultKey = types.ResultKeyRecommended
 		message = fmt.Sprintf("Many user namespaces are missing resource constraints: %.1f%% have resource quotas, %.1f%% have limit ranges",
 			quotasPercentage, limitsPercentage)
 	} else {
 		// Otherwise, just an advisory
-		status = healthcheck.StatusWarning
-		resultKey = healthcheck.ResultKeyAdvisory
+		status = types.StatusWarning
+		resultKey = types.ResultKeyAdvisory
 		message = fmt.Sprintf("Some user namespaces are missing resource constraints: %d missing resource quotas, %d missing limit ranges",
 			totalUserNamespaces-namespacesWithResourceQuotas, totalUserNamespaces-namespacesWithLimitRanges)
 	}

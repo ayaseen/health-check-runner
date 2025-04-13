@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -20,7 +21,7 @@ func NewEtcdHealthCheck() *EtcdHealthCheck {
 			"etcd-health",
 			"ETCD Health",
 			"Checks the health of the etcd cluster",
-			healthcheck.CategorySecurity,
+			types.CategorySecurity,
 		),
 	}
 }
@@ -32,9 +33,9 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get etcd operator status",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting etcd operator status: %v", err)
 	}
 
@@ -52,9 +53,9 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get etcd operator availability status",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting etcd operator availability status: %v", err)
 	}
 
@@ -76,8 +77,8 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 
 	// If etcd is degraded or not available, the check fails
 	if degraded == "True" || available != "True" || !allPodsRunning {
-		status := healthcheck.StatusCritical
-		resultKey := healthcheck.ResultKeyRequired
+		status := types.StatusCritical
+		resultKey := types.ResultKeyRequired
 
 		// Create detailed message based on the issues found
 		var issues []string
@@ -113,9 +114,9 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 	// If everything looks good, return OK
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusOK,
+		types.StatusOK,
 		"ETCD cluster is healthy",
-		healthcheck.ResultKeyNoChange,
+		types.ResultKeyNoChange,
 	)
 	result.Detail = fmt.Sprintf("ETCD Operator Information:\n%s\n\nETCD Pods Information:\n%s", detailedOut, etcdPodsOut)
 	return result, nil

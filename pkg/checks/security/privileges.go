@@ -3,6 +3,7 @@ package security
 import (
 	"context"
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -33,7 +34,7 @@ func NewElevatedPrivilegesCheck() *ElevatedPrivilegesCheck {
 			"elevated-privileges",
 			"Elevated Privileges",
 			"Checks for workloads running with elevated privileges",
-			healthcheck.CategorySecurity,
+			types.CategorySecurity,
 		),
 	}
 }
@@ -45,9 +46,9 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get cluster config",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting cluster config: %v", err)
 	}
 
@@ -55,9 +56,9 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to create Kubernetes client",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error creating Kubernetes client: %v", err)
 	}
 
@@ -67,9 +68,9 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to list namespaces",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error listing namespaces: %v", err)
 	}
 
@@ -136,9 +137,9 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 	if len(privilegedWorkloads) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			"No user workloads using privileged containers were found",
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		return result, nil
 	}
@@ -195,9 +196,9 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 	// Create result with privileged workloads information
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		fmt.Sprintf("Found %d workloads running with elevated privileges", len(privilegedWorkloads)),
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Review and remove privileged containers from user workloads unless absolutely necessary")

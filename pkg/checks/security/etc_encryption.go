@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -20,7 +21,7 @@ func NewEtcdEncryptionCheck() *EtcdEncryptionCheck {
 			"etcd-encryption",
 			"ETCD Encryption",
 			"Checks if etcd encryption is enabled for sensitive data",
-			healthcheck.CategorySecurity,
+			types.CategorySecurity,
 		),
 	}
 }
@@ -32,9 +33,9 @@ func (c *EtcdEncryptionCheck) Run() (healthcheck.Result, error) {
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusCritical,
+			types.StatusCritical,
 			"Failed to get etcd encryption configuration",
-			healthcheck.ResultKeyRequired,
+			types.ResultKeyRequired,
 		), fmt.Errorf("error getting etcd encryption configuration: %v", err)
 	}
 
@@ -51,9 +52,9 @@ func (c *EtcdEncryptionCheck) Run() (healthcheck.Result, error) {
 	if encryptionType == "aescbc" || encryptionType == "aesgcm" {
 		result := healthcheck.NewResult(
 			c.ID(),
-			healthcheck.StatusOK,
+			types.StatusOK,
 			fmt.Sprintf("ETCD encryption is enabled with type: %s", encryptionType),
-			healthcheck.ResultKeyNoChange,
+			types.ResultKeyNoChange,
 		)
 		result.Detail = detailedOut
 		return result, nil
@@ -62,9 +63,9 @@ func (c *EtcdEncryptionCheck) Run() (healthcheck.Result, error) {
 	// Create result with recommendation to enable encryption
 	result := healthcheck.NewResult(
 		c.ID(),
-		healthcheck.StatusWarning,
+		types.StatusWarning,
 		"ETCD encryption is not enabled",
-		healthcheck.ResultKeyRecommended,
+		types.ResultKeyRecommended,
 	)
 
 	result.AddRecommendation("Enable etcd encryption to protect sensitive data")
