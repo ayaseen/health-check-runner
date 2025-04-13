@@ -26,13 +26,13 @@ func GenerateFullAsciiDocReport(title string, checks []types.Check, results map[
 		// Map old categories to new ones for consistent reporting
 		category := check.Category()
 		switch category {
-		case types.CategoryClusterConfig:
-			category = types.CategoryClusterConfigConfig
+		case types.CategoryCluster:
+			category = types.CategoryClusterConfig // Fixed from ClusterConfigConfig
 		case types.CategoryNetworking:
 			category = types.CategoryNetwork
 		case types.CategoryApplications:
 			category = types.CategoryAppDev
-		case types.CategoryOpReady:
+		case types.CategoryMonitoring:
 			category = types.CategoryOpReady
 		case types.CategoryInfrastructure:
 			category = types.CategoryInfra
@@ -73,13 +73,13 @@ func OrganizeChecksByCategory(checks []types.Check) map[types.Category][]types.C
 		// Map old categories to new ones for consistent reporting
 		category := check.Category()
 		switch category {
-		case types.CategoryClusterConfig:
-			category = types.CategoryClusterConfigConfig
+		case types.CategoryCluster:
+			category = types.CategoryClusterConfig // Fixed from ClusterConfigConfig
 		case types.CategoryNetworking:
 			category = types.CategoryNetwork
 		case types.CategoryApplications:
 			category = types.CategoryAppDev
-		case types.CategoryOpReady:
+		case types.CategoryMonitoring:
 			category = types.CategoryOpReady
 		case types.CategoryInfrastructure:
 			category = types.CategoryInfra
@@ -97,7 +97,7 @@ func GetSortedCategories() []types.Category {
 		types.CategoryInfra,
 		types.CategoryNetwork,
 		types.CategoryStorage,
-		types.CategoryClusterConfigConfig,
+		types.CategoryClusterConfig, // Fixed from ClusterConfigConfig
 		types.CategoryAppDev,
 		types.CategorySecurity,
 		types.CategoryOpReady,
