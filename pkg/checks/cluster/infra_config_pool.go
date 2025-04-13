@@ -21,7 +21,7 @@ func NewInfraMachineConfigPoolCheck() *InfraMachineConfigPoolCheck {
 			"infra-machine-config-pool",
 			"Infrastructure Machine Config Pool",
 			"Checks if a dedicated infrastructure machine config pool exists",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 	}
 }

@@ -31,7 +31,7 @@ func NewProxySettingsCheck() *ProxySettingsCheck {
 			"proxy-settings",
 			"OpenShift Proxy Settings",
 			"Checks the proxy configuration for the OpenShift cluster",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 	}
 }

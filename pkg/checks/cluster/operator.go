@@ -26,7 +26,7 @@ func NewClusterOperatorsCheck() *ClusterOperatorsCheck {
 			"cluster-operators",
 			"Cluster Operators",
 			"Checks if all cluster operators are available",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 	}
 }

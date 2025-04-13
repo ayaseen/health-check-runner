@@ -23,7 +23,7 @@ func NewClusterVersionCheck(latestVersion string) *ClusterVersionCheck {
 			"cluster-version",
 			"Cluster Version",
 			"Checks if the cluster is running the latest version of OpenShift",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 		latestVersion: latestVersion,
 	}

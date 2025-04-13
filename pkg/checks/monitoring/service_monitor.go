@@ -26,7 +26,7 @@ func NewServiceMonitorCheck() *ServiceMonitorCheck {
 			"service-monitors",
 			"Service Monitors",
 			"Checks if ServiceMonitors are configured for monitoring application metrics",
-			types.CategoryMonitoring,
+			types.CategoryOpReady,
 		),
 	}
 }

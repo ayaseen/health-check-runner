@@ -24,7 +24,7 @@ func NewControlNodeSchedulableCheck() *ControlNodeSchedulableCheck {
 			"control-node-schedulable",
 			"Control Plane Node Schedulability",
 			"Checks if control plane nodes are marked as unschedulable for regular workloads",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 	}
 }
@@ -124,7 +124,7 @@ func NewWorkloadOffInfraNodesCheck() *WorkloadOffInfraNodesCheck {
 			"workload-off-infra-nodes",
 			"Workloads on Infrastructure Nodes",
 			"Checks if user workloads are scheduled on infrastructure nodes",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 	}
 }
@@ -271,7 +271,7 @@ func NewInstallationTypeCheck() *InstallationTypeCheck {
 			"installation-type",
 			"Installation Type",
 			"Checks the installation type of OpenShift",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 	}
 }

@@ -47,25 +47,32 @@ const (
 type Category string
 
 const (
-	// CategoryCluster is for cluster-level checks
-	CategoryCluster Category = "Cluster"
+	// CategoryInfra is for infrastructure-level checks (renamed from Infrastructure)
+	CategoryInfra Category = "Infra"
 
-	// CategorySecurity is for security-related checks
-	CategorySecurity Category = "Security"
+	// CategoryNetwork is for networking-related checks (changed from Networking)
+	CategoryNetwork Category = "Network"
 
-	// CategoryNetworking is for networking-related checks
-	CategoryNetworking Category = "Networking"
-
-	// CategoryStorage is for storage-related checks
+	// CategoryStorage is for storage-related checks (unchanged)
 	CategoryStorage Category = "Storage"
 
-	// CategoryApplications is for application-related checks
-	CategoryApplications Category = "Applications"
+	// CategoryClusterConfig is for cluster-level checks (changed from Cluster)
+	CategoryClusterConfig Category = "Cluster Config"
 
-	// CategoryMonitoring is for monitoring-related checks
-	CategoryMonitoring Category = "Monitoring"
+	// CategoryAppDev is for application-related checks (changed from Applications)
+	CategoryAppDev Category = "App Dev"
 
-	// CategoryInfrastructure is for infrastructure-related checks
+	// CategorySecurity is for security-related checks (unchanged)
+	CategorySecurity Category = "Security"
+
+	// CategoryOpReady is for monitoring-related checks (changed from Monitoring)
+	CategoryOpReady Category = "Op-Ready"
+
+	// Keep the original categories for backward compatibility during transition
+	CategoryCluster        Category = "Cluster"
+	CategoryNetworking     Category = "Networking"
+	CategoryApplications   Category = "Applications"
+	CategoryMonitoring     Category = "Monitoring"
 	CategoryInfrastructure Category = "Infrastructure"
 )
 

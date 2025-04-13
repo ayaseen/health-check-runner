@@ -25,7 +25,7 @@ func NewNodeStatusCheck() *NodeStatusCheck {
 			"node-status",
 			"Node Status",
 			"Checks if all nodes are ready",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 	}
 }
@@ -121,7 +121,7 @@ func NewNodeUsageCheck() *NodeUsageCheck {
 			"node-usage",
 			"Node Usage",
 			"Checks if nodes are within CPU and memory usage thresholds",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 		cpuThreshold:    80, // 80% CPU usage threshold
 		memoryThreshold: 80, // 80% memory usage threshold

@@ -21,7 +21,7 @@ func NewInfrastructureNodesCheck() *InfrastructureNodesCheck {
 			"infrastructure-nodes",
 			"Infrastructure Nodes",
 			"Checks if dedicated infrastructure nodes are configured",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 	}
 }

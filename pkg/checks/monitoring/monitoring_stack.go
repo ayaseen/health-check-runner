@@ -36,7 +36,7 @@ func NewMonitoringStorageCheck() *MonitoringStorageCheck {
 			"monitoring-storage",
 			"Monitoring Storage",
 			"Checks if OpenShift monitoring components have persistent storage configured",
-			types.CategoryMonitoring,
+			types.CategoryOpReady,
 		),
 	}
 }
@@ -138,7 +138,7 @@ func NewUserWorkloadMonitoringCheck() *UserWorkloadMonitoringCheck {
 			"user-workload-monitoring",
 			"User Workload Monitoring",
 			"Checks if monitoring for user-defined projects is enabled",
-			types.CategoryMonitoring,
+			types.CategoryOpReady,
 		),
 	}
 }

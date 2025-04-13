@@ -21,7 +21,7 @@ func NewInfrastructureProviderCheck() *InfrastructureProviderCheck {
 			"infrastructure-provider",
 			"Infrastructure Provider",
 			"Checks the infrastructure provider configuration",
-			types.CategoryCluster,
+			types.CategoryClusterConfig,
 		),
 	}
 }

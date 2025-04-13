@@ -49,13 +49,13 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 	// Add all checks to the summary section
 	// Order categories as in the old report
 	orderedCategories := []types.Category{
-		types.CategoryInfrastructure,
-		types.CategoryNetworking,
+		types.CategoryInfra,
+		types.CategoryNetwork,
 		types.CategoryStorage,
-		types.CategoryCluster,
-		types.CategoryApplications,
+		types.CategoryClusterConfigConfig,
+		types.CategoryAppDev,
 		types.CategorySecurity,
-		types.CategoryMonitoring,
+		types.CategoryOpReady,
 	}
 
 	for _, category := range orderedCategories {
@@ -257,6 +257,21 @@ func groupChecksByCategory(checks []types.Check, results map[string]types.Result
 	for _, check := range checks {
 		if _, exists := results[check.ID()]; exists {
 			category := check.Category()
+
+			// Map old categories to new ones for consistent reporting
+			switch category {
+			case types.CategoryClusterConfig:
+				category = types.CategoryClusterConfigConfig
+			case types.CategoryNetworking:
+				category = types.CategoryNetwork
+			case types.CategoryApplications:
+				category = types.CategoryAppDev
+			case types.CategoryOpReady:
+				category = types.CategoryOpReady
+			case types.CategoryInfrastructure:
+				category = types.CategoryInfra
+			}
+
 			categorized[category] = append(categorized[category], check)
 		}
 	}

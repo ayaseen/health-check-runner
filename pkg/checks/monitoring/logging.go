@@ -23,7 +23,7 @@ func NewLoggingInstallCheck() *LoggingInstallCheck {
 			"logging-install",
 			"OpenShift Logging Installation",
 			"Checks if OpenShift Logging is installed and configured correctly",
-			types.CategoryMonitoring,
+			types.CategoryOpReady,
 		),
 	}
 }
@@ -96,7 +96,7 @@ func NewLoggingHealthCheck() *LoggingHealthCheck {
 			"logging-health",
 			"OpenShift Logging Health",
 			"Checks if OpenShift Logging components are functioning and healthy",
-			types.CategoryMonitoring,
+			types.CategoryOpReady,
 		),
 	}
 }
@@ -184,7 +184,7 @@ func NewLoggingStorageCheck() *LoggingStorageCheck {
 			"logging-storage",
 			"OpenShift Logging Storage",
 			"Checks if Elasticsearch has sufficient storage space",
-			types.CategoryMonitoring,
+			types.CategoryOpReady,
 		),
 		warningThreshold:  85,
 		criticalThreshold: 95,
@@ -300,7 +300,7 @@ func NewLoggingForwarderCheck() *LoggingForwarderCheck {
 			"logging-forwarder",
 			"Log Forwarding",
 			"Checks if log forwarding is configured for long-term storage",
-			types.CategoryMonitoring,
+			types.CategoryOpReady,
 		),
 	}
 }
@@ -387,7 +387,7 @@ func NewLoggingPlacementCheck() *LoggingPlacementCheck {
 			"logging-placement",
 			"Logging Component Placement",
 			"Checks if Elasticsearch pods are scheduled on appropriate nodes",
-			types.CategoryMonitoring,
+			types.CategoryOpReady,
 		),
 	}
 }
