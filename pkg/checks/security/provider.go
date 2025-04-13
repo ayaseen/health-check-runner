@@ -8,16 +8,21 @@ import (
 func GetChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Get base security checks from the renamed function in scc.go
-	checks = append(checks, GetSecurityChecks()...)
+	// Add SCC check
+	checks = append(checks, NewClusterDefaultSCCCheck())
 
-	// Add privileged containers check - our new implementation with different name
-	checks = append(checks, NewPrivilegedContainersCheck())
+	// Add elevated privileges check (consolidated version)
+	checks = append(checks, NewElevatedPrivilegesCheck())
 
-	// Add default project template check - moved from cluster package
+	// Add ETCD security checks
+	checks = append(checks, NewEtcdEncryptionCheck())
+	checks = append(checks, NewEtcdBackupCheck())
+	checks = append(checks, NewEtcdHealthCheck())
+
+	// Add default project template check
 	checks = append(checks, NewDefaultProjectTemplateCheck())
 
-	// Add kubeadmin user check - moved from cluster package
+	// Add kubeadmin user check
 	checks = append(checks, NewKubeadminUserCheck())
 
 	// Add identity provider check

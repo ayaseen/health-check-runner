@@ -8,13 +8,14 @@ import (
 func GetChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Get base networking checks from the renamed function in cni.go
-	checks = append(checks, GetNetworkingChecks()...)
+	// Add CNI network plugin check
+	checks = append(checks, NewCNINetworkPluginCheck())
 
-	// Add individual ingress controller checks
-	checks = append(checks, NewIngressControllerTypeCheck())
-	checks = append(checks, NewIngressControllerPlacementCheck())
-	checks = append(checks, NewIngressControllerReplicaCheck())
+	// Add network policy check
+	checks = append(checks, NewNetworkPolicyCheck())
+
+	// Add ingress controller checks
+	checks = append(checks, NewIngressControllerCheck())
 
 	return checks
 }

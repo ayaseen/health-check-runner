@@ -13,9 +13,8 @@ import (
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
-// PrivilegedContainersCheck checks for workloads with elevated privileges
-// This is a new name to avoid duplicate with existing ElevatedPrivilegesCheck
-type PrivilegedContainersCheck struct {
+// ElevatedPrivilegesCheck checks for workloads with elevated privileges
+type ElevatedPrivilegesCheck struct {
 	healthcheck.BaseCheck
 }
 
@@ -24,23 +23,23 @@ type PrivilegedWorkload struct {
 	Namespace    string
 	ResourceType string
 	ResourceName string
+	Reason       string
 }
 
-// NewPrivilegedContainersCheck creates a new privileged containers check
-// Using a new name to avoid duplicate with existing NewElevatedPrivilegesCheck
-func NewPrivilegedContainersCheck() *PrivilegedContainersCheck {
-	return &PrivilegedContainersCheck{
+// NewElevatedPrivilegesCheck creates a new elevated privileges check
+func NewElevatedPrivilegesCheck() *ElevatedPrivilegesCheck {
+	return &ElevatedPrivilegesCheck{
 		BaseCheck: healthcheck.NewBaseCheck(
-			"privileged-containers",
-			"Privileged Containers",
-			"Checks for containers running with privileged security context",
+			"elevated-privileges",
+			"Elevated Privileges",
+			"Checks for workloads running with elevated privileges",
 			healthcheck.CategorySecurity,
 		),
 	}
 }
 
 // Run executes the health check
-func (c *PrivilegedContainersCheck) Run() (healthcheck.Result, error) {
+func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 	// Get Kubernetes clientset
 	config, err := utils.GetClusterConfig()
 	if err != nil {
@@ -97,20 +96,27 @@ func (c *PrivilegedContainersCheck) Run() (healthcheck.Result, error) {
 				continue
 			}
 
-			// Check each container for privileged security context
+			// Check for privileged security context
 			for _, container := range pod.Spec.Containers {
-				if container.SecurityContext != nil &&
-					container.SecurityContext.Privileged != nil &&
-					*container.SecurityContext.Privileged {
-
+				if hasElevatedPrivileges(container) {
 					// Determine owner resource
 					ownerType, ownerName := findOwnerResource(clientset, ctx, &pod, namespace.Name)
+
+					reason := "Privileged container"
+					if container.SecurityContext != nil && container.SecurityContext.Privileged != nil && *container.SecurityContext.Privileged {
+						reason = "Privileged flag set to true"
+					} else if container.SecurityContext != nil && container.SecurityContext.Capabilities != nil && len(container.SecurityContext.Capabilities.Add) > 0 {
+						reason = fmt.Sprintf("Added capabilities: %v", container.SecurityContext.Capabilities.Add)
+					} else if container.SecurityContext != nil && container.SecurityContext.RunAsUser != nil && *container.SecurityContext.RunAsUser == 0 {
+						reason = "Running as root (uid=0)"
+					}
 
 					// Add to the list of privileged workloads
 					privilegedWorkloads = append(privilegedWorkloads, PrivilegedWorkload{
 						Namespace:    namespace.Name,
 						ResourceType: ownerType,
 						ResourceName: ownerName,
+						Reason:       reason,
 					})
 
 					// We found a privileged container in this pod, no need to check others
@@ -144,7 +150,7 @@ func (c *PrivilegedContainersCheck) Run() (healthcheck.Result, error) {
 	var otherDetails []string
 
 	for _, workload := range privilegedWorkloads {
-		detail := fmt.Sprintf("- %s in namespace '%s'", workload.ResourceName, workload.Namespace)
+		detail := fmt.Sprintf("- %s in namespace '%s' (%s)", workload.ResourceName, workload.Namespace, workload.Reason)
 
 		switch workload.ResourceType {
 		case "Deployment":
@@ -154,8 +160,8 @@ func (c *PrivilegedContainersCheck) Run() (healthcheck.Result, error) {
 		case "Pod":
 			podDetails = append(podDetails, detail)
 		default:
-			otherDetails = append(otherDetails, fmt.Sprintf("- %s '%s' in namespace '%s'",
-				workload.ResourceType, workload.ResourceName, workload.Namespace))
+			otherDetails = append(otherDetails, fmt.Sprintf("- %s '%s' in namespace '%s' (%s)",
+				workload.ResourceType, workload.ResourceName, workload.Namespace, workload.Reason))
 		}
 	}
 
@@ -163,25 +169,25 @@ func (c *PrivilegedContainersCheck) Run() (healthcheck.Result, error) {
 	var allDetails []string
 
 	if len(deploymentDetails) > 0 {
-		allDetails = append(allDetails, "Deployments with privileged containers:")
+		allDetails = append(allDetails, "Deployments with elevated privileges:")
 		allDetails = append(allDetails, deploymentDetails...)
 		allDetails = append(allDetails, "")
 	}
 
 	if len(dcDetails) > 0 {
-		allDetails = append(allDetails, "DeploymentConfigs with privileged containers:")
+		allDetails = append(allDetails, "DeploymentConfigs with elevated privileges:")
 		allDetails = append(allDetails, dcDetails...)
 		allDetails = append(allDetails, "")
 	}
 
 	if len(podDetails) > 0 {
-		allDetails = append(allDetails, "Pods with privileged containers:")
+		allDetails = append(allDetails, "Pods with elevated privileges:")
 		allDetails = append(allDetails, podDetails...)
 		allDetails = append(allDetails, "")
 	}
 
 	if len(otherDetails) > 0 {
-		allDetails = append(allDetails, "Other resources with privileged containers:")
+		allDetails = append(allDetails, "Other resources with elevated privileges:")
 		allDetails = append(allDetails, otherDetails...)
 		allDetails = append(allDetails, "")
 	}
@@ -190,7 +196,7 @@ func (c *PrivilegedContainersCheck) Run() (healthcheck.Result, error) {
 	result := healthcheck.NewResult(
 		c.ID(),
 		healthcheck.StatusWarning,
-		fmt.Sprintf("Found %d workloads running with privileged containers", len(privilegedWorkloads)),
+		fmt.Sprintf("Found %d workloads running with elevated privileges", len(privilegedWorkloads)),
 		healthcheck.ResultKeyRecommended,
 	)
 
@@ -201,6 +207,8 @@ func (c *PrivilegedContainersCheck) Run() (healthcheck.Result, error) {
 	result.Detail = strings.Join(allDetails, "\n")
 	return result, nil
 }
+
+// Helper functions
 
 // isSystemNamespace determines if a namespace should be excluded from checks
 func isSystemNamespace(namespace string) bool {
@@ -223,6 +231,31 @@ func isBuildOrDeployPod(podName string) bool {
 		if strings.HasSuffix(podName, suffix) {
 			return true
 		}
+	}
+
+	return false
+}
+
+// hasElevatedPrivileges checks if a container has elevated privileges
+func hasElevatedPrivileges(container corev1.Container) bool {
+	// Check for privileged flag
+	if container.SecurityContext != nil && container.SecurityContext.Privileged != nil && *container.SecurityContext.Privileged {
+		return true
+	}
+
+	// Check for capabilities
+	if container.SecurityContext != nil && container.SecurityContext.Capabilities != nil {
+		for _, cap := range container.SecurityContext.Capabilities.Add {
+			// Check for dangerous capabilities
+			if cap == "SYS_ADMIN" || cap == "NET_ADMIN" || cap == "ALL" {
+				return true
+			}
+		}
+	}
+
+	// Check for running as root
+	if container.SecurityContext != nil && container.SecurityContext.RunAsUser != nil && *container.SecurityContext.RunAsUser == 0 {
+		return true
 	}
 
 	return false

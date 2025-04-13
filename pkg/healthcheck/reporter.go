@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
 // ReportFormat defines the format of the generated report
@@ -51,6 +53,9 @@ type ReportConfig struct {
 
 	// ColorOutput enables colored output for terminal formats
 	ColorOutput bool
+
+	// UseEnhancedAsciiDoc enables enhanced AsciiDoc formatting
+	UseEnhancedAsciiDoc bool
 }
 
 // Reporter generates reports for health check results
@@ -83,7 +88,11 @@ func (r *Reporter) Generate() (string, error) {
 
 	switch r.config.Format {
 	case FormatAsciiDoc:
-		content, err = r.generateAsciiDoc()
+		if r.config.UseEnhancedAsciiDoc {
+			content, err = r.generateEnhancedAsciiDoc()
+		} else {
+			content, err = r.generateAsciiDoc()
+		}
 	case FormatHTML:
 		content, err = r.generateHTML()
 	case FormatJSON:
@@ -141,7 +150,7 @@ func (r *Reporter) getFilename() string {
 	return filename
 }
 
-// generateAsciiDoc generates an AsciiDoc report
+// generateAsciiDoc generates an AsciiDoc report (standard format)
 func (r *Reporter) generateAsciiDoc() (string, error) {
 	var sb strings.Builder
 
@@ -218,6 +227,17 @@ func (r *Reporter) generateAsciiDoc() (string, error) {
 	return sb.String(), nil
 }
 
+// generateEnhancedAsciiDoc generates an enhanced AsciiDoc report
+func (r *Reporter) generateEnhancedAsciiDoc() (string, error) {
+	checks := r.runner.GetChecks()
+	results := r.runner.GetResults()
+
+	// Generate the full report using the enhanced template format
+	content := utils.GenerateFullAsciiDocReport(r.config.Title, checks, results)
+
+	return content, nil
+}
+
 // writeAsciiDocResultsTable writes a table of results in AsciiDoc format
 func (r *Reporter) writeAsciiDocResultsTable(sb *strings.Builder, results []Result) {
 	sb.WriteString("[cols=\"1,3,1,3\", options=\"header\"]\n|===\n|Check|Result|Status|Recommendations\n\n")
@@ -254,8 +274,6 @@ func (r *Reporter) writeAsciiDocResultsTable(sb *strings.Builder, results []Resu
 
 // generateHTML generates an HTML report
 func (r *Reporter) generateHTML() (string, error) {
-	// HTML report would be more complex
-	// For now, we'll generate a simple one
 	var sb strings.Builder
 
 	sb.WriteString("<!DOCTYPE html>\n")

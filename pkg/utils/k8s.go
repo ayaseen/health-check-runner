@@ -21,28 +21,30 @@ import (
 func GetClusterConfig() (*rest.Config, error) {
 	// Try to use in-cluster config first
 	config, err := rest.InClusterConfig()
-	if err != nil {
-		// Fall back to kubeconfig file
-		kubeconfig := os.Getenv("KUBECONFIG")
-		if kubeconfig == "" {
-			// If KUBECONFIG is not set, use the default location
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return nil, fmt.Errorf("failed to get user home directory: %v", err)
-			}
-			kubeconfig = filepath.Join(home, ".kube", "config")
-		}
+	if err == nil {
+		return config, nil
+	}
 
-		// Check if the kubeconfig file exists
-		if !FileExists(kubeconfig) {
-			return nil, fmt.Errorf("kubeconfig file not found at %s", kubeconfig)
-		}
-
-		// Build config from kubeconfig file
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+	// Fall back to kubeconfig file
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig == "" {
+		// If KUBECONFIG is not set, use the default location
+		home, err := os.UserHomeDir()
 		if err != nil {
-			return nil, fmt.Errorf("failed to build config from kubeconfig: %v", err)
+			return nil, fmt.Errorf("failed to get user home directory: %v", err)
 		}
+		kubeconfig = filepath.Join(home, ".kube", "config")
+	}
+
+	// Check if the kubeconfig file exists
+	if !FileExists(kubeconfig) {
+		return nil, fmt.Errorf("kubeconfig file not found at %s", kubeconfig)
+	}
+
+	// Build config from kubeconfig file
+	config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build config from kubeconfig: %v", err)
 	}
 
 	return config, nil
@@ -52,15 +54,29 @@ func GetClusterConfig() (*rest.Config, error) {
 func GetClientSet() (*kubernetes.Clientset, error) {
 	config, err := GetClusterConfig()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get cluster config: %w", err)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Kubernetes client: %v", err)
+		return nil, fmt.Errorf("failed to create Kubernetes clientset: %w", err)
 	}
 
 	return clientset, nil
+}
+
+// CommandError represents a command execution error with detailed information
+type CommandError struct {
+	Command string
+	Args    []string
+	Err     error
+	Stderr  string
+}
+
+// Error returns the formatted error message
+func (ce *CommandError) Error() string {
+	return fmt.Sprintf("command '%s %s' failed: %v\nstderr: %s",
+		ce.Command, strings.Join(ce.Args, " "), ce.Err, ce.Stderr)
 }
 
 // RunCommand executes a command and returns its output
@@ -72,8 +88,12 @@ func RunCommand(name string, args ...string) (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("command '%s %s' failed: %v, stderr: %s",
-			name, strings.Join(args, " "), err, stderr.String())
+		return "", &CommandError{
+			Command: name,
+			Args:    args,
+			Err:     err,
+			Stderr:  stderr.String(),
+		}
 	}
 
 	return stdout.String(), nil
@@ -81,6 +101,11 @@ func RunCommand(name string, args ...string) (string, error) {
 
 // RunCommandWithTimeout executes a command with a timeout and returns its output
 func RunCommandWithTimeout(timeout int, name string, args ...string) (string, error) {
+	// Validate timeout
+	if timeout <= 0 {
+		return "", fmt.Errorf("timeout must be greater than 0")
+	}
+
 	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -100,11 +125,34 @@ func RunCommandWithTimeout(timeout int, name string, args ...string) (string, er
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("command '%s %s' failed: %v, stderr: %s",
-			name, strings.Join(args, " "), err, stderr.String())
+		return "", &CommandError{
+			Command: name,
+			Args:    args,
+			Err:     err,
+			Stderr:  stderr.String(),
+		}
 	}
 
 	return stdout.String(), nil
+}
+
+// RunCommandWithRetry executes a command with retries on failure
+func RunCommandWithRetry(retries int, delay time.Duration, name string, args ...string) (string, error) {
+	var output string
+	var err error
+
+	for i := 0; i <= retries; i++ {
+		output, err = RunCommand(name, args...)
+		if err == nil {
+			return output, nil
+		}
+
+		if i < retries {
+			time.Sleep(delay)
+		}
+	}
+
+	return output, fmt.Errorf("command failed after %d retries: %w", retries, err)
 }
 
 // FileExists checks if a file exists
@@ -152,12 +200,12 @@ func IsAuthenticatedToCluster() bool {
 func GetOpenShiftVersion() (string, error) {
 	out, err := RunCommand("oc", "get", "clusterversion", "-o", "jsonpath={.items[].status.history[0].version}")
 	if err != nil {
-		return "", fmt.Errorf("failed to get OpenShift version: %v", err)
+		return "", fmt.Errorf("failed to get OpenShift version: %w", err)
 	}
 
 	version := strings.TrimSpace(out)
 	if version == "" {
-		return "", fmt.Errorf("empty OpenShift version")
+		return "", fmt.Errorf("empty OpenShift version returned")
 	}
 
 	return version, nil
@@ -190,7 +238,7 @@ func RunCommandWithInput(input string, name string, args ...string) (string, err
 	// Set up pipes
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		return "", fmt.Errorf("failed to create stdin pipe: %v", err)
+		return "", fmt.Errorf("failed to create stdin pipe: %w", err)
 	}
 
 	var stdout, stderr bytes.Buffer
@@ -199,19 +247,28 @@ func RunCommandWithInput(input string, name string, args ...string) (string, err
 
 	// Start the command
 	if err := cmd.Start(); err != nil {
-		return "", fmt.Errorf("failed to start command: %v", err)
+		return "", fmt.Errorf("failed to start command: %w", err)
 	}
 
 	// Write input to stdin
 	_, err = io.WriteString(stdin, input)
 	if err != nil {
-		return "", fmt.Errorf("failed to write to stdin: %v", err)
+		return "", fmt.Errorf("failed to write to stdin: %w", err)
 	}
-	stdin.Close()
+
+	// Close stdin to signal that no more input is coming
+	if err := stdin.Close(); err != nil {
+		return "", fmt.Errorf("failed to close stdin: %w", err)
+	}
 
 	// Wait for the command to complete
 	if err := cmd.Wait(); err != nil {
-		return "", fmt.Errorf("command failed: %v, stderr: %s", err, stderr.String())
+		return "", &CommandError{
+			Command: name,
+			Args:    args,
+			Err:     err,
+			Stderr:  stderr.String(),
+		}
 	}
 
 	return stdout.String(), nil
@@ -234,18 +291,39 @@ func CompressDirectory(sourcePath, destPath string, password string) error {
 	// Ensure parent directory of destination exists
 	destDir := filepath.Dir(destPath)
 	if err := CreateDirIfNotExists(destDir); err != nil {
-		return fmt.Errorf("failed to create destination directory: %v", err)
+		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
 
 	// Use the zip command if available
 	_, err := exec.LookPath("zip")
 	if err == nil {
-		_, err := RunCommand("zip", "-r", destPath, ".")
-		if err != nil {
-			return fmt.Errorf("failed to create zip archive: %v", err)
+		cmd := exec.Command("zip", "-r", destPath, ".")
+		cmd.Dir = sourcePath
+
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to create zip archive: %v, stderr: %s", err, stderr.String())
 		}
 		return nil
 	}
 
 	return fmt.Errorf("zip command not available, compression not implemented")
 }
+
+// SafeReadFile reads a file with proper error handling
+func SafeReadFile(path string) ([]byte, error) {
+	if !FileExists(path) {
+		return nil, fmt.Errorf("file not found: %s", path)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", path, err)
+	}
+
+	return data, nil
+}
+
+// SafeWriteFile writes data to

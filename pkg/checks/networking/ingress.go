@@ -157,7 +157,7 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 // checkControllerType checks if the ingress controller is the default type
 func (c *IngressControllerCheck) checkControllerType() (healthcheck.Result, error) {
 	out, err := utils.RunCommand("oc", "get", "deployment/router-default", "-n", "openshift-ingress",
-		"-o", `jsonpath={.metadata.labels.ingresscontroller\.operator\.openshift\.io\/owning-ingresscontroller}`)
+		"-o", `jsonpath={.metadata.labels.ingresscontroller\.operator\.openshift\.io/owning-ingresscontroller}`)
 	if err != nil {
 		return healthcheck.NewResult(
 			"ingress-controller-type",
@@ -205,6 +205,12 @@ func (c *IngressControllerCheck) checkControllerPlacement() (healthcheck.Result,
 
 	placement := strings.TrimSpace(out)
 
+	// Get OpenShift version for documentation links
+	version, verErr := utils.GetOpenShiftMajorMinorVersion()
+	if verErr != nil {
+		version = "4.10" // Default to a known version if we can't determine
+	}
+
 	if strings.Contains(placement, "node-role.kubernetes.io/infra") {
 		return healthcheck.NewResult(
 			"ingress-controller-placement",
@@ -222,7 +228,7 @@ func (c *IngressControllerCheck) checkControllerPlacement() (healthcheck.Result,
 	)
 
 	result.AddRecommendation("Configure the ingress controller to run on dedicated infrastructure nodes")
-	result.AddRecommendation("Follow the documentation at https://docs.openshift.com/container-platform/latest/networking/ingress-operator.html#nw-ingress-controller-configuration-parameters_configuring-ingress")
+	result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/networking/index#nw-ingress-controller-configuration-parameters_configuring-ingress", version))
 
 	return result, nil
 }
@@ -243,13 +249,19 @@ func (c *IngressControllerCheck) checkControllerReplicas() (healthcheck.Result, 
 	// Remove the surrounding quotes from the output
 	replicaStr := strings.Trim(strings.TrimSpace(out), "'")
 
+	// Get OpenShift version for documentation links
+	version, verErr := utils.GetOpenShiftMajorMinorVersion()
+	if verErr != nil {
+		version = "4.10" // Default to a known version if we can't determine
+	}
+
 	if replicaStr == "" {
 		// No replica count specified, likely using default (auto-scaling)
 		return healthcheck.NewResult(
 			"ingress-controller-replicas",
-			healthcheck.StatusOK,
-			"Ingress controller is using default replica configuration",
-			healthcheck.ResultKeyNoChange,
+			healthcheck.StatusWarning,
+			"Ingress controller is using default replica configuration, which may not be optimal",
+			healthcheck.ResultKeyAdvisory,
 		), nil
 	}
 
@@ -281,6 +293,7 @@ func (c *IngressControllerCheck) checkControllerReplicas() (healthcheck.Result, 
 	)
 
 	result.AddRecommendation("Increase the number of ingress controller replicas to at least 3 for high availability")
+	result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/networking/index#configuring-ingress", version))
 
 	return result, nil
 }
@@ -301,6 +314,12 @@ func (c *IngressControllerCheck) checkControllerCertificate() (healthcheck.Resul
 
 	certificate := strings.TrimSpace(out)
 
+	// Get OpenShift version for documentation links
+	version, verErr := utils.GetOpenShiftMajorMinorVersion()
+	if verErr != nil {
+		version = "4.10" // Default to a known version if we can't determine
+	}
+
 	// If a custom certificate is configured, the check passes
 	if certificate != "" && certificate != "{}" {
 		return healthcheck.NewResult(
@@ -320,7 +339,7 @@ func (c *IngressControllerCheck) checkControllerCertificate() (healthcheck.Resul
 	)
 
 	result.AddRecommendation("Configure a custom certificate for the ingress controller to avoid browser warnings")
-	result.AddRecommendation("Follow the documentation at https://docs.openshift.com/container-platform/latest/security/certificates/replacing-default-ingress-certificate.html")
+	result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/security/certificates/replacing-default-ingress-certificate", version))
 
 	return result, nil
 }
