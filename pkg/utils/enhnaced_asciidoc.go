@@ -7,11 +7,17 @@ import (
 	"github.com/ayaseen/health-check-runner/pkg/types"
 )
 
-// GenerateEnhancedAsciiDocReport generates a comprehensive AsciiDoc report similar to the provided sample
+// GenerateEnhancedAsciiDocReport generates a comprehensive AsciiDoc report that matches the old report format
 func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results map[string]types.Result) string {
 	var sb strings.Builder
 
-	// Add key section with color coding and descriptions
+	// Add report header with title
+	sb.WriteString(fmt.Sprintf("= %s\n\n", title))
+
+	// Add AsciiDoc settings for GitHub
+	sb.WriteString("ifdef::env-github[]\n:tip-caption: :bulb:\n:note-caption: :information_source:\n:important-caption: :heavy_exclamation_mark:\n:caution-caption: :fire:\n:warning-caption: :warning:\nendif::[]\n\n")
+
+	// Add key section with color coding and descriptions - exactly matching old format
 	sb.WriteString("= Key\n\n")
 	sb.WriteString("[cols=\"1,3\", options=header]\n|===\n|Value\n|Description\n\n")
 
@@ -28,12 +34,12 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 	sb.WriteString("No change required or recommended, but additional information provided.\n\n")
 
 	sb.WriteString("|\n{set:cellbgcolor:#00FF00}\nNo Change\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("No change required.  In alignment with recommended practices.\n\n")
+	sb.WriteString("No change required. In alignment with recommended practices.\n\n")
 
 	sb.WriteString("|\n{set:cellbgcolor:#FFFFFF}\nTo Be Evaluated\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("Not yet evaluated.  Will appear only in draft copies.\n|===\n\n")
+	sb.WriteString("Not yet evaluated. Will appear only in draft copies.\n|===\n\n")
 
-	// Generate summary section with all checks
+	// Generate summary section with all checks - matching old format
 	sb.WriteString("= Summary\n\n")
 	sb.WriteString("\n[cols=\"1,2,2,3\", options=header]\n|===\n|*Category*\n|*Item Evaluated*\n|*Observed Result*\n|*Recommendation*\n\n")
 
@@ -41,7 +47,18 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 	checksByCategory := groupChecksByCategory(checks, results)
 
 	// Add all checks to the summary section
-	for _, category := range getCategoryOrder() {
+	// Order categories as in the old report
+	orderedCategories := []types.Category{
+		types.CategoryInfrastructure,
+		types.CategoryNetworking,
+		types.CategoryStorage,
+		types.CategoryCluster,
+		types.CategoryApplications,
+		types.CategorySecurity,
+		types.CategoryMonitoring,
+	}
+
+	for _, category := range orderedCategories {
 		categoryChecks, exists := checksByCategory[category]
 		if !exists {
 			continue
@@ -54,32 +71,36 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 			}
 
 			// Category column
+			sb.WriteString("// ------------------------ITEM START\n")
+			sb.WriteString("// ----ITEM SOURCE:  ./content/healthcheck-items/" + check.ID() + ".item\n\n")
+			sb.WriteString("// Category\n")
 			sb.WriteString("|\n{set:cellbgcolor!}\n" + string(check.Category()) + "\n\n")
 
 			// Item Evaluated column with link to detailed section
+			sb.WriteString("// Item Evaluated\n")
 			sb.WriteString("a|\n<<" + check.Name() + ">>\n\n")
 
 			// Observed Result column
 			sb.WriteString("| " + result.Message + " \n\n")
 
 			// Recommendation column with proper coloring
-			sb.WriteString(formatResultKeyForTable(result.ResultKey) + "\n\n")
+			sb.WriteString(formatResultKeyForSummaryTable(result.ResultKey) + "\n\n")
+			sb.WriteString("// ------------------------ITEM END\n\n")
 		}
 	}
 
 	sb.WriteString("|===\n\n")
+	sb.WriteString("<<<\n\n")
+	sb.WriteString("{set:cellbgcolor!}\n\n")
 
 	// Add detailed category sections
-	for _, category := range getCategoryOrder() {
+	for _, category := range orderedCategories {
 		categoryChecks, exists := checksByCategory[category]
 		if !exists {
 			continue
 		}
 
-		// Add page break before category
-		sb.WriteString("<<<\n\n{set:cellbgcolor!}\n\n")
-
-		// Category heading
+		// Add category heading with proper formatting
 		sb.WriteString("# " + string(category) + "\n\n")
 
 		// Start category table
@@ -93,23 +114,36 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 			}
 
 			// Category column
+			sb.WriteString("// ------------------------ITEM START\n")
+			sb.WriteString("// ----ITEM SOURCE:  ./content/healthcheck-items/" + check.ID() + ".item\n\n")
+			sb.WriteString("// Category\n")
 			sb.WriteString("|\n{set:cellbgcolor!}\n" + string(check.Category()) + "\n\n")
 
 			// Item Evaluated column with link to detailed section
+			sb.WriteString("// Item Evaluated\n")
 			sb.WriteString("a|\n<<" + check.Name() + ">>\n\n")
 
 			// Observed Result column
 			sb.WriteString("| " + result.Message + " \n\n")
 
 			// Recommendation column with proper coloring
-			sb.WriteString(formatResultKeyForTable(result.ResultKey) + "\n\n")
+			sb.WriteString(formatResultKeyForSummaryTable(result.ResultKey) + "\n\n")
+			sb.WriteString("// ------------------------ITEM END\n")
 		}
 
 		sb.WriteString("|===\n\n")
+		sb.WriteString("<<<\n\n")
+		sb.WriteString("{set:cellbgcolor!}\n\n")
+	}
+
+	// Get OpenShift version for documentation links
+	version, err := GetOpenShiftMajorMinorVersion()
+	if err != nil {
+		version = "4.14" // Default to a known version if we can't determine
 	}
 
 	// Add detailed sections for each check
-	for _, category := range getCategoryOrder() {
+	for _, category := range orderedCategories {
 		categoryChecks, exists := checksByCategory[category]
 		if !exists {
 			continue
@@ -121,16 +155,13 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 				continue
 			}
 
-			// Add page break before detailed section
-			sb.WriteString("<<<\n\n")
-
 			// Add section header with check name
 			sb.WriteString("== " + check.Name() + "\n\n")
 
-			// Add result key formatted as a table
+			// Add result key formatted as a centered table (exactly like old report)
 			sb.WriteString(formatResultKeyAsCenteredTable(result.ResultKey) + "\n\n")
 
-			// Add detailed output if available
+			// Add detailed output if available, properly formatted
 			if result.Detail != "" {
 				sb.WriteString("[source, bash]\n----\n")
 				sb.WriteString(result.Detail)
@@ -151,31 +182,27 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 				sb.WriteString("None\n\n")
 			}
 
-			// Add reference links
+			// Add reference links section (similar to old report)
 			sb.WriteString("*Reference Link(s)*\n\n")
-			version, err := GetOpenShiftMajorMinorVersion()
-			if err != nil {
-				version = "4.14" // Default
-			}
-			sb.WriteString(fmt.Sprintf("* https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/\n", version))
+			sb.WriteString(fmt.Sprintf("* https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/\n\n", version))
 		}
 	}
 
-	// Reset bgcolor for future tables
-	sb.WriteString("\n\n// Reset bgcolor for future tables\n[grid=none,frame=none]\n|===\n|{set:cellbgcolor!}\n|===\n\n")
+	// Reset bgcolor for future tables - exactly as in old report
+	sb.WriteString("// Reset bgcolor for future tables\n[grid=none,frame=none]\n|===\n|{set:cellbgcolor!}\n|===\n\n")
 
 	return sb.String()
 }
 
-// formatResultKeyForTable formats a result key for display in a table cell
-func formatResultKeyForTable(resultKey types.ResultKey) string {
+// formatResultKeyForSummaryTable formats a result key for display in the summary table
+func formatResultKeyForSummaryTable(resultKey types.ResultKey) string {
 	cellColor := getResultKeyColor(resultKey)
 	displayText := getResultKeyDisplayText(resultKey)
 
-	return fmt.Sprintf("|\n{set:cellbgcolor:%s}\n%s\n", cellColor, displayText)
+	return fmt.Sprintf("|{set:cellbgcolor:%s}\n%s\n", cellColor, displayText)
 }
 
-// formatResultKeyAsCenteredTable formats a result key as a centered table
+// formatResultKeyAsCenteredTable formats a result key as a centered table (as in old report)
 func formatResultKeyAsCenteredTable(resultKey types.ResultKey) string {
 	cellColor := getResultKeyColor(resultKey)
 	displayText := getResultKeyDisplayText(resultKey)
@@ -235,17 +262,4 @@ func groupChecksByCategory(checks []types.Check, results map[string]types.Result
 	}
 
 	return categorized
-}
-
-// getCategoryOrder returns the preferred order of categories (matching old format)
-func getCategoryOrder() []types.Category {
-	return []types.Category{
-		types.CategoryInfrastructure,
-		types.CategoryNetworking,
-		types.CategoryStorage,
-		types.CategoryCluster,
-		types.CategorySecurity,
-		types.CategoryApplications,
-		types.CategoryMonitoring,
-	}
 }

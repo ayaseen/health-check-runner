@@ -41,10 +41,15 @@ type ReportConfig struct {
 	UseEnhancedAsciiDoc bool
 }
 
+// ReportGeneratorFunc is a function type for generating reports
+type ReportGeneratorFunc func(title string, checks []types.Check, results map[string]types.Result) string
+
 // Reporter generates reports for health check results
 type Reporter struct {
 	config ReportConfig
 	runner *Runner
+	// Generator function for enhanced AsciiDoc reports
+	enhancedAsciiDocGenerator ReportGeneratorFunc
 }
 
 // NewReporter creates a new reporter
@@ -52,7 +57,14 @@ func NewReporter(config ReportConfig, runner *Runner) *Reporter {
 	return &Reporter{
 		config: config,
 		runner: runner,
+		// This will be set in SetEnhancedAsciiDocGenerator
+		enhancedAsciiDocGenerator: nil,
 	}
+}
+
+// SetEnhancedAsciiDocGenerator sets the function to generate enhanced AsciiDoc reports
+func (r *Reporter) SetEnhancedAsciiDocGenerator(generator ReportGeneratorFunc) {
+	r.enhancedAsciiDocGenerator = generator
 }
 
 // Generate generates a report
@@ -71,8 +83,20 @@ func (r *Reporter) Generate() (string, error) {
 
 	switch r.config.Format {
 	case types.FormatAsciiDoc:
-		if r.config.UseEnhancedAsciiDoc {
-			content, err = r.generateEnhancedAsciiDoc()
+		if r.config.UseEnhancedAsciiDoc && r.enhancedAsciiDocGenerator != nil {
+			// Convert runner results to types.Result
+			typesResults := make(map[string]types.Result)
+			for id, result := range r.runner.results {
+				typesResults[id] = result.ToTypesResult()
+			}
+
+			// Convert checks to types.Check
+			var typesChecks []types.Check
+			for _, check := range r.runner.checks {
+				typesChecks = append(typesChecks, check)
+			}
+
+			content = r.enhancedAsciiDocGenerator(r.config.Title, typesChecks, typesResults)
 		} else {
 			content, err = r.generateAsciiDoc()
 		}
@@ -208,178 +232,6 @@ func (r *Reporter) generateAsciiDoc() (string, error) {
 	}
 
 	return sb.String(), nil
-}
-
-// generateEnhancedAsciiDoc generates an enhanced AsciiDoc report
-func (r *Reporter) generateEnhancedAsciiDoc() (string, error) {
-	// This function would typically use the utils.GenerateFullAsciiDocReport function,
-	// but we're moving away from that to fix the cyclic dependency.
-	// Implement a simplified version here directly.
-
-	var sb strings.Builder
-
-	// Title
-	sb.WriteString(fmt.Sprintf("= %s\n\n", r.config.Title))
-	sb.WriteString("ifdef::env-github[]\n:tip-caption: :bulb:\n:note-caption: :information_source:\n:important-caption: :heavy_exclamation_mark:\n:caution-caption: :fire:\n:warning-caption: :warning:\nendif::[]\n\n")
-
-	// Key for status colors
-	sb.WriteString("= Key\n\n")
-	sb.WriteString("[cols=\"1,3\", options=header]\n|===\n|Value\n|Description\n\n")
-
-	sb.WriteString("|\n{set:cellbgcolor:#FF0000}\nChanges Required\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("Indicates Changes Required for system stability, subscription compliance, or other reason.\n\n")
-
-	sb.WriteString("|\n{set:cellbgcolor:#FEFE20}\nChanges Recommended\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("Indicates Changes Recommended to align with recommended practices, but not urgently required\n\n")
-
-	sb.WriteString("|\n{set:cellbgcolor:#A6B9BF}\nN/A\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("No advise given on line item. For line items which are data-only to provide context.\n\n")
-
-	sb.WriteString("|\n{set:cellbgcolor:#80E5FF}\nAdvisory\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("No change required or recommended, but additional information provided.\n\n")
-
-	sb.WriteString("|\n{set:cellbgcolor:#00FF00}\nNo Change\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("No change required. In alignment with recommended practices.\n\n")
-
-	sb.WriteString("|\n{set:cellbgcolor:#FFFFFF}\nTo Be Evaluated\n|\n{set:cellbgcolor!}\n")
-	sb.WriteString("Not yet evaluated. Will appear only in draft copies.\n|===\n\n")
-
-	// Summary table
-	sb.WriteString("= Summary\n\n")
-	sb.WriteString("[cols=\"1,2,2,3\", options=header]\n|===\n|*Category*\n|*Item Evaluated*\n|*Observed Result*\n|*Recommendation*\n\n")
-
-	for _, check := range r.runner.checks {
-		if result, exists := r.runner.results[check.ID()]; exists {
-			// Category
-			sb.WriteString("|\n{set:cellbgcolor!}\n" + string(check.Category()) + "\n\n")
-
-			// Item Evaluated
-			sb.WriteString("a|\n<<" + check.Name() + ">>\n\n")
-
-			// Observed Result
-			sb.WriteString("|\n" + result.Message + "\n\n")
-
-			// Recommendation - using a function similar to GetKeyChanges
-			sb.WriteString(r.formatKeyChange(result.ResultKey) + "\n\n")
-		}
-	}
-
-	sb.WriteString("|===\n\n")
-
-	// Detailed checks
-	for _, check := range r.runner.checks {
-		if result, exists := r.runner.results[check.ID()]; exists {
-			sb.WriteString(fmt.Sprintf("== %s\n\n", check.Name()))
-			sb.WriteString(r.formatChange(result.ResultKey) + "\n\n")
-
-			if result.Detail != "" {
-				sb.WriteString("[source,bash]\n----\n")
-				sb.WriteString(result.Detail)
-				sb.WriteString("\n----\n\n")
-			}
-
-			sb.WriteString("**Observation**\n\n")
-			sb.WriteString(result.Message + "\n\n")
-
-			sb.WriteString("**Recommendation**\n\n")
-			if len(result.Recommendations) > 0 {
-				for _, rec := range result.Recommendations {
-					sb.WriteString(rec + "\n\n")
-				}
-			} else {
-				sb.WriteString("None.\n\n")
-			}
-
-			sb.WriteString("**Reference Link(s)**\n\n")
-			sb.WriteString("* https://access.redhat.com/documentation/en-us/openshift_container_platform/latest/\n\n")
-		}
-	}
-
-	return sb.String(), nil
-}
-
-// formatChange returns a formatted AsciiDoc table for a result key
-func (r *Reporter) formatChange(resultKey types.ResultKey) string {
-	options := map[types.ResultKey]string{
-		types.ResultKeyRequired: `[cols="^"] 
-|===
-|
-{set:cellbgcolor:#FF0000}
-Changes Required
-|===`,
-		types.ResultKeyRecommended: `[cols="^"] 
-|===
-|
-{set:cellbgcolor:#FEFE20}
-Changes Recommended
-|===`,
-		types.ResultKeyNoChange: `[cols="^"] 
-|===
-|
-{set:cellbgcolor:#00FF00}
-No Change
-|===`,
-		types.ResultKeyAdvisory: `[cols="^"] 
-|===
-|
-{set:cellbgcolor:#80E5FF}
-Advisory
-|===`,
-		types.ResultKeyEvaluate: `[cols="^"] 
-|===
-|
-{set:cellbgcolor:#FFFFFF}
-To Be Evaluated
-|===`,
-		types.ResultKeyNotApplicable: `[cols="^"] 
-|===
-|
-{set:cellbgcolor:#A6B9BF}
-Not Applicable
-|===`,
-	}
-
-	result, ok := options[resultKey]
-	if !ok {
-		return options[types.ResultKeyEvaluate]
-	}
-	return result
-}
-
-// formatKeyChange returns a formatted AsciiDoc table cell for a result key
-func (r *Reporter) formatKeyChange(resultKey types.ResultKey) string {
-	options := map[types.ResultKey]string{
-		types.ResultKeyRequired: `| 
-{set:cellbgcolor:#FF0000}
-Changes Required
-`,
-		types.ResultKeyRecommended: `| 
-{set:cellbgcolor:#FEFE20}
-Changes Recommended
-`,
-		types.ResultKeyNoChange: `| 
-{set:cellbgcolor:#00FF00}
-No Change
-`,
-		types.ResultKeyAdvisory: `| 
-{set:cellbgcolor:#80E5FF}
-Advisory
-`,
-		types.ResultKeyNotApplicable: `| 
-{set:cellbgcolor:#A6B9BF}
-Not Applicable
-`,
-		types.ResultKeyEvaluate: `| 
-{set:cellbgcolor:#FFFFFF}
-To Be Evaluated
-`,
-	}
-
-	result, ok := options[resultKey]
-	if !ok {
-		return options[types.ResultKeyEvaluate]
-	}
-	return result
 }
 
 // writeAsciiDocResultsTable writes a table of results in AsciiDoc format

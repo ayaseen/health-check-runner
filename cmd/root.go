@@ -117,6 +117,9 @@ The application runs a variety of checks and generates a formatted report with t
 		// Create reporter
 		reporter := healthcheck.NewReporter(reporterConfig, runner)
 
+		// Set the enhanced AsciiDoc generator to avoid circular imports
+		reporter.SetEnhancedAsciiDocGenerator(utils.GenerateEnhancedAsciiDocReport)
+
 		// Generate report
 		reportPath, err := reporter.Generate()
 		if err != nil {

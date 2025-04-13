@@ -222,7 +222,7 @@ func GenerateAsciiDocCheckSection(check types.Check, result types.Result, versio
 		sb.WriteString("None.\n\n")
 	}
 
-	sb.WriteString("**Reference Link(s)**\n\n")
+	sb.WriteString("*Reference Link(s)*\n\n")
 	sb.WriteString(fmt.Sprintf("* https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/\n", version))
 
 	return sb.String()
@@ -242,16 +242,21 @@ func GenerateAsciiDocSummaryTable(checks []types.Check, results map[string]types
 		}
 
 		// Category
+		sb.WriteString("// ------------------------ITEM START\n")
+		sb.WriteString("// ----ITEM SOURCE:  ./content/healthcheck-items/" + check.ID() + ".item\n\n")
+		sb.WriteString("// Category\n")
 		sb.WriteString("|\n{set:cellbgcolor!}\n" + string(check.Category()) + "\n\n")
 
 		// Item Evaluated
+		sb.WriteString("// Item Evaluated\n")
 		sb.WriteString("a|\n<<" + check.Name() + ">>\n\n")
 
 		// Observed Result
-		sb.WriteString("|\n" + result.Message + "\n\n")
+		sb.WriteString("| " + result.Message + " \n\n")
 
 		// Recommendation
 		sb.WriteString(GetKeyChanges(result.ResultKey) + "\n\n")
+		sb.WriteString("// ------------------------ITEM END\n\n")
 	}
 
 	sb.WriteString("|===\n\n")
@@ -267,13 +272,13 @@ func GenerateAsciiDocCategorySections(
 
 	// Sort categories
 	categories := []types.Category{
-		types.CategoryCluster,
-		types.CategorySecurity,
+		types.CategoryInfrastructure,
 		types.CategoryNetworking,
 		types.CategoryStorage,
+		types.CategoryCluster,
 		types.CategoryApplications,
+		types.CategorySecurity,
 		types.CategoryMonitoring,
-		types.CategoryInfrastructure,
 	}
 
 	for _, category := range categories {
@@ -292,16 +297,21 @@ func GenerateAsciiDocCategorySections(
 			}
 
 			// Category
+			sb.WriteString("// ------------------------ITEM START\n")
+			sb.WriteString("// ----ITEM SOURCE:  ./content/healthcheck-items/" + check.ID() + ".item\n\n")
+			sb.WriteString("// Category\n")
 			sb.WriteString("|\n{set:cellbgcolor!}\n" + string(check.Category()) + "\n\n")
 
 			// Item Evaluated
+			sb.WriteString("// Item Evaluated\n")
 			sb.WriteString("a|\n<<" + check.Name() + ">>\n\n")
 
 			// Observed Result
-			sb.WriteString("|\n" + result.Message + "\n\n")
+			sb.WriteString("| " + result.Message + " \n\n")
 
 			// Recommendation
 			sb.WriteString(GetKeyChanges(result.ResultKey) + "\n\n")
+			sb.WriteString("// ------------------------ITEM END\n\n")
 		}
 
 		sb.WriteString("|===\n\n")
