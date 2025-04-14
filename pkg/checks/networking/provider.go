@@ -25,9 +25,9 @@ func GetChecks() []healthcheck.Check {
 
 	//// Add new ingress controller type check
 	//checks = append(checks, NewIngressControllerTypeCheck())
-	//
-	//// Add new default ingress certificate check
-	//checks = append(checks, NewDefaultIngressCertificateCheck())
+
+	// Add new default ingress certificate check
+	checks = append(checks, NewDefaultIngressCertificateCheck())
 
 	return checks
 }

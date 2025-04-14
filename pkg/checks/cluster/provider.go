@@ -57,6 +57,21 @@ func GetChecks() []healthcheck.Check {
 	// Add proxy settings check
 	checks = append(checks, NewProxySettingsCheck())
 
+	//// Add new internal registry check
+	//checks = append(checks, NewInternalRegistryCheck())
+	//
+	//// Add new image pruning check
+	//checks = append(checks, NewImagePruningCheck())
+
+	// Add new infra taints check
+	checks = append(checks, NewInfraTaintsCheck())
+
+	// Add new kubelet garbage collection check
+	checks = append(checks, NewKubeletGarbageCollectionCheck())
+
+	// Add new default node schedule check
+	checks = append(checks, NewDefaultNodeScheduleCheck())
+
 	// Note: DefaultProjectTemplateCheck and KubeadminUserCheck moved to security package
 
 	return checks
