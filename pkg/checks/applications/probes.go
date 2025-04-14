@@ -3,11 +3,12 @@ package applications
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 // ProbesCheck checks if applications have readiness and liveness probes configured
@@ -76,7 +77,11 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 	// Check each namespace for deployments
 	for _, namespace := range namespaces.Items {
 		// Skip system namespaces
-		if skipNamespaces[namespace.Name] || strings.HasPrefix(namespace.Name, "openshift-") {
+		if skipNamespaces[namespace.Name] || strings.HasPrefix(namespace.Name, "openshift-") ||
+			strings.HasPrefix(namespace.Name, "kube-") ||
+			strings.Contains(namespace.Name, "operator") ||
+			strings.Contains(namespace.Name, "multicluster") ||
+			strings.Contains(namespace.Name, "open-cluster") {
 			continue
 		}
 
@@ -91,8 +96,8 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 		namespaceMissingProbes := false
 
 		for _, deployment := range deployments.Items {
-			// Skip deployments with certain labels that might be system components
-			if isSystemDeployment(deployment) {
+			// Skip deployments with certain labels that might be system components or operators
+			if isSystemDeployment(deployment) || strings.Contains(deployment.Name, "operator") {
 				continue
 			}
 
@@ -156,7 +161,11 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 	// Check also StatefulSets
 	for _, namespace := range namespaces.Items {
 		// Skip system namespaces
-		if skipNamespaces[namespace.Name] || strings.HasPrefix(namespace.Name, "openshift-") {
+		if skipNamespaces[namespace.Name] || strings.HasPrefix(namespace.Name, "openshift-") ||
+			strings.HasPrefix(namespace.Name, "kube-") ||
+			strings.Contains(namespace.Name, "operator") ||
+			strings.Contains(namespace.Name, "multicluster") ||
+			strings.Contains(namespace.Name, "open-cluster") {
 			continue
 		}
 
@@ -171,8 +180,8 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 		namespaceMissingProbes := false
 
 		for _, statefulSet := range statefulsets.Items {
-			// Skip StatefulSets with certain labels that might be system components
-			if isSystemStatefulSet(statefulSet) {
+			// Skip StatefulSets with certain labels that might be system components or operators
+			if isSystemStatefulSet(statefulSet) || strings.Contains(statefulSet.Name, "operator") {
 				continue
 			}
 
@@ -230,6 +239,87 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 		// Add namespace to the list if it has workloads without probes
 		if namespaceMissingProbes && !contains(namespacesWithoutProbes, namespace.Name) {
 			namespacesWithoutProbes = append(namespacesWithoutProbes, namespace.Name)
+		}
+	}
+
+	// Check also DeploymentConfigs for OpenShift-specific workloads
+	for _, namespace := range namespaces.Items {
+		// Skip system namespaces
+		if skipNamespaces[namespace.Name] || strings.HasPrefix(namespace.Name, "openshift-") ||
+			strings.HasPrefix(namespace.Name, "kube-") ||
+			strings.Contains(namespace.Name, "operator") ||
+			strings.Contains(namespace.Name, "multicluster") ||
+			strings.Contains(namespace.Name, "open-cluster") {
+			continue
+		}
+
+		// Get DeploymentConfigs in the namespace (using oc command as client-go doesn't have direct access)
+		dcOut, err := utils.RunCommand("oc", "get", "deploymentconfigs", "-n", namespace.Name, "-o", "json")
+		if err != nil || !strings.Contains(dcOut, "items") {
+			// No DeploymentConfigs or error, continue with other namespaces
+			continue
+		}
+
+		// Parse the output and extract info about missing probes
+		// For simplicity, we'll just check if any DeploymentConfigs exist and run a check
+		if strings.Contains(dcOut, "\"kind\": \"DeploymentConfig\"") {
+			// Use direct oc command to get the status of probes in DeploymentConfigs
+			probeCheckCmd := fmt.Sprintf(`oc get dc -n %s -o jsonpath="{range .items[*]}{.metadata.name}{': readiness='}{range .spec.template.spec.containers[*]}{.readinessProbe}{', '}{end}{' liveness='}{range .spec.template.spec.containers[*]}{.livenessProbe}{', '}{end}{'\n'}{end}"`, namespace.Name)
+			probeOut, err := utils.RunCommandWithInput("", "bash", "-c", probeCheckCmd)
+
+			if err == nil {
+				// Process the output to identify missing probes
+				for _, line := range strings.Split(probeOut, "\n") {
+					if line == "" {
+						continue
+					}
+
+					parts := strings.Split(line, ":")
+					if len(parts) < 2 {
+						continue
+					}
+
+					dcName := parts[0]
+					probeInfo := parts[1]
+
+					// Skip operator-related deploymentconfigs
+					if strings.Contains(dcName, "operator") {
+						continue
+					}
+
+					totalWorkloads++
+
+					// Check for missing probes
+					missingReadiness := strings.Contains(probeInfo, "readiness=<nil>") || strings.Contains(probeInfo, "readiness=, ")
+					missingLiveness := strings.Contains(probeInfo, "liveness=<nil>") || strings.Contains(probeInfo, "liveness=, ")
+
+					if missingReadiness {
+						workloadsWithoutReadinessProbe++
+					}
+
+					if missingLiveness {
+						workloadsWithoutLivenessProbe++
+					}
+
+					if missingReadiness && missingLiveness {
+						workloadsWithoutBothProbes++
+						workloadsWithoutProbesDetails = append(workloadsWithoutProbesDetails,
+							fmt.Sprintf("- DeploymentConfig '%s' in namespace '%s' is missing both readiness and liveness probes",
+								dcName, namespace.Name))
+						namespacesWithoutProbes = appendIfMissing(namespacesWithoutProbes, namespace.Name)
+					} else if missingReadiness {
+						workloadsWithoutProbesDetails = append(workloadsWithoutProbesDetails,
+							fmt.Sprintf("- DeploymentConfig '%s' in namespace '%s' is missing readiness probe",
+								dcName, namespace.Name))
+						namespacesWithoutProbes = appendIfMissing(namespacesWithoutProbes, namespace.Name)
+					} else if missingLiveness {
+						workloadsWithoutProbesDetails = append(workloadsWithoutProbesDetails,
+							fmt.Sprintf("- DeploymentConfig '%s' in namespace '%s' is missing liveness probe",
+								dcName, namespace.Name))
+						namespacesWithoutProbes = appendIfMissing(namespacesWithoutProbes, namespace.Name)
+					}
+				}
+			}
 		}
 	}
 
@@ -331,4 +421,14 @@ Benefits of using probes:
 	result.Detail = detail
 
 	return result, nil
+}
+
+// appendIfMissing adds a string to a slice if it's not already present
+func appendIfMissing(slice []string, item string) []string {
+	for _, s := range slice {
+		if s == item {
+			return slice
+		}
+	}
+	return append(slice, item)
 }
