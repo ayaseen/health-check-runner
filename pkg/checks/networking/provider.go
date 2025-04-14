@@ -2,42 +2,32 @@ package networking
 
 import (
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
-	"github.com/ayaseen/health-check-runner/pkg/types"
 )
 
 // GetChecks returns all networking-related health checks
 func GetChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Add CNI network plugin check with updated category
-	checks = append(checks, &CNINetworkPluginCheck{
-		BaseCheck: healthcheck.NewBaseCheck(
-			"cni-network-plugin",
-			"CNI Network Plugin",
-			"Checks if the cluster is using the recommended CNI network plugin",
-			types.CategoryNetwork, // Changed from CategoryNetworking
-		),
-	})
+	// Add CNI network plugin check
+	checks = append(checks, NewCNINetworkPluginCheck())
 
-	// Add network policy check with updated category
-	checks = append(checks, &NetworkPolicyCheck{
-		BaseCheck: healthcheck.NewBaseCheck(
-			"network-policy",
-			"Network Policy",
-			"Checks if network policies are configured for traffic control",
-			types.CategoryNetwork, // Changed from CategoryNetworking
-		),
-	})
+	// Add network policy check
+	checks = append(checks, NewNetworkPolicyCheck())
 
-	// Add ingress controller check with updated category
-	checks = append(checks, &IngressControllerCheck{
-		BaseCheck: healthcheck.NewBaseCheck(
-			"ingress-controller",
-			"Ingress Controller",
-			"Checks if the ingress controller is properly configured",
-			types.CategoryNetwork, // Changed from CategoryNetworking
-		),
-	})
+	// Add ingress controller check
+	checks = append(checks, NewIngressControllerCheck())
+
+	// Add new ingress controller placement check
+	checks = append(checks, NewIngressControllerPlacementCheck())
+
+	// Add new ingress controller replica check
+	checks = append(checks, NewIngressControllerReplicaCheck())
+
+	//// Add new ingress controller type check
+	//checks = append(checks, NewIngressControllerTypeCheck())
+	//
+	//// Add new default ingress certificate check
+	//checks = append(checks, NewDefaultIngressCertificateCheck())
 
 	return checks
 }

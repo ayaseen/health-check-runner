@@ -1,18 +1,3 @@
-/*
-Author: Amjad Yaseen, Updated by the refactoring team
-Email: ayaseen@redhat.com
-Date: 2023-03-06, Updated: 2025-04-12
-
-This application performs health checks on OpenShift to provide visibility into various functionalities. It verifies the following aspects:
-
-- OpenShift configurations: Verify OpenShift configuration meets the standard and best practices.
-- Security: It examines the security measures in place, such as authentication and authorization configurations.
-- Application Probes: It tests the health and readiness probes of deployed applications to ensure they are functioning correctly.
-- Resource Usage: It monitors resource consumption of OpenShift clusters, including CPU, memory, and storage.
-
-The purpose of this application is to provide administrators and developers with an overview of OpenShift's health and functionality, helping them identify potential issues and ensure the smooth operation of their OpenShift environment.
-*/
-
 package cmd
 
 import (
@@ -136,17 +121,13 @@ The application runs a variety of checks and generates a formatted report with t
 			fmt.Fprintf(os.Stderr, "Warning: Failed to compress report: %v\n", err)
 			fmt.Printf("\nReport generated at: %s\n", reportPath)
 		} else {
-			fmt.Printf("\nCompressed report generated at: %s\n", zipPath)
-			fmt.Printf("Password: %s\n", password)
+			fmt.Printf("\nCompressed report generated at: %s", zipPath)
 
 			// Delete the original report
 			if err := os.Remove(reportPath); err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: Failed to delete original report: %v\n", err)
 			}
 		}
-
-		// Print summary
-		printSummary(runner)
 	},
 }
 
@@ -232,108 +213,4 @@ func validateFlags() error {
 	}
 
 	return nil
-}
-
-// printSummary prints a summary of the health check results with improved formatting
-func printSummary(runner *healthcheck.Runner) {
-	counts := runner.CountByStatus()
-
-	fmt.Println("\nHealth Check Summary:")
-	fmt.Println("---------------------")
-
-	totalChecks := 0
-	for _, count := range counts {
-		totalChecks += count
-	}
-
-	fmt.Printf("Total checks: %d\n", totalChecks)
-
-	// Print statuses in a consistent order
-	statuses := []types.Status{
-		types.StatusOK,
-		types.StatusWarning,
-		types.StatusCritical,
-		types.StatusUnknown,
-		types.StatusNotApplicable,
-	}
-
-	for _, status := range statuses {
-		count, exists := counts[status]
-		if exists {
-			// Add color to the output if it's a terminal
-			switch status {
-			case types.StatusOK:
-				fmt.Printf("\033[32mOK\033[0m: %d\n", count)
-			case types.StatusWarning:
-				fmt.Printf("\033[33mWarning\033[0m: %d\n", count)
-			case types.StatusCritical:
-				fmt.Printf("\033[31mCritical\033[0m: %d\n", count)
-			case types.StatusUnknown:
-				fmt.Printf("\033[37mUnknown\033[0m: %d\n", count)
-			case types.StatusNotApplicable:
-				fmt.Printf("Not Applicable: %d\n", count)
-			}
-		}
-	}
-
-	// Check for issues to report
-	warningResults := runner.GetResultsByStatus()[types.StatusWarning]
-	criticalResults := runner.GetResultsByStatus()[types.StatusCritical]
-
-	if len(warningResults) > 0 || len(criticalResults) > 0 {
-		fmt.Println("\nIssues found:")
-
-		// Print critical issues first
-		if len(criticalResults) > 0 {
-			fmt.Println("\nCritical issues:")
-			for _, result := range criticalResults {
-				// Find the check name
-				var checkName string
-				for _, check := range runner.GetChecks() {
-					if check.ID() == result.CheckID {
-						checkName = check.Name()
-						break
-					}
-				}
-				fmt.Printf("\033[31m[Critical]\033[0m %s: %s\n", checkName, result.Message)
-
-				// Print recommendations for critical issues
-				if len(result.Recommendations) > 0 {
-					fmt.Println("  Recommendations:")
-					for _, rec := range result.Recommendations {
-						fmt.Printf("  - %s\n", rec)
-					}
-				}
-			}
-		}
-
-		// Then print warnings
-		if len(warningResults) > 0 {
-			fmt.Println("\nWarnings:")
-			for _, result := range warningResults {
-				// Find the check name
-				var checkName string
-				for _, check := range runner.GetChecks() {
-					if check.ID() == result.CheckID {
-						checkName = check.Name()
-						break
-					}
-				}
-				fmt.Printf("\033[33m[Warning]\033[0m %s: %s\n", checkName, result.Message)
-
-				// Print recommendations for warning issues
-				if len(result.Recommendations) > 0 {
-					fmt.Println("  Recommendations:")
-					for _, rec := range result.Recommendations {
-						fmt.Printf("  - %s\n", rec)
-					}
-				}
-			}
-		}
-	} else {
-		fmt.Println("\n\033[32mNo issues found.\033[0m")
-	}
-
-	// Print report location
-	fmt.Printf("\nFor more details, refer to the generated report.\n")
 }

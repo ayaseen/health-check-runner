@@ -96,10 +96,12 @@ func (r *Runner) Run() error {
 
 	// Initialize progress bar if enabled
 	if !r.config.SkipProgressBar {
+		fmt.Println("OpenShift Health Check in Progress ...")
+
+		// Create a simple progress bar without a description
 		r.progressBar = progressbar.NewOptions(len(checksToRun),
 			progressbar.OptionEnableColorCodes(true),
 			progressbar.OptionSetWidth(50),
-			progressbar.OptionSetDescription("Running health checks..."),
 			progressbar.OptionShowCount(),
 			progressbar.OptionSetTheme(progressbar.Theme{
 				Saucer:        "[green]=[reset]",
@@ -117,11 +119,6 @@ func (r *Runner) Run() error {
 		r.runSequential(checksToRun)
 	}
 
-	// Finish progress bar if enabled
-	if !r.config.SkipProgressBar && r.progressBar != nil {
-		_ = r.progressBar.Finish()
-	}
-
 	return nil
 }
 
@@ -136,11 +133,6 @@ func (r *Runner) runSequential(checks []Check) {
 			defer cancel()
 		}
 
-		// Update progress bar if enabled
-		if !r.config.SkipProgressBar && r.progressBar != nil {
-			r.progressBar.Describe(fmt.Sprintf("[green]\033[1m%s\033[22m[reset] in progress...", check.Name()))
-		}
-
 		// Run the check
 		result, err := r.runCheck(ctx, check)
 
@@ -149,8 +141,8 @@ func (r *Runner) runSequential(checks []Check) {
 		r.results[check.ID()] = result
 		r.mu.Unlock()
 
-		// Print verbose output if enabled
-		if r.config.VerboseOutput {
+		// Print verbose output if enabled but no progress bar is used
+		if r.config.VerboseOutput && r.config.SkipProgressBar {
 			fmt.Printf("[%s] %s: %s\n", result.Status, check.Name(), result.Message)
 		}
 
@@ -171,6 +163,12 @@ func (r *Runner) runParallel(checks []Check) {
 	var wg sync.WaitGroup
 	wg.Add(len(checks))
 
+	// To track completed checks
+	completedChecks := sync.Map{}
+
+	// Update display mutex
+	var displayMutex sync.Mutex
+
 	for _, check := range checks {
 		go func(c Check) {
 			defer wg.Done()
@@ -183,11 +181,6 @@ func (r *Runner) runParallel(checks []Check) {
 				defer cancel()
 			}
 
-			// Update progress bar if enabled
-			if !r.config.SkipProgressBar && r.progressBar != nil {
-				r.progressBar.Describe(fmt.Sprintf("[green]\033[1m%s\033[22m[reset] in progress...", c.Name()))
-			}
-
 			// Run the check
 			result, _ := r.runCheck(ctx, c)
 
@@ -196,14 +189,26 @@ func (r *Runner) runParallel(checks []Check) {
 			r.results[c.ID()] = result
 			r.mu.Unlock()
 
-			// Print verbose output if enabled
-			if r.config.VerboseOutput {
+			// Print verbose output if enabled but no progress bar is used
+			if r.config.VerboseOutput && r.config.SkipProgressBar {
 				fmt.Printf("[%s] %s: %s\n", result.Status, c.Name(), result.Message)
 			}
 
+			// Mark check as completed
+			completedChecks.Store(c.ID(), true)
+
 			// Increment progress bar if enabled
 			if !r.config.SkipProgressBar && r.progressBar != nil {
-				_ = r.progressBar.Add(1)
+				displayMutex.Lock()
+				// Count completed checks for progress bar
+				completed := 0
+				completedChecks.Range(func(key, value interface{}) bool {
+					completed++
+					return true
+				})
+
+				_ = r.progressBar.Set(completed)
+				displayMutex.Unlock()
 			}
 		}(check)
 	}
