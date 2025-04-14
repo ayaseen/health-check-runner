@@ -11,8 +11,7 @@ func GetChecks() []healthcheck.Check {
 	// Following the order in the PDF:
 
 	// Ingress Controller Type
-	// checks = append(checks, NewIngressControllerTypeCheck())
-	// Not implemented yet, but mentioned in the PDF
+	checks = append(checks, NewIngressControllerTypeCheck())
 
 	// Ingress Controller Placement
 	checks = append(checks, NewIngressControllerPlacementCheck())

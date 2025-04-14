@@ -2,11 +2,10 @@ package networking
 
 import (
 	"fmt"
-	"github.com/ayaseen/health-check-runner/pkg/types"
-	"strconv"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
@@ -29,50 +28,26 @@ func NewIngressControllerCheck() *IngressControllerCheck {
 
 // Run executes the health check
 func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
-	// This is a comprehensive check that evaluates multiple aspects of the ingress controller
+	// Use individual checks instead of internal methods
+	typeCheck := NewIngressControllerTypeCheck()
+	placementCheck := NewIngressControllerPlacementCheck()
+	replicaCheck := NewIngressControllerReplicaCheck()
+	certCheck := NewDefaultIngressCertificateCheck()
 
-	// Check if the ingress controller is the default type
-	typeResult, err := c.checkControllerType()
-	if err != nil {
+	// Run each check
+	typeResult, typeErr := typeCheck.Run()
+	placementResult, placementErr := placementCheck.Run()
+	replicaResult, replicaErr := replicaCheck.Run()
+	certResult, certErr := certCheck.Run()
+
+	// Check for critical errors in any check
+	if typeErr != nil || placementErr != nil || replicaErr != nil || certErr != nil {
 		return healthcheck.NewResult(
 			c.ID(),
 			types.StatusCritical,
-			"Failed to check ingress controller type",
+			"Failed to check ingress controller configuration",
 			types.ResultKeyRequired,
-		), fmt.Errorf("error checking ingress controller type: %v", err)
-	}
-
-	// Check ingress controller placement
-	placementResult, err := c.checkControllerPlacement()
-	if err != nil {
-		return healthcheck.NewResult(
-			c.ID(),
-			types.StatusCritical,
-			"Failed to check ingress controller placement",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error checking ingress controller placement: %v", err)
-	}
-
-	// Check ingress controller replica count
-	replicaResult, err := c.checkControllerReplicas()
-	if err != nil {
-		return healthcheck.NewResult(
-			c.ID(),
-			types.StatusCritical,
-			"Failed to check ingress controller replicas",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error checking ingress controller replicas: %v", err)
-	}
-
-	// Check if the ingress controller certificate is properly configured
-	certResult, err := c.checkControllerCertificate()
-	if err != nil {
-		return healthcheck.NewResult(
-			c.ID(),
-			types.StatusCritical,
-			"Failed to check ingress controller certificate",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error checking ingress controller certificate: %v", err)
+		), fmt.Errorf("error checking ingress controller configuration")
 	}
 
 	// Combine the results of each sub-check
@@ -151,196 +126,6 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 	}
 
 	result.Detail = detailedResult
-
-	return result, nil
-}
-
-// checkControllerType checks if the ingress controller is the default type
-func (c *IngressControllerCheck) checkControllerType() (healthcheck.Result, error) {
-	out, err := utils.RunCommand("oc", "get", "deployment/router-default", "-n", "openshift-ingress",
-		"-o", `jsonpath={.metadata.labels.ingresscontroller\.operator\.openshift\.io/owning-ingresscontroller}`)
-	if err != nil {
-		return healthcheck.NewResult(
-			"ingress-controller-type",
-			types.StatusCritical,
-			"Failed to get ingress controller type",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error getting ingress controller type: %v", err)
-	}
-
-	ingressType := strings.TrimSpace(out)
-
-	if ingressType == "default" {
-		return healthcheck.NewResult(
-			"ingress-controller-type",
-			types.StatusOK,
-			"Default OpenShift ingress controller is in use",
-			types.ResultKeyNoChange,
-		), nil
-	}
-
-	result := healthcheck.NewResult(
-		"ingress-controller-type",
-		types.StatusWarning,
-		fmt.Sprintf("Non-default ingress controller type is in use: %s", ingressType),
-		types.ResultKeyAdvisory,
-	)
-
-	result.AddRecommendation("Ensure the non-default ingress controller meets your requirements")
-
-	return result, nil
-}
-
-// checkControllerPlacement checks if the ingress controller is placed on infrastructure nodes
-func (c *IngressControllerCheck) checkControllerPlacement() (healthcheck.Result, error) {
-	out, err := utils.RunCommand("oc", "get", "ingresscontroller/default", "-n", "openshift-ingress-operator",
-		"-o", `jsonpath={.spec.nodePlacement.nodeSelector.matchLabels}`)
-	if err != nil {
-		return healthcheck.NewResult(
-			"ingress-controller-placement",
-			types.StatusCritical,
-			"Failed to get ingress controller placement",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error getting ingress controller placement: %v", err)
-	}
-
-	placement := strings.TrimSpace(out)
-
-	// Get OpenShift version for documentation links
-	version, verErr := utils.GetOpenShiftMajorMinorVersion()
-	if verErr != nil {
-		version = "4.10" // Default to a known version if we can't determine
-	}
-
-	if strings.Contains(placement, "node-role.kubernetes.io/infra") {
-		return healthcheck.NewResult(
-			"ingress-controller-placement",
-			types.StatusOK,
-			"Ingress controller is placed on infrastructure nodes",
-			types.ResultKeyNoChange,
-		), nil
-	}
-
-	result := healthcheck.NewResult(
-		"ingress-controller-placement",
-		types.StatusWarning,
-		"Ingress controller is not placed on dedicated infrastructure nodes",
-		types.ResultKeyRecommended,
-	)
-
-	result.AddRecommendation("Configure the ingress controller to run on dedicated infrastructure nodes")
-	result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/networking/index#nw-ingress-controller-configuration-parameters_configuring-ingress", version))
-
-	return result, nil
-}
-
-// checkControllerReplicas checks if the ingress controller has the recommended number of replicas
-func (c *IngressControllerCheck) checkControllerReplicas() (healthcheck.Result, error) {
-	out, err := utils.RunCommand("oc", "get", "ingresscontroller/default", "-n", "openshift-ingress-operator",
-		"-o", `jsonpath='{.spec.replicas}'`)
-	if err != nil {
-		return healthcheck.NewResult(
-			"ingress-controller-replicas",
-			types.StatusCritical,
-			"Failed to get ingress controller replicas",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error getting ingress controller replicas: %v", err)
-	}
-
-	// Remove the surrounding quotes from the output
-	replicaStr := strings.Trim(strings.TrimSpace(out), "'")
-
-	// Get OpenShift version for documentation links
-	version, verErr := utils.GetOpenShiftMajorMinorVersion()
-	if verErr != nil {
-		version = "4.10" // Default to a known version if we can't determine
-	}
-
-	if replicaStr == "" {
-		// No replica count specified, likely using default (auto-scaling)
-		return healthcheck.NewResult(
-			"ingress-controller-replicas",
-			types.StatusWarning,
-			"Ingress controller is using default replica configuration, which may not be optimal",
-			types.ResultKeyAdvisory,
-		), nil
-	}
-
-	replicas, err := strconv.Atoi(replicaStr)
-	if err != nil {
-		return healthcheck.NewResult(
-			"ingress-controller-replicas",
-			types.StatusCritical,
-			"Failed to parse ingress controller replica count",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error parsing ingress controller replicas: %v", err)
-	}
-
-	// Recommended minimum is 3 for high availability
-	if replicas >= 3 {
-		return healthcheck.NewResult(
-			"ingress-controller-replicas",
-			types.StatusOK,
-			fmt.Sprintf("Ingress controller has sufficient replicas: %d", replicas),
-			types.ResultKeyNoChange,
-		), nil
-	}
-
-	result := healthcheck.NewResult(
-		"ingress-controller-replicas",
-		types.StatusWarning,
-		fmt.Sprintf("Ingress controller has insufficient replicas: %d (recommended: >= 3)", replicas),
-		types.ResultKeyRecommended,
-	)
-
-	result.AddRecommendation("Increase the number of ingress controller replicas to at least 3 for high availability")
-	result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/networking/index#configuring-ingress", version))
-
-	return result, nil
-}
-
-// checkControllerCertificate checks if the ingress controller certificate is properly configured
-func (c *IngressControllerCheck) checkControllerCertificate() (healthcheck.Result, error) {
-	// Check for custom domain certificate configuration
-	out, err := utils.RunCommand("oc", "get", "ingresscontroller/default", "-n", "openshift-ingress-operator",
-		"-o", `jsonpath={.spec.defaultCertificate}`)
-	if err != nil {
-		return healthcheck.NewResult(
-			"ingress-controller-certificate",
-			types.StatusCritical,
-			"Failed to get ingress controller certificate configuration",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error getting ingress controller certificate: %v", err)
-	}
-
-	certificate := strings.TrimSpace(out)
-
-	// Get OpenShift version for documentation links
-	version, verErr := utils.GetOpenShiftMajorMinorVersion()
-	if verErr != nil {
-		version = "4.10" // Default to a known version if we can't determine
-	}
-
-	// If a custom certificate is configured, the check passes
-	if certificate != "" && certificate != "{}" {
-		return healthcheck.NewResult(
-			"ingress-controller-certificate",
-			types.StatusOK,
-			"Custom certificate is configured for the ingress controller",
-			types.ResultKeyNoChange,
-		), nil
-	}
-
-	// If no custom certificate is configured, recommend configuring one
-	result := healthcheck.NewResult(
-		"ingress-controller-certificate",
-		types.StatusWarning,
-		"Default (self-signed) certificate is used for the ingress controller",
-		types.ResultKeyRecommended,
-	)
-
-	result.AddRecommendation("Configure a custom certificate for the ingress controller to avoid browser warnings")
-	result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/security/certificates/replacing-default-ingress-certificate", version))
 
 	return result, nil
 }
