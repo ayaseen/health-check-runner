@@ -8,19 +8,36 @@ import (
 func GetChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Add monitoring stack checks
-	checks = append(checks, NewMonitoringStorageCheck())
-	checks = append(checks, NewUserWorkloadMonitoringCheck())
+	// Following the order in the PDF (Op-Ready category):
 
-	// Add logging checks
+	// Logging forwarders for audit logs
+	checks = append(checks, NewLoggingForwardersOpsCheck())
+
+	// Logging forwarders for application logs
+	checks = append(checks, NewLoggingForwarderCheck())
+
+	// Logging installation and health
 	checks = append(checks, NewLoggingInstallCheck())
 	checks = append(checks, NewLoggingHealthCheck())
-	checks = append(checks, NewLoggingStorageCheck())
-	checks = append(checks, NewLoggingForwarderCheck())
+
+	// Logging placement
 	checks = append(checks, NewLoggingPlacementCheck())
 
-	// Add service monitor check
+	// Logging storage
+	checks = append(checks, NewLoggingStorageCheck())
+
+	// Service monitors
 	checks = append(checks, NewServiceMonitorCheck())
+
+	// Alerts forwarding
+	// checks = append(checks, NewAlertsForwardingCheck())
+	// Mentioned in PDF but not implemented
+
+	// Monitoring storage
+	checks = append(checks, NewMonitoringStorageCheck())
+
+	// User workload monitoring
+	checks = append(checks, NewUserWorkloadMonitoringCheck())
 
 	return checks
 }

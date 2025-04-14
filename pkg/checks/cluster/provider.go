@@ -22,57 +22,71 @@ func GetChecks() []healthcheck.Check {
 
 	var checks []healthcheck.Check
 
-	// Add cluster version check
-	checks = append(checks, NewClusterVersionCheck(latestVersion))
+	// Following the order in the PDF:
 
-	// Add cluster operators check
-	checks = append(checks, NewClusterOperatorsCheck())
-
-	// Add nodes check
-	checks = append(checks, NewNodeStatusCheck())
-
-	// Add node usage check
-	checks = append(checks, NewNodeUsageCheck())
-
-	// Add control node schedulable check
-	checks = append(checks, NewControlNodeSchedulableCheck())
-
-	// Add infrastructure nodes check - from infra_nodes.go
-	checks = append(checks, NewInfrastructureNodesCheck())
-
-	// Add infrastructure machine config pool check - from infra_config_pool.go
-	checks = append(checks, NewInfraMachineConfigPoolCheck())
-
-	// Cluster default SCC check moved to security package
-
-	// Add infrastructure provider check - from infrastructure_provider.go
+	// Infrastructure Provider - first in Infra category
 	checks = append(checks, NewInfrastructureProviderCheck())
 
-	// Add installation type check
+	// Installation Type
 	checks = append(checks, NewInstallationTypeCheck())
 
-	// Add workload off infra nodes check
+	// Node Status
+	checks = append(checks, NewNodeStatusCheck())
+
+	// Node Usage
+	checks = append(checks, NewNodeUsageCheck())
+
+	// Cluster Version - first in Cluster Config
+	checks = append(checks, NewClusterVersionCheck(latestVersion))
+
+	// Cluster Operators
+	checks = append(checks, NewClusterOperatorsCheck())
+
+	// Control Nodes Schedulable
+	checks = append(checks, NewControlNodeSchedulableCheck())
+
+	// Infrastructure Nodes
+	checks = append(checks, NewInfrastructureNodesCheck())
+
+	// Workload off Infra Nodes
 	checks = append(checks, NewWorkloadOffInfraNodesCheck())
 
-	// Add proxy settings check
-	checks = append(checks, NewProxySettingsCheck())
+	// Default Project Template - comes from security in PDF
 
-	//// Add new internal registry check
-	//checks = append(checks, NewInternalRegistryCheck())
-	//
-	//// Add new image pruning check
-	//checks = append(checks, NewImagePruningCheck())
-
-	// Add new infra taints check
-	checks = append(checks, NewInfraTaintsCheck())
-
-	// Add new kubelet garbage collection check
-	checks = append(checks, NewKubeletGarbageCollectionCheck())
-
-	// Add new default node schedule check
+	// Default Node Schedule
 	checks = append(checks, NewDefaultNodeScheduleCheck())
 
-	// Note: DefaultProjectTemplateCheck and KubeadminUserCheck moved to security package
+	// Self-Provisioner - comes from security in PDF
+
+	// Kubeadmin user - comes from security in PDF
+
+	// Network Policy - comes from networking in PDF
+
+	// Identity Provider - comes from security in PDF
+
+	// User Workload Monitoring - comes from monitoring in PDF
+
+	// OpenShift Logging - comes from monitoring in PDF
+
+	// ETCD backup - comes from security in PDF
+
+	// ETCD Encryption - comes from security in PDF
+
+	// ETCD Performance - comes from security in PDF
+
+	// Infra machine config pool
+	checks = append(checks, NewInfraMachineConfigPoolCheck())
+
+	// Kubelet Configuration
+	checks = append(checks, NewKubeletGarbageCollectionCheck())
+
+	// EmptyDir Volumes - comes from applications in PDF
+
+	// Openshift Proxy Settings
+	checks = append(checks, NewProxySettingsCheck())
+
+	// Infrastructure node taints
+	checks = append(checks, NewInfraTaintsCheck())
 
 	return checks
 }

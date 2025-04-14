@@ -8,28 +8,30 @@ import (
 func GetChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Add SCC check
+	// Following the order in the PDF:
+
+	// Default Security Context Constraint (SCC)
 	checks = append(checks, NewClusterDefaultSCCCheck())
 
-	// Add elevated privileges check (consolidated version)
-	checks = append(checks, NewElevatedPrivilegesCheck())
-
-	// Add ETCD security checks
-	checks = append(checks, NewEtcdEncryptionCheck())
-	checks = append(checks, NewEtcdBackupCheck())
-	checks = append(checks, NewEtcdHealthCheck())
-
-	// Add default project template check
+	// Default Project Template
 	checks = append(checks, NewDefaultProjectTemplateCheck())
 
-	// Add kubeadmin user check
+	// Self-Provisioner role
+	checks = append(checks, NewSelfProvisionerCheck())
+
+	// Kubeadmin user
 	checks = append(checks, NewKubeadminUserCheck())
 
-	// Add identity provider check
+	// Identity Provider checks
 	checks = append(checks, NewIdentityProviderCheck())
 
-	// Add self-provisioner check
-	checks = append(checks, NewSelfProvisionerCheck())
+	// ETCD backup, encryption, and health checks
+	checks = append(checks, NewEtcdBackupCheck())
+	checks = append(checks, NewEtcdEncryptionCheck())
+	checks = append(checks, NewEtcdHealthCheck())
+
+	// Elevated privileges - in App Dev category in PDF but implementation is in security
+	checks = append(checks, NewElevatedPrivilegesCheck())
 
 	return checks
 }

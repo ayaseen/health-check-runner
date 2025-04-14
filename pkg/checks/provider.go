@@ -14,16 +14,19 @@ import (
 func GetOpenShiftChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Add cluster checks
+	// Add cluster checks first (includes Infra checks)
 	checks = append(checks, cluster.GetChecks()...)
-
-	// Add security checks
-	checks = append(checks, security.GetChecks()...)
 
 	// Add networking checks
 	checks = append(checks, networking.GetChecks()...)
 
-	// Add monitoring checks
+	// Add storage checks
+	checks = append(checks, storage.GetChecks()...)
+
+	// Add security checks
+	checks = append(checks, security.GetChecks()...)
+
+	// Add monitoring checks (Op-Ready in the PDF)
 	checks = append(checks, monitoring.GetChecks()...)
 
 	return checks
@@ -53,14 +56,23 @@ func GetStorageChecks() []healthcheck.Check {
 func GetAllChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Add OpenShift checks
-	checks = append(checks, GetOpenShiftChecks()...)
+	// Add cluster checks first (includes Infra checks)
+	checks = append(checks, cluster.GetChecks()...)
 
-	// Add application checks
-	checks = append(checks, GetApplicationChecks()...)
+	// Add networking checks
+	checks = append(checks, networking.GetChecks()...)
 
 	// Add storage checks
-	checks = append(checks, GetStorageChecks()...)
+	checks = append(checks, storage.GetChecks()...)
+
+	// Add application checks (App Dev in the PDF)
+	checks = append(checks, applications.GetChecks()...)
+
+	// Add security checks
+	checks = append(checks, security.GetChecks()...)
+
+	// Add monitoring checks (Op-Ready in the PDF)
+	checks = append(checks, monitoring.GetChecks()...)
 
 	return checks
 }

@@ -8,26 +8,29 @@ import (
 func GetChecks() []healthcheck.Check {
 	var checks []healthcheck.Check
 
-	// Add CNI network plugin check
-	checks = append(checks, NewCNINetworkPluginCheck())
+	// Following the order in the PDF:
 
-	// Add network policy check
-	checks = append(checks, NewNetworkPolicyCheck())
+	// Ingress Controller Type
+	// checks = append(checks, NewIngressControllerTypeCheck())
+	// Not implemented yet, but mentioned in the PDF
 
-	// Add ingress controller check
-	checks = append(checks, NewIngressControllerCheck())
-
-	// Add new ingress controller placement check
+	// Ingress Controller Placement
 	checks = append(checks, NewIngressControllerPlacementCheck())
 
-	// Add new ingress controller replica check
+	// Ingress Controller Replica Count
 	checks = append(checks, NewIngressControllerReplicaCheck())
 
-	//// Add new ingress controller type check
-	//checks = append(checks, NewIngressControllerTypeCheck())
-
-	// Add new default ingress certificate check
+	// Ingress Controller Certificate
 	checks = append(checks, NewDefaultIngressCertificateCheck())
+
+	// CNI Network Plugin
+	checks = append(checks, NewCNINetworkPluginCheck())
+
+	// Network Policy
+	checks = append(checks, NewNetworkPolicyCheck())
+
+	// The comprehensive ingress controller check - this might include all the above specific checks
+	checks = append(checks, NewIngressControllerCheck())
 
 	return checks
 }
