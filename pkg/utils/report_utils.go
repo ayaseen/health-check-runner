@@ -27,7 +27,7 @@ func GenerateFullAsciiDocReport(title string, checks []types.Check, results map[
 		category := check.Category()
 		switch category {
 		case types.CategoryCluster:
-			category = types.CategoryClusterConfig // Fixed from ClusterConfigConfig
+			category = types.CategoryClusterConfig
 		case types.CategoryNetworking:
 			category = types.CategoryNetwork
 		case types.CategoryApplications:
@@ -74,7 +74,7 @@ func OrganizeChecksByCategory(checks []types.Check) map[types.Category][]types.C
 		category := check.Category()
 		switch category {
 		case types.CategoryCluster:
-			category = types.CategoryClusterConfig // Fixed from ClusterConfigConfig
+			category = types.CategoryClusterConfig
 		case types.CategoryNetworking:
 			category = types.CategoryNetwork
 		case types.CategoryApplications:
@@ -97,7 +97,7 @@ func GetSortedCategories() []types.Category {
 		types.CategoryInfra,
 		types.CategoryNetwork,
 		types.CategoryStorage,
-		types.CategoryClusterConfig, // Fixed from ClusterConfigConfig
+		types.CategoryClusterConfig,
 		types.CategoryAppDev,
 		types.CategorySecurity,
 		types.CategoryOpReady,

@@ -52,7 +52,7 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 		types.CategoryInfra,
 		types.CategoryNetwork,
 		types.CategoryStorage,
-		types.CategoryClusterConfig, // Fixed from ClusterConfigConfig
+		types.CategoryClusterConfig,
 		types.CategoryAppDev,
 		types.CategorySecurity,
 		types.CategoryOpReady,
@@ -261,7 +261,7 @@ func groupChecksByCategory(checks []types.Check, results map[string]types.Result
 			// Map old categories to new ones for consistent reporting
 			switch category {
 			case types.CategoryCluster:
-				category = types.CategoryClusterConfig // Fixed from ClusterConfigConfig
+				category = types.CategoryClusterConfig
 			case types.CategoryNetworking:
 				category = types.CategoryNetwork
 			case types.CategoryApplications:
