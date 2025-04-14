@@ -51,8 +51,11 @@ func (c *KubeletGarbageCollectionCheck) Run() (healthcheck.Result, error) {
 
 	gcConfigured := err == nil && strings.TrimSpace(gcThreshold) != ""
 
-	// Check for machine config pools with kubelet config
-	mcpOut, err := utils.RunCommand("oc", "get", "mcp", "-o", "jsonpath={.items[*].metadata.name}")
+	// Get machine config pools with kubelet config - store for detailed reporting
+	mcpInfo, err := utils.RunCommand("oc", "get", "mcp", "-o", "jsonpath={.items[*].metadata.name}")
+	if err == nil && strings.TrimSpace(mcpInfo) != "" {
+		detailedOut += fmt.Sprintf("\n\nMachine Config Pools:\n%s", mcpInfo)
+	}
 
 	// Get node storage information to check for potential issues
 	nodeStorageOut, err := utils.RunCommand("oc", "adm", "top", "nodes", "|", "grep", "100%")
