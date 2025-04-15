@@ -102,7 +102,7 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Check which monitoring components are deployed or missing
-	deployedComponents, missingComponents, componentDetails := checkMonitoringComponents(monConfigYaml)
+	_, missingComponents, componentDetails := checkMonitoringComponents(monConfigYaml)
 	detailedOut.WriteString("== Monitoring Stack Components ==\n")
 	detailedOut.WriteString(componentDetails)
 	detailedOut.WriteString("\n\n")
@@ -112,19 +112,8 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 		recommendations = append(recommendations, "Configure all recommended monitoring stack components for comprehensive monitoring")
 	}
 
-	// Check if user workload monitoring is enabled
-	userWorkloadEnabled := strings.Contains(monConfigYaml, "enableUserWorkload: true")
-	if userWorkloadEnabled {
-		detailedOut.WriteString("== User Workload Monitoring ==\n")
-		detailedOut.WriteString("User workload monitoring is enabled\n\n")
-	} else {
-		detailedOut.WriteString("== User Workload Monitoring ==\n")
-		detailedOut.WriteString("User workload monitoring is not enabled\n\n")
-		if isMultiNode && nodeCount > 3 {
-			issues = append(issues, "user workload monitoring is not enabled in a multi-node cluster")
-			recommendations = append(recommendations, "Enable user workload monitoring to monitor application metrics")
-		}
-	}
+	// Note: User workload monitoring is checked by the dedicated UserWorkloadMonitoringCheck
+	// This avoids duplication and follows the single responsibility principle
 
 	// Check for persistent storage configuration
 	hasPVC, pvcDetails := checkPersistentStorage(client, monConfigYaml)
