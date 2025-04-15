@@ -93,9 +93,10 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 	// Add monitoring config to the detailed output
 	if monConfigExists {
-		detailedOut.WriteString("Cluster Monitoring Config exists:\n")
+		detailedOut.WriteString("Cluster Monitoring Config exists:\n\n")
+		detailedOut.WriteString("[source, yaml]\n----\n")
 		detailedOut.WriteString(monConfigYaml)
-		detailedOut.WriteString("\n\n")
+		detailedOut.WriteString("\n----\n\n")
 	} else {
 		detailedOut.WriteString("No custom cluster-monitoring-config ConfigMap found. Using default configuration.\n\n")
 		issues = append(issues, "no custom monitoring configuration found, using defaults")
@@ -110,6 +111,7 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 	// Check which monitoring components are deployed or missing
 	_, unconfiguredComponents, componentDetails := checkMonitoringComponents(monConfigYaml, version)
+	detailedOut.WriteString("== Monitoring Stack Components ==\n\n")
 	detailedOut.WriteString(componentDetails)
 	detailedOut.WriteString("\n\n")
 
@@ -123,9 +125,10 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 	// Check for persistent storage configuration
 	hasPVC, pvcDetails := checkPersistentStorage(client, monConfigYaml)
-	detailedOut.WriteString("== Persistent Storage Configuration ==\n")
+	detailedOut.WriteString("== Persistent Storage Configuration ==\n\n")
+	detailedOut.WriteString("[source, yaml]\n----\n")
 	detailedOut.WriteString(pvcDetails)
-	detailedOut.WriteString("\n\n")
+	detailedOut.WriteString("----\n\n")
 
 	if !hasPVC && isMultiNode {
 		issues = append(issues, "persistent storage not configured for monitoring components in a multi-node cluster")
@@ -134,9 +137,10 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 	// Check for resource requests and limits
 	hasResourceLimits, resourceDetails := checkResourceLimits(monConfigYaml)
-	detailedOut.WriteString("== Resource Requests and Limits ==\n")
+	detailedOut.WriteString("== Resource Requests and Limits ==\n\n")
+	detailedOut.WriteString("[source, yaml]\n----\n")
 	detailedOut.WriteString(resourceDetails)
-	detailedOut.WriteString("\n\n")
+	detailedOut.WriteString("----\n\n")
 
 	if !hasResourceLimits {
 		issues = append(issues, "resource requests and limits not explicitly configured for monitoring components")
@@ -146,9 +150,10 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	// Check for node placement configuration
 	monitoringComponents := getExpectedComponentsForVersion(version)
 	hasNodePlacement, nodeDetails, missingPlacementComponents := checkNodePlacement(monConfigYaml, monitoringComponents)
-	detailedOut.WriteString("== Node Placement Configuration ==\n")
+	detailedOut.WriteString("== Node Placement Configuration ==\n\n")
+	detailedOut.WriteString("[source, yaml]\n----\n")
 	detailedOut.WriteString(nodeDetails)
-	detailedOut.WriteString("\n\n")
+	detailedOut.WriteString("----\n\n")
 
 	if !hasNodePlacement && nodeCount > 3 {
 		if len(missingPlacementComponents) > 0 {
@@ -161,9 +166,10 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 	// Check for retention time and size configuration
 	hasRetentionConfig, retentionDetails := checkRetentionConfig(monConfigYaml)
-	detailedOut.WriteString("== Data Retention Configuration ==\n")
+	detailedOut.WriteString("== Data Retention Configuration ==\n\n")
+	detailedOut.WriteString("[source, yaml]\n----\n")
 	detailedOut.WriteString(retentionDetails)
-	detailedOut.WriteString("\n\n")
+	detailedOut.WriteString("----\n\n")
 
 	if !hasRetentionConfig {
 		issues = append(issues, "no custom retention time or size configured for Prometheus metrics")
@@ -172,9 +178,10 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 	// Check for remote write configuration
 	hasRemoteWrite, remoteWriteDetails := checkRemoteWriteConfig(monConfigYaml)
-	detailedOut.WriteString("== Remote Write Configuration ==\n")
+	detailedOut.WriteString("== Remote Write Configuration ==\n\n")
+	detailedOut.WriteString("[source, yaml]\n----\n")
 	detailedOut.WriteString(remoteWriteDetails)
-	detailedOut.WriteString("\n\n")
+	detailedOut.WriteString("----\n\n")
 
 	if !hasRemoteWrite {
 		issues = append(issues, "remote write storage not configured for long-term metrics retention")
@@ -183,9 +190,10 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 	// Check for alerting configuration
 	hasAlertRouting, alertDetails := checkAlertRouting()
-	detailedOut.WriteString("== Alert Routing Configuration ==\n")
+	detailedOut.WriteString("== Alert Routing Configuration ==\n\n")
+	detailedOut.WriteString("[source, yaml]\n----\n")
 	detailedOut.WriteString(alertDetails)
-	detailedOut.WriteString("\n\n")
+	detailedOut.WriteString("----\n\n")
 
 	if !hasAlertRouting {
 		issues = append(issues, "no custom alert routing configuration found")
@@ -193,7 +201,7 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Generate recommendations based on documented best practices
-	detailedOut.WriteString("== Best Practices Recommendations ==\n")
+	detailedOut.WriteString("== Best Practices Recommendations ==\n\n")
 	detailedOut.WriteString("1. For production clusters, configure persistent storage for monitoring components\n")
 	detailedOut.WriteString("2. Set appropriate CPU and memory limits for monitoring components\n")
 	detailedOut.WriteString("3. Configure node placement to isolate monitoring components on dedicated nodes\n")
@@ -402,7 +410,6 @@ func checkMonitoringComponents(monConfigYaml, version string) ([]string, []strin
 	// Generate detailed output
 	var details strings.Builder
 
-	details.WriteString("== Monitoring Stack Components ==\n\n")
 	details.WriteString(fmt.Sprintf("Using OpenShift %s monitoring component requirements\n\n", version))
 
 	if len(configuredComponents) > 0 {
@@ -575,7 +582,7 @@ func checkResourceLimits(monConfigYaml string) (bool, string) {
 
 	var details strings.Builder
 	if hasResourceLimits {
-		details.WriteString("Resource requests and/or limits are configured in the monitoring config\n")
+		details.WriteString("Resource requests and/or limits are configured in the monitoring config\n\n")
 
 		// Try to extract resource configurations for key components
 		resourceConfigs := regexp.MustCompile(`(?s)(prometheus|alertmanager|thanosQuerier)K?8?s?:\s*\n\s*resources:\s*\n([\s\S]*?)(?:\n\w|\z)`).FindAllStringSubmatch(monConfigYaml, -1)
@@ -583,7 +590,7 @@ func checkResourceLimits(monConfigYaml string) (bool, string) {
 		if len(resourceConfigs) > 0 {
 			for _, match := range resourceConfigs {
 				if len(match) >= 3 {
-					details.WriteString(fmt.Sprintf("\nResource configuration for %s:\n%s\n", match[1], match[2]))
+					details.WriteString(fmt.Sprintf("Resource configuration for %s:\n%s\n", match[1], match[2]))
 				}
 			}
 		}
@@ -745,21 +752,21 @@ func checkRetentionConfig(monConfigYaml string) (bool, string) {
 
 	var details strings.Builder
 	if hasRetention || hasRetentionSize {
-		details.WriteString("Prometheus data retention is configured\n")
+		details.WriteString("Prometheus data retention is configured\n\n")
 
 		// Try to extract retention configurations
 		retentionConfig := regexp.MustCompile(`(?s)prometheusK8s:\s*\n(.*?)(retention: [^\n]*)`).FindStringSubmatch(monConfigYaml)
 		if len(retentionConfig) >= 3 {
-			details.WriteString(fmt.Sprintf("\nRetention time: %s\n", retentionConfig[2]))
+			details.WriteString(fmt.Sprintf("Retention time: %s\n", retentionConfig[2]))
 		} else {
-			details.WriteString("\nUsing default retention time (15d)\n")
+			details.WriteString("Using default retention time (15d)\n")
 		}
 
 		retentionSizeConfig := regexp.MustCompile(`(?s)prometheusK8s:\s*\n(.*?)(retentionSize: [^\n]*)`).FindStringSubmatch(monConfigYaml)
 		if len(retentionSizeConfig) >= 3 {
-			details.WriteString(fmt.Sprintf("\nRetention size: %s\n", retentionSizeConfig[2]))
+			details.WriteString(fmt.Sprintf("Retention size: %s\n", retentionSizeConfig[2]))
 		} else {
-			details.WriteString("\nNo retention size limit configured\n")
+			details.WriteString("No retention size limit configured\n")
 		}
 	} else {
 		details.WriteString("Using default Prometheus retention configuration (15d with no size limit)\n")
@@ -775,12 +782,12 @@ func checkRemoteWriteConfig(monConfigYaml string) (bool, string) {
 
 	var details strings.Builder
 	if hasRemoteWrite {
-		details.WriteString("Remote write is configured for Prometheus\n")
+		details.WriteString("Remote write is configured for Prometheus\n\n")
 
 		// Try to extract remote write configurations
 		remoteWriteConfig := regexp.MustCompile(`(?s)remoteWrite:\s*\n([\s\S]*?)(?:\n\w|\z)`).FindStringSubmatch(monConfigYaml)
 		if len(remoteWriteConfig) >= 2 {
-			details.WriteString("\nRemote write configuration:\n")
+			details.WriteString("Remote write configuration:\n")
 			details.WriteString(remoteWriteConfig[1])
 		}
 
