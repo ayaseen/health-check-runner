@@ -23,6 +23,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -101,8 +102,14 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 		recommendations = append(recommendations, "Create a cluster-monitoring-config ConfigMap in the openshift-monitoring namespace to customize the monitoring stack")
 	}
 
+	// Get OpenShift version for dynamic component check
+	version, verErr := utils.GetOpenShiftMajorMinorVersion()
+	if verErr != nil {
+		version = "4.14" // Default to a known version if we can't determine
+	}
+
 	// Check which monitoring components are deployed or missing
-	_, unconfiguredComponents, componentDetails := checkMonitoringComponents(monConfigYaml)
+	_, unconfiguredComponents, componentDetails := checkMonitoringComponents(monConfigYaml, version)
 	detailedOut.WriteString(componentDetails)
 	detailedOut.WriteString("\n\n")
 
@@ -137,7 +144,8 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Check for node placement configuration
-	hasNodePlacement, nodeDetails, missingPlacementComponents := checkNodePlacement(monConfigYaml)
+	monitoringComponents := getExpectedComponentsForVersion(version)
+	hasNodePlacement, nodeDetails, missingPlacementComponents := checkNodePlacement(monConfigYaml, monitoringComponents)
 	detailedOut.WriteString("== Node Placement Configuration ==\n")
 	detailedOut.WriteString(nodeDetails)
 	detailedOut.WriteString("\n\n")
@@ -182,12 +190,6 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	if !hasAlertRouting {
 		issues = append(issues, "no custom alert routing configuration found")
 		recommendations = append(recommendations, "Configure alert routing to ensure alerts are properly delivered to the right teams")
-	}
-
-	// Get OpenShift version for documentation links
-	version, verErr := utils.GetOpenShiftMajorMinorVersion()
-	if verErr != nil {
-		version = "4.14" // Default to a known version if we can't determine
 	}
 
 	// Generate recommendations based on documented best practices
@@ -288,8 +290,66 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	return result, nil
 }
 
+// getExpectedComponentsForVersion returns the expected monitoring components for a specific OpenShift version
+func getExpectedComponentsForVersion(version string) []string {
+	// Split the version string
+	parts := strings.Split(version, ".")
+	if len(parts) < 2 {
+		// Default to 4.14 components if we can't parse the version
+		return getOpenShift414Components()
+	}
+
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return getOpenShift414Components()
+	}
+
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return getOpenShift414Components()
+	}
+
+	// For OpenShift 4.16 and later
+	if major > 4 || (major == 4 && minor >= 16) {
+		return getOpenShift416Components()
+	}
+
+	// For OpenShift 4.14-4.15
+	return getOpenShift414Components()
+}
+
+// getOpenShift414Components returns the monitoring components for OpenShift 4.14
+func getOpenShift414Components() []string {
+	return []string{
+		"prometheusOperator",
+		"prometheusK8s",
+		"alertmanagerMain",
+		"thanosQuerier",
+		"kubeStateMetrics",
+		"monitoringPlugin",
+		"openshiftStateMetrics",
+		"telemeterClient",
+		"k8sPrometheusAdapter",
+	}
+}
+
+// getOpenShift416Components returns the monitoring components for OpenShift 4.16 and later
+func getOpenShift416Components() []string {
+	return []string{
+		"prometheusOperator",
+		"prometheusK8s",
+		"alertmanagerMain",
+		"thanosQuerier",
+		"kubeStateMetrics",
+		"monitoringPlugin",
+		"openshiftStateMetrics",
+		"telemeterClient",
+		"metricsServer",
+	}
+}
+
 // checkMonitoringComponents checks which monitoring components are configured in the cluster-monitoring-config ConfigMap
-func checkMonitoringComponents(monConfigYaml string) ([]string, []string, string) {
+func checkMonitoringComponents(monConfigYaml, version string) ([]string, []string, string) {
 	// Extract the actual config.yaml content
 	configPattern := regexp.MustCompile(`(?s)config\.yaml:\s*\|(.*?)(?:kind:|$)`)
 	configMatch := configPattern.FindStringSubmatch(monConfigYaml)
@@ -302,19 +362,8 @@ func checkMonitoringComponents(monConfigYaml string) ([]string, []string, string
 		configYaml = monConfigYaml
 	}
 
-	// List of configurable core platform monitoring components per OpenShift documentation
-	configurableComponents := []string{
-		"prometheusOperator",
-		"prometheusK8s",
-		"alertmanagerMain",
-		"thanosQuerier",
-		"kubeStateMetrics",
-		"monitoringPlugin",
-		"openshiftStateMetrics",
-		"telemeterClient",
-		"metricsServer",
-		"k8sPrometheusAdapter", // Added from the sample config
-	}
+	// Get the expected components based on OpenShift version
+	configurableComponents := getExpectedComponentsForVersion(version)
 
 	// Additional components that may be configured
 	additionalComponents := []string{
@@ -353,6 +402,7 @@ func checkMonitoringComponents(monConfigYaml string) ([]string, []string, string
 	var details strings.Builder
 
 	details.WriteString("== Monitoring Stack Components ==\n\n")
+	details.WriteString(fmt.Sprintf("Using OpenShift %s monitoring component requirements\n\n", version))
 
 	if len(configuredComponents) > 0 {
 		details.WriteString("Components explicitly configured in cluster-monitoring-config:\n")
@@ -551,7 +601,7 @@ func checkResourceLimits(monConfigYaml string) (bool, string) {
 }
 
 // checkNodePlacement checks if node placement is configured for monitoring components
-func checkNodePlacement(monConfigYaml string) (bool, string, []string) {
+func checkNodePlacement(monConfigYaml string, monitoringComponents []string) (bool, string, []string) {
 	// Extract the actual config.yaml content
 	configPattern := regexp.MustCompile(`(?s)config\.yaml:\s*\|(.*?)(?:kind:|$)`)
 	configMatch := configPattern.FindStringSubmatch(monConfigYaml)
@@ -567,19 +617,6 @@ func checkNodePlacement(monConfigYaml string) (bool, string, []string) {
 	// Simple direct check for each component by name
 	componentsWithNodeSelector := make(map[string]bool)
 	componentsWithTolerations := make(map[string]bool)
-
-	// List of monitoring components to check
-	monitoringComponents := []string{
-		"prometheusOperator",
-		"prometheusK8s",
-		"alertmanagerMain",
-		"thanosQuerier",
-		"kubeStateMetrics",
-		"monitoringPlugin",
-		"openshiftStateMetrics",
-		"telemeterClient",
-		"k8sPrometheusAdapter",
-	}
 
 	// Check each component directly in the yaml
 	for _, component := range monitoringComponents {
