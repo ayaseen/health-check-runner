@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for infrastructure machine config pools. It:
+
+- Verifies if a dedicated infrastructure machine config pool exists
+- Checks if the machine config pool is properly configured
+- Examines the health status of the infrastructure MCP
+- Provides recommendations for setting up dedicated infrastructure nodes
+- Ensures proper node management for infrastructure components
+
+This check helps maintain proper node configuration for infrastructure components in OpenShift.
+*/
+
 package cluster
 
 import (

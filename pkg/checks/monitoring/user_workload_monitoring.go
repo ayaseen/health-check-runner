@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for user workload monitoring. It:
+
+- Verifies if monitoring for user-defined projects is enabled
+- Checks the cluster-monitoring-config ConfigMap for proper settings
+- Examines the existence of the openshift-user-workload-monitoring namespace
+- Provides recommendations for enabling application monitoring
+- Helps ensure proper visibility into application performance
+
+This check helps administrators configure proper monitoring for application workloads beyond the default system monitoring.
+*/
+
 package monitoring
 
 import (

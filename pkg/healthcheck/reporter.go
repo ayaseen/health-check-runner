@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements the reporting functionality for health checks. It:
+
+- Generates formatted reports of health check results
+- Supports multiple output formats (AsciiDoc, HTML, JSON, text summary)
+- Organizes results by category and status
+- Includes detailed result information and recommendations
+- Handles report file creation and formatting options
+
+This component transforms raw health check results into readable, actionable reports for administrators.
+*/
+
 package healthcheck
 
 import (

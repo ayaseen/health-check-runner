@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for OpenShift installation type. It:
+
+- Determines if the cluster was installed using IPI, UPI, or HCP methods
+- Examines machine API integration and configuration
+- Identifies the installation pattern used
+- Provides context about the cluster's provisioning model
+- Helps understand the appropriate management approach based on installation type
+
+This check provides important context about how the cluster was provisioned, informing other checks and recommendations.
+*/
+
 package cluster
 
 import (

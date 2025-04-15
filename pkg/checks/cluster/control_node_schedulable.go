@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for control plane node scheduling. It:
+
+- Verifies if control plane nodes are properly protected from regular workloads
+- Checks for appropriate taints on master/control nodes
+- Examines node scheduling configuration for control plane protection
+- Provides recommendations for proper control plane isolation
+- Helps maintain control plane stability by preventing resource contention
+
+This check helps ensure that critical control plane components have dedicated resources without competition from application workloads.
+*/
+
 package cluster
 
 import (

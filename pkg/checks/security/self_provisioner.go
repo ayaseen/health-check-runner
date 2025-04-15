@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements a health check for the self-provisioner role binding. It:
+
+- Checks if the self-provisioner role is configured securely
+- Verifies that system:authenticated:oauth group doesn't have uncontrolled namespace creation rights
+- Provides recommendations for proper project creation control
+- Helps maintain proper multi-tenancy boundaries
+- Prevents unauthorized project proliferation
+
+This check helps maintain proper governance over namespace creation in shared OpenShift environments.
+*/
+
 package security
 
 import (

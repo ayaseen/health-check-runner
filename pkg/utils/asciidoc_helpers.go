@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file provides utilities for AsciiDoc report formatting. It includes:
+
+- Functions for creating color-coded status indicators
+- Methods for generating formatted tables and sections
+- Utilities for consistent styling and presentation
+- Helpers for creating report headers and structured content
+- Functions for formatting result keys and recommendations
+
+These utilities help create readable, visually appealing reports that clearly communicate health check findings.
+*/
+
 package utils
 
 import (

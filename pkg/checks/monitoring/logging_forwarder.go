@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for log forwarding configuration. It:
+
+- Checks if log forwarding is configured for long-term storage
+- Examines cluster log forwarder configurations
+- Identifies log forwarding targets and methods
+- Provides recommendations for external log storage
+- Helps ensure logs are preserved beyond the cluster's local storage
+
+This check helps administrators ensure that application logs are properly forwarded to external systems for long-term retention and analysis.
+*/
+
 package monitoring
 
 import (

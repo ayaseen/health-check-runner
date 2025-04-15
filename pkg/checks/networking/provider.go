@@ -1,3 +1,19 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file acts as a provider for networking-related health checks. It includes:
+
+- A registry of all available networking health checks
+- Functions to retrieve and initialize networking checks
+- Organization of checks related to CNI plugins, network policies, and ingress controllers
+- Registration of checks for network connectivity and configuration
+
+The provider ensures that all networking-related health checks are properly registered and available for execution by the main runner.
+*/
+
 package networking
 
 import (

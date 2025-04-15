@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for UPI installations using MachineSets. It:
+
+- Identifies if a UPI installation is using MachineSets for node management
+- Checks if MachineSets are properly configured with replica counts
+- Examines the integration between UPI installation and Machine API
+- Provides insights into node management approaches
+- Helps understand the cluster's scaling capabilities
+
+This check helps identify the node management approach in UPI installations, which affects operational procedures.
+*/
+
 package cluster
 
 import (

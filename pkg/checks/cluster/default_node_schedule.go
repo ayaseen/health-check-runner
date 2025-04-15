@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for default node scheduling configuration. It:
+
+- Examines node role labeling and tainting
+- Verifies proper node selector configuration for namespaces
+- Checks for custom scheduler configuration
+- Ensures nodes have appropriate roles assigned
+- Provides recommendations for workload placement control
+
+This check helps maintain a well-organized cluster with proper workload placement rules across different node types.
+*/
+
 package cluster
 
 import (

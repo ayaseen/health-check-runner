@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file defines the core interfaces and structures for health checks. It includes:
+
+- The Check interface that all health checks must implement
+- BaseCheck structure providing common functionality for all checks
+- Result structure for storing and managing check results
+- Methods for managing check metadata, recommendations, and execution details
+- Conversion utilities between internal and external result representations
+
+This file forms the foundation of the health check framework, defining how checks are structured and how results are processed.
+*/
+
 package healthcheck
 
 import (

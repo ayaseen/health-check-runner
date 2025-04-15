@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for ingress controller certificates. It:
+
+- Verifies if a custom certificate is configured for the default ingress controller
+- Checks if the certificate secret exists and is properly configured
+- Provides recommendations for replacing the default self-signed certificate
+- Helps avoid browser security warnings for applications
+- Ensures proper TLS configuration for external traffic
+
+This check helps maintain secure and trusted communication for applications exposed through the OpenShift router.
+*/
+
 package networking
 
 import (

@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for identity provider configuration. It:
+
+- Verifies if a secure central identity provider (like LDAP) is configured
+- Examines OAuth configuration for proper integration
+- Checks for secure connection settings to identity sources
+- Provides recommendations for proper authentication configuration
+- Helps ensure secure user access to the cluster
+
+This check helps maintain proper authentication and identity management for cluster users, a critical security component.
+*/
+
 package security
 
 import (

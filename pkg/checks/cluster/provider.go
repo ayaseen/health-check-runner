@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file acts as a provider for cluster-related health checks. It includes:
+
+- A registry of all available cluster configuration health checks
+- Functions to retrieve and initialize cluster checks
+- Organization of checks related to node configuration, operators, and cluster version
+- Utilities for fetching the latest OpenShift version for comparison
+- Registration of checks for core cluster components
+
+The provider ensures that all cluster-related health checks are properly registered and available for execution by the main runner.
+*/
+
 package cluster
 
 import (

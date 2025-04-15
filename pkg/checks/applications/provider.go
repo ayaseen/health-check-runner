@@ -1,3 +1,19 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file acts as a provider for application-related health checks. It includes:
+
+- A registry of all available application health checks
+- Functions to retrieve and initialize application checks
+- Organization of checks related to application configurations and best practices
+- Registration of checks for probes, resource quotas, and volume usage
+
+The provider ensures that all application-related health checks are properly registered and available for execution by the main runner.
+*/
+
 package applications
 
 import (

@@ -1,3 +1,19 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file provides utilities for compressing files with password protection. It includes:
+
+- Functions to create password-protected ZIP archives from source files
+- Error handling for file operations related to compression
+- Path management for source and destination files
+- Security features for encrypting sensitive report data
+
+These compression utilities ensure that health check reports can be securely stored and transmitted with password protection.
+*/
+
 package utils
 
 import (

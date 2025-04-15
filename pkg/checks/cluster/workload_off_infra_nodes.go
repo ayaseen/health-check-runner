@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for workload placement relative to infrastructure nodes. It:
+
+- Identifies user workloads running on infrastructure nodes
+- Verifies proper separation of applications from infrastructure components
+- Examines pod scheduling across different node types
+- Provides recommendations for proper workload isolation
+- Helps maintain dedicated resources for infrastructure components
+
+This check ensures that infrastructure nodes remain dedicated to their intended purpose without resource competition from application workloads.
+*/
+
 package cluster
 
 import (

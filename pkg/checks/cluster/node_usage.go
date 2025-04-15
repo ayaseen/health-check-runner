@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for node resource usage. It:
+
+- Examines CPU and memory utilization across cluster nodes
+- Identifies nodes with high resource consumption
+- Analyzes resource trends and potential bottlenecks
+- Provides recommendations for addressing resource constraints
+- Helps ensure proper resource distribution and capacity planning
+
+This check helps identify resource constraints before they impact application performance and availability.
+*/
+
 package cluster
 
 import (

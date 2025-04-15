@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for monitoring component storage. It:
+
+- Verifies if persistent storage is configured for monitoring components
+- Examines the configuration of Prometheus and other monitoring tools
+- Checks volume claim templates and storage configuration
+- Provides recommendations for durable monitoring setup
+- Helps ensure monitoring data persists across restarts
+
+This check helps maintain reliable monitoring by ensuring monitoring data is stored persistently.
+*/
+
 package monitoring
 
 import (

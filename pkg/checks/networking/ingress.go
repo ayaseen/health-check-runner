@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements comprehensive health checks for ingress controller configuration. It:
+
+- Coordinates multiple ingress-related checks (type, placement, replica, certificate)
+- Aggregates findings from individual checks into a comprehensive assessment
+- Provides consolidated recommendations for ingress configuration
+- Identifies critical ingress issues that could impact application accessibility
+- Helps ensure reliable and secure application routing
+
+This check provides a holistic view of ingress controller health and configuration in OpenShift clusters.
+*/
+
 package networking
 
 import (

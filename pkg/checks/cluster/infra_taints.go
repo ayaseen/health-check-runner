@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for infrastructure node taints. It:
+
+- Verifies if infrastructure nodes have appropriate taints
+- Checks for missing or insufficient taints
+- Examines taint effect types (NoSchedule, NoExecute, PreferNoSchedule)
+- Provides recommendations for proper node isolation
+- Helps ensure infrastructure nodes are dedicated to infrastructure workloads
+
+This check complements the infrastructure node checks to ensure proper workload isolation and resource dedication.
+*/
+
 package cluster
 
 import (

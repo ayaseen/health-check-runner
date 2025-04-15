@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements a health check for the presence of the kubeadmin user. It:
+
+- Checks if the kubeadmin user still exists in the cluster
+- Verifies if the kubeadmin secret exists in the kube-system namespace
+- Provides recommendations for removing this temporary user
+- Helps ensure proper security practices after initial installation
+- Reduces the risk of unauthorized cluster access
+
+This check enforces the security best practice of removing the default administrator account after proper identity providers are configured.
+*/
+
 package security
 
 import (

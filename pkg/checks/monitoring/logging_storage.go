@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for logging component storage. It:
+
+- Examines storage utilization for Elasticsearch or Loki components
+- Identifies potential storage shortages or performance issues
+- Checks for appropriate storage configuration based on logging type
+- Provides recommendations for optimizing logging storage
+- Helps prevent log data loss due to storage issues
+
+This check ensures that logging components have sufficient and properly configured storage resources.
+*/
+
 package monitoring
 
 import (

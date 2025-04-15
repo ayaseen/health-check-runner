@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements a health check for default project templates. It:
+
+- Checks if a custom default project template is configured
+- Verifies the project request template settings
+- Provides recommendations for standardizing project creation
+- Helps enforce consistent project settings across the cluster
+- Ensures proper governance for new namespace creation
+
+This check aids in maintaining consistent resource constraints and security settings across all newly created projects.
+*/
+
 package security
 
 import (

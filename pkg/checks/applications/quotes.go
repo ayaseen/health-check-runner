@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for resource quotas and limits. It:
+
+- Examines namespaces for configured resource quotas and limit ranges
+- Identifies namespaces lacking proper resource constraints
+- Calculates the percentage of namespaces with appropriate configurations
+- Provides detailed recommendations for resource management
+- Explains the purpose and benefits of resource quotas and limit ranges
+
+These checks help ensure fair resource allocation and prevent resource starvation in multi-tenant OpenShift environments.
+*/
+
 package applications
 
 import (

@@ -1,3 +1,22 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file provides Kubernetes and OpenShift API interaction utilities. It includes:
+
+- Functions to establish connections to Kubernetes clusters
+- Command execution wrappers for 'oc' and 'kubectl' commands
+- Error handling and retry mechanisms for cluster operations
+- Utilities for file operations and directory management
+- OpenShift version detection and information gathering
+- YAML parsing and manipulation functions
+- Directory compression and file management operations
+
+These utilities abstract the complexities of interacting with Kubernetes and OpenShift APIs, providing a simplified interface for health checks to gather cluster information.
+*/
+
 package utils
 
 import (

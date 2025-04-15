@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file provides utilities for generating various report formats. It includes:
+
+- Functions for creating full-featured AsciiDoc reports
+- Methods for organizing checks by category
+- Utilities for formatting detailed check information
+- Functions for generating issue summaries
+- Helpers for consistent report structure across different formats
+
+These utilities support the creation of comprehensive, well-organized health check reports that highlight issues and recommendations.
+*/
+
 package utils
 
 import (

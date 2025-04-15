@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for ingress controller type. It:
+
+- Verifies if the ingress controller is of the recommended type
+- Examines the OpenShift router deployment to determine the controller type
+- Checks if the default ingress controller is being used
+- Provides recommendations if non-default controller types are detected
+- Helps ensure proper application routing configuration
+
+This check helps maintain standard and supported ingress controller configurations in OpenShift clusters, ensuring reliable application access.
+*/
+
 package networking
 
 import (

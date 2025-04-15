@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for applications using emptyDir volumes. It:
+
+- Identifies deployments, stateful sets, and pods using emptyDir volumes
+- Calculates the percentage of workloads using non-persistent storage
+- Provides detailed explanations about the risks of using emptyDir
+- Recommends alternatives for persistent storage needs
+- Flags potential data loss scenarios due to pod rescheduling
+
+This check helps administrators identify applications at risk of data loss due to the ephemeral nature of emptyDir volumes.
+*/
+
 package applications
 
 import (

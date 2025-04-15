@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for cluster operators. It:
+
+- Verifies if all cluster operators are available and not degraded
+- Identifies operators with issues that need attention
+- Provides detailed operator status information
+- Recommends troubleshooting steps for problematic operators
+- Helps ensure the core cluster functionality is working correctly
+
+This check is critical for overall cluster health, as operators manage key components of the OpenShift platform.
+*/
+
 package cluster
 
 import (

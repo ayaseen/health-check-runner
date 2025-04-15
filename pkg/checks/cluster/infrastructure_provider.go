@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for infrastructure provider configuration. It:
+
+- Identifies the underlying infrastructure provider (AWS, Azure, GCP, etc.)
+- Gathers provider-specific information for context
+- Examines control plane and infrastructure topology
+- Provides insights into the cluster's infrastructure setup
+- Helps understand the deployment environment for proper troubleshooting
+
+This check provides important context about the underlying platform hosting the OpenShift cluster.
+*/
+
 package cluster
 
 import (

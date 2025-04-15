@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements the root command for the health check CLI application. It handles:
+
+- Command-line flag parsing for configuration options
+- Setting up the health check runner with the appropriate configuration
+- Executing health checks based on the selected type (OpenShift, application, or all)
+- Generating and compressing reports in various formats (AsciiDoc, HTML, JSON, summary)
+- Validating user inputs to ensure proper configuration
+
+The root command serves as the main entry point for the health check utility, orchestrating the entire process from configuration to report generation.
+*/
+
 package cmd
 
 import (

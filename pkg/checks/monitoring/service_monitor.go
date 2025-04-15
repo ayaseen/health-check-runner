@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for ServiceMonitor configurations. It:
+
+- Verifies if ServiceMonitors are configured for application monitoring
+- Checks if User Workload Monitoring is enabled
+- Examines custom metrics collection setup
+- Provides recommendations for proper monitoring configuration
+- Helps ensure application metrics are being collected appropriately
+
+This check helps administrators ensure proper monitoring of application workloads beyond the default system monitoring.
+*/
+
 package monitoring
 
 import (

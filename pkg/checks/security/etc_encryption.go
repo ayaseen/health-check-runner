@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements a health check for etcd encryption configuration. It:
+
+- Verifies whether etcd encryption is enabled for sensitive data
+- Checks the encryption type used (aescbc or aesgcm)
+- Examines the API server configuration for encryption settings
+- Provides recommendations for enabling encryption if not configured
+- Helps ensure that sensitive data in etcd is properly protected
+
+This check is important for data security, particularly for clusters storing sensitive information in their configuration resources.
+*/
+
 package security
 
 import (

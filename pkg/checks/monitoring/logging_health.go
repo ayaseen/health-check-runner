@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for OpenShift Logging component health. It:
+
+- Examines the status of logging components based on the installed type
+- Checks Elasticsearch or Loki pod status and health
+- Verifies collector (Fluentd/Vector) functionality
+- Identifies issues with logging component stability
+- Provides recommendations for addressing logging health issues
+
+This check ensures that the deployed logging solution is functioning properly and collecting logs reliably.
+*/
+
 package monitoring
 
 import (

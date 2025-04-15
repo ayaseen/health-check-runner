@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for storage performance characteristics. It:
+
+- Examines storage class configurations for performance annotations
+- Identifies storage classes with performance tiers
+- Provides recommendations for storage class organization
+- Helps ensure appropriate storage performance for different workloads
+- Identifies potential storage performance bottlenecks
+
+This check helps administrators configure and maintain storage resources that meet application performance requirements.
+*/
+
 package storage
 
 import (

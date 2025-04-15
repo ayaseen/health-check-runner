@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for networking configurations. It includes:
+
+- Checks for the recommended CNI network plugin (OVNKubernetes)
+- Verification of network policy configuration
+- Examination of network isolation between namespaces
+- Recommendations for network security best practices
+- Provider functions for registering networking checks
+
+These checks help ensure optimal network performance and proper network security configurations in OpenShift clusters.
+*/
+
 package networking
 
 import (

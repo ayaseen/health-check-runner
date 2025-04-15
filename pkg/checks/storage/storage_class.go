@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for storage classes. It:
+
+- Verifies if appropriate storage classes are configured
+- Checks for a default storage class configuration
+- Examines storage classes for ReadWriteMany (RWX) capability
+- Provides recommendations for storage class configuration
+- Helps ensure proper dynamic provisioning capabilities
+
+This check helps maintain proper storage provisioning options for applications requiring persistent storage.
+*/
+
 package storage
 
 import (

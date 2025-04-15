@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for cluster version. It:
+
+- Compares the current OpenShift version against the latest available version
+- Verifies if the cluster is running an up-to-date release
+- Provides recommendations for updating outdated clusters
+- Includes version comparison utilities
+- Helps ensure clusters receive security updates and new features
+
+This check helps administrators keep their OpenShift clusters current with the latest improvements and security fixes.
+*/
+
 package cluster
 
 import (

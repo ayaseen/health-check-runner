@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for node status. It:
+
+- Verifies that all nodes in the cluster are in the Ready state
+- Identifies nodes with issues requiring investigation
+- Examines node conditions that could impact workload placement
+- Provides recommendations for addressing node problems
+- Helps ensure a healthy compute foundation for the cluster
+
+This check is fundamental to overall cluster health, ensuring that the compute layer is functioning properly.
+*/
+
 package cluster
 
 import (

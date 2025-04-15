@@ -1,3 +1,21 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file defines core types and constants used throughout the health check framework. It includes:
+
+- Status types for health check results (OK, Warning, Critical, etc.)
+- Result key types for indicating the importance of findings
+- Category types for organizing health checks
+- Report format types for different output formats
+- Core interfaces and structures for representing check results
+- Configuration types for report generation
+
+These types provide a standardized way to represent and process health check data throughout the application.
+*/
+
 package types
 
 // Status represents the result status of a health check

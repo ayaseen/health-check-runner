@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for etcd cluster health. It:
+
+- Examines the status of the etcd cluster and operator
+- Checks for signs of performance issues or degradation
+- Analyzes etcd logs for common problem patterns
+- Provides detailed diagnostics about etcd health
+- Recommends actions to address etcd issues
+
+This check helps ensure the stability of the control plane by monitoring the critical etcd database component.
+*/
+
 package cluster
 
 import (

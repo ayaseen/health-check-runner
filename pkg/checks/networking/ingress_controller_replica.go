@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for ingress controller replicas. It:
+
+- Verifies if the ingress controller has sufficient replicas for high availability
+- Checks for the recommended minimum of three replicas
+- Examines the ingress controller deployment configuration
+- Provides recommendations for proper ingress controller scaling
+- Helps ensure resilient ingress traffic handling
+
+This check helps maintain high availability for application routing in OpenShift clusters.
+*/
+
 package networking
 
 import (

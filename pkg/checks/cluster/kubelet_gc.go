@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for kubelet garbage collection configuration. It:
+
+- Examines kubelet configuration for garbage collection settings
+- Checks for container and image cleanup policies
+- Verifies log rotation and maximum size settings
+- Identifies nodes with storage issues
+- Provides recommendations for optimal garbage collection configuration
+
+This check helps prevent node storage issues by ensuring proper cleanup of unused containers and images.
+*/
+
 package cluster
 
 import (

@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for infrastructure nodes. It:
+
+- Verifies if dedicated infrastructure nodes are configured
+- Checks if there are enough infrastructure nodes for high availability
+- Examines if infrastructure nodes are properly tainted
+- Provides recommendations for infrastructure node configuration
+- Ensures proper separation of infrastructure components from application workloads
+
+This check helps maintain a properly architected OpenShift environment with dedicated resources for infrastructure components.
+*/
+
 package cluster
 
 import (

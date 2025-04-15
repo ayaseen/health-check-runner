@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for ingress controller placement. It:
+
+- Verifies if the ingress controller is placed on infrastructure nodes
+- Checks for proper node selector configuration
+- Ensures router pods are running on the designated nodes
+- Provides recommendations for optimal ingress traffic handling
+- Helps ensure proper separation of infrastructure components
+
+This check helps maintain a properly architected environment where infrastructure components like ingress controllers are appropriately placed.
+*/
+
 package networking
 
 import (

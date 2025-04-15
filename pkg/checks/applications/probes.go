@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for application probes. It:
+
+- Identifies deployments and stateful sets lacking readiness and liveness probes
+- Calculates the percentage of workloads with properly configured probes
+- Provides detailed explanations about the importance of probes
+- Recommends best practices for probe configuration
+- Helps ensure application resilience and proper health monitoring
+
+This check helps improve application availability and reliability by encouraging proper health check implementations.
+*/
+
 package applications
 
 import (

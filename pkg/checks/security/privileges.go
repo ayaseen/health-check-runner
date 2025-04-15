@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for workloads with elevated privileges. It:
+
+- Identifies containers running with privileged security contexts
+- Detects containers with dangerous capabilities like SYS_ADMIN
+- Identifies pods running as root users
+- Provides recommendations for limiting container privileges
+- Reports on workloads that violate security best practices
+
+This check helps maintain the principle of least privilege across application workloads, reducing the security risk surface.
+*/
+
 package security
 
 import (

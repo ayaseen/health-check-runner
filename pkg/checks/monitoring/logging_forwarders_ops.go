@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for operations log forwarding. It:
+
+- Verifies if infrastructure and audit logs are being forwarded
+- Examines cluster log forwarder configurations
+- Checks for proper forwarding of operations logs to external systems
+- Provides recommendations for comprehensive log management
+- Helps ensure important system logs are preserved and analyzed
+
+This check ensures that critical operations logs are properly captured and preserved for troubleshooting and compliance.
+*/
+
 package monitoring
 
 import (

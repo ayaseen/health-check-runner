@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements a health check for etcd backup configuration. It:
+
+- Examines the cluster for scheduled backup jobs for etcd
+- Identifies CronJobs that might be backing up etcd based on naming patterns
+- Verifies the status of the etcd cluster operator
+- Provides recommendations for proper etcd backup procedures
+- Helps ensure data recovery capabilities are in place
+
+This check is critical for disaster recovery preparedness, ensuring that etcd data can be restored in case of cluster failures.
+*/
+
 package security
 
 import (

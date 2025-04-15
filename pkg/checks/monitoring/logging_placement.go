@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for logging component placement. It:
+
+- Verifies if logging components are scheduled on infrastructure nodes
+- Checks node selector and affinity configurations for logging pods
+- Examines pod placement relative to node roles
+- Provides recommendations for optimal logging component placement
+- Helps ensure proper resource allocation for logging workloads
+
+This check helps maintain a properly architected environment where logging components are appropriately placed on dedicated infrastructure nodes.
+*/
+
 package monitoring
 
 import (

@@ -1,3 +1,19 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file acts as a provider for monitoring-related health checks. It includes:
+
+- A registry of all available monitoring and logging health checks
+- Functions to retrieve and initialize monitoring checks
+- Organization of checks related to alerts, logs, and metrics
+- Registration of checks for monitoring storage and configuration
+
+The provider ensures that all monitoring-related health checks are properly registered and available for execution by the main runner.
+*/
+
 package monitoring
 
 import (

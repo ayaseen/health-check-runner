@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for etcd performance metrics. It:
+
+- Analyzes etcd logs for performance-related entries
+- Checks compaction times, heartbeat issues, and fsync delays
+- Examines clock drift between etcd members
+- Runs diagnostic tests to assess etcd performance
+- Provides detailed recommendations for optimizing etcd
+
+This check helps identify and address etcd performance issues before they impact control plane stability.
+*/
+
 package cluster
 
 import (

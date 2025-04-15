@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for Security Context Constraints (SCCs). It:
+
+- Verifies that the default 'restricted' SCC hasn't been modified
+- Examines key security fields that impact container isolation
+- Compares current SCC configuration against secure baseline values
+- Provides recommendations for SCC management best practices
+- Identifies potentially insecure SCC modifications
+
+These checks help maintain a secure container runtime environment by ensuring proper security constraints are in place.
+*/
+
 package security
 
 import (

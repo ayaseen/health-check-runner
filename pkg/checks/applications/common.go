@@ -1,3 +1,19 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file provides common utility functions used across application health checks. It includes:
+
+- Functions to identify system pods and components versus user workloads
+- Methods to determine if deployments and stateful sets are part of OpenShift system components
+- Helper functions to examine labels and names to categorize resources
+- Utilities for string operations used in application checks
+
+These functions help separate OpenShift infrastructure components from user applications, ensuring that health checks focus on the appropriate resources.
+*/
+
 package applications
 
 import (

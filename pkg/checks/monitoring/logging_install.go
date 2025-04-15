@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for OpenShift Logging installation. It:
+
+- Detects if OpenShift Logging is installed and configured
+- Identifies the logging stack type (Elasticsearch or Loki)
+- Examines logging operator configurations
+- Provides recommendations for deploying logging if not installed
+- Helps ensure proper log aggregation capabilities
+
+This check verifies the presence and basic configuration of the logging subsystem in OpenShift.
+*/
+
 package monitoring
 
 import (

@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for OpenShift proxy settings. It:
+
+- Examines if proxy configuration is present for clusters requiring it
+- Verifies completeness of proxy configuration (HTTP, HTTPS, NoProxy)
+- Checks if important domains are included in NoProxy settings
+- Provides recommendations for optimal proxy configuration
+- Helps ensure proper network connectivity in proxied environments
+
+This check helps maintain proper external connectivity for clusters behind corporate proxies.
+*/
+
 package cluster
 
 import (

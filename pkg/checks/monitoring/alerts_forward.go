@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for alert forwarding configuration. It:
+
+- Checks if OpenShift alerts are forwarded to external notification systems
+- Examines Alertmanager configuration for receivers and routes
+- Identifies integrations with systems like PagerDuty, Slack, or email
+- Provides recommendations for alert notification setup
+- Helps ensure timely response to critical cluster events
+
+This check helps administrators ensure that alerts are properly routed to notification systems for timely response to issues.
+*/
+
 package monitoring
 
 import (

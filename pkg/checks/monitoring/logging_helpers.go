@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file provides helper functions for logging-related health checks. It includes:
+
+- Types and constants for detecting different logging configurations
+- Functions to detect if logging is installed and its type (Traditional/Loki)
+- Methods to check for external log forwarders
+- Utilities for examining logging component status
+- Helper functions used across multiple logging-related checks
+
+These utilities help standardize detection and analysis of logging configurations across different health checks.
+*/
+
 package monitoring
 
 import (

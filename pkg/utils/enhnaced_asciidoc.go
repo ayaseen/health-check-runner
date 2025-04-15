@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file provides enhanced AsciiDoc report generation utilities. It includes:
+
+- Functions for creating comprehensive and well-formatted AsciiDoc reports
+- Methods for organizing health check results by category
+- Utilities for formatting result keys and status indicators
+- Functions for creating detailed check sections with recommendations
+- Helpers for generating summary tables and detailed explanations
+
+These utilities enhance the standard AsciiDoc generation with more sophisticated formatting and organization.
+*/
+
 package utils
 
 import (

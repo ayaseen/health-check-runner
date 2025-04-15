@@ -1,3 +1,20 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements health checks for LimitRange configurations. It:
+
+- Examines namespaces for configured LimitRanges
+- Identifies namespaces lacking resource constraints
+- Calculates the percentage of namespaces with proper LimitRanges
+- Provides detailed recommendations for resource constraint configuration
+- Helps ensure proper resource management across namespaces
+
+This check complements the resource quota checks to ensure comprehensive resource governance in multi-tenant environments.
+*/
+
 package applications
 
 import (

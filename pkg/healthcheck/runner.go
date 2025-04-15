@@ -1,3 +1,21 @@
+/*
+Author: Amjad Yaseen
+Email: ayaseen@redhat.com
+Date: 2023-03-06
+Modified: 2025-04-15
+
+This file implements the core runner for executing health checks. It:
+
+- Manages the execution of multiple health checks
+- Supports parallel or sequential execution modes
+- Handles timeouts and error conditions
+- Collects and organizes check results
+- Provides progress reporting during check execution
+- Implements filtering by category and other configuration options
+
+This component orchestrates the execution of health checks and collects their results for reporting.
+*/
+
 package healthcheck
 
 import (
