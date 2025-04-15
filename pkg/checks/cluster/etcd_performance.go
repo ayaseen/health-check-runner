@@ -184,7 +184,7 @@ func checkCompactionPerformance() (string, []string) {
 	// Get recent logs with compaction info
 	compactionOut, err := utils.RunCommand("oc", "logs", "--tail=500", "-n", "openshift-etcd", "-l", "app=etcd", "-c", "etcd", "|", "grep", "-i", "finished scheduled compaction")
 	if err != nil {
-		return "Could not retrieve compaction logs", issues
+		return "", issues
 	}
 
 	details.WriteString("Compaction performance logs:\n")
@@ -270,7 +270,7 @@ func checkApplyEntriesPerformance() (string, []string) {
 	// Get recent logs with "apply entries took too long" messages
 	tookTooLongOut, err := utils.RunCommand("oc", "logs", "--tail=500", "-n", "openshift-etcd", "-l", "app=etcd", "-c", "etcd", "|", "grep", "-i", "took too long")
 	if err != nil {
-		return "Could not retrieve apply entries logs", issues
+		return "", issues
 	}
 
 	details.WriteString("Apply entries performance logs:\n")
@@ -333,7 +333,7 @@ func checkHeartbeatPerformance() (string, []string) {
 	// Get recent logs with heartbeat issues
 	heartbeatOut, err := utils.RunCommand("oc", "logs", "--tail=500", "-n", "openshift-etcd", "-l", "app=etcd", "-c", "etcd", "|", "grep", "-i", "failed to send out heartbeat")
 	if err != nil {
-		return "Could not retrieve heartbeat logs", issues
+		return "", issues
 	}
 
 	details.WriteString("Heartbeat performance logs:\n")
@@ -390,7 +390,7 @@ func checkClockDriftIssues() (string, []string) {
 	// Get recent logs with clock difference issues
 	clockDriftOut, err := utils.RunCommand("oc", "logs", "--tail=500", "-n", "openshift-etcd", "-l", "app=etcd", "-c", "etcd", "|", "grep", "-i", "clock difference")
 	if err != nil {
-		return "Could not retrieve clock drift logs", issues
+		return "", issues
 	}
 
 	details.WriteString("Clock drift logs:\n")
@@ -521,7 +521,7 @@ func checkNodeResourceUsage() (string, []string) {
 	// Get etcd pod information
 	podsOut, err := utils.RunCommand("oc", "get", "pods", "-n", "openshift-etcd", "-l", "app=etcd", "-o", "wide")
 	if err != nil {
-		return "Could not retrieve etcd pod information", issues
+		return "", issues
 	}
 
 	details.WriteString("ETCD Pods:\n")
@@ -540,8 +540,8 @@ func checkNodeResourceUsage() (string, []string) {
 	}
 
 	if len(nodeNames) == 0 {
-		details.WriteString("Could not extract node names from pod output.\n")
-		return details.String(), issues
+		// Skip node resource check if we can't extract node names
+		return "", issues
 	}
 
 	// Check resource usage on each node
