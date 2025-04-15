@@ -102,17 +102,13 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Check which monitoring components are deployed or missing
-	_, missingComponents, componentDetails := checkMonitoringComponents(monConfigYaml)
-	detailedOut.WriteString(componentDetails) // Component details already contain the heading
+	configuredComponents, unconfiguredComponents, componentDetails := checkMonitoringComponents(monConfigYaml)
+	detailedOut.WriteString(componentDetails)
+	detailedOut.WriteString("\n\n")
 
-	if len(missingComponents) > 0 {
-		issueMsg := fmt.Sprintf("monitoring stack is missing %d components: %s",
-			len(missingComponents), strings.Join(missingComponents, ", "))
-		issues = append(issues, issueMsg)
-
-		recommendations = append(recommendations,
-			fmt.Sprintf("Configure missing monitoring stack components (%s) for comprehensive monitoring",
-				strings.Join(missingComponents, ", ")))
+	if len(unconfiguredComponents) > 0 {
+		issues = append(issues, fmt.Sprintf("monitoring stack is missing configuration for components: %s", strings.Join(unconfiguredComponents, ", ")))
+		recommendations = append(recommendations, "Configure all recommended monitoring stack components for comprehensive monitoring")
 	}
 
 	// Note: User workload monitoring is checked by the dedicated UserWorkloadMonitoringCheck
@@ -205,6 +201,55 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	detailedOut.WriteString("7. Enable user workload monitoring for application metrics\n")
 	detailedOut.WriteString("\n")
 
+	// Add sample configuration section
+	detailedOut.WriteString("== Sample Configuration ==\n\n")
+	detailedOut.WriteString("Below is a sample configuration for the cluster-monitoring-config ConfigMap that includes proper resource limits, storage configuration, and node placement:\n\n")
+	detailedOut.WriteString("[source,yaml]\n")
+	detailedOut.WriteString("----\n")
+	detailedOut.WriteString("apiVersion: v1\n")
+	detailedOut.WriteString("kind: ConfigMap\n")
+	detailedOut.WriteString("metadata:\n")
+	detailedOut.WriteString("  name: cluster-monitoring-config\n")
+	detailedOut.WriteString("  namespace: openshift-monitoring\n")
+	detailedOut.WriteString("data:\n")
+	detailedOut.WriteString("  config.yaml: |\n")
+	detailedOut.WriteString("    enableUserWorkload: true\n")
+	detailedOut.WriteString("    prometheusOperator:\n")
+	detailedOut.WriteString("      resources:\n")
+	detailedOut.WriteString("        limits:\n")
+	detailedOut.WriteString("          cpu: 500m\n")
+	detailedOut.WriteString("          memory: 1Gi\n")
+	detailedOut.WriteString("        requests:\n")
+	detailedOut.WriteString("          cpu: 200m\n")
+	detailedOut.WriteString("          memory: 500Mi\n")
+	detailedOut.WriteString("      nodeSelector:\n")
+	detailedOut.WriteString("        node-role.kubernetes.io/infra: \"\"\n")
+	detailedOut.WriteString("      tolerations:\n")
+	detailedOut.WriteString("      - key: node-role.kubernetes.io/infra\n")
+	detailedOut.WriteString("        effect: NoSchedule\n")
+	detailedOut.WriteString("    prometheusK8s:\n")
+	detailedOut.WriteString("      resources:\n")
+	detailedOut.WriteString("        limits:\n")
+	detailedOut.WriteString("          cpu: 500m\n")
+	detailedOut.WriteString("          memory: 3Gi\n")
+	detailedOut.WriteString("        requests:\n")
+	detailedOut.WriteString("          cpu: 200m\n")
+	detailedOut.WriteString("          memory: 500Mi\n")
+	detailedOut.WriteString("      retention: 7d\n")
+	detailedOut.WriteString("      volumeClaimTemplate:\n")
+	detailedOut.WriteString("        spec:\n")
+	detailedOut.WriteString("          storageClassName: gp3-csi\n")
+	detailedOut.WriteString("          resources:\n")
+	detailedOut.WriteString("            requests:\n")
+	detailedOut.WriteString("              storage: 40Gi\n")
+	detailedOut.WriteString("      nodeSelector:\n")
+	detailedOut.WriteString("        node-role.kubernetes.io/infra: \"\"\n")
+	detailedOut.WriteString("      tolerations:\n")
+	detailedOut.WriteString("      - key: node-role.kubernetes.io/infra\n")
+	detailedOut.WriteString("        effect: NoSchedule\n")
+	detailedOut.WriteString("----\n")
+	detailedOut.WriteString("\nNote: The above is a simplified example. You should adjust resource limits, storage size, and other parameters based on your cluster size and workload.\n")
+
 	// If there are no issues, return OK
 	if len(issues) == 0 {
 		result := healthcheck.NewResult(
@@ -243,9 +288,9 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	return result, nil
 }
 
-// checkMonitoringComponents checks which monitoring components are deployed or missing
+// checkMonitoringComponents checks which monitoring components are configured in the cluster-monitoring-config ConfigMap
 func checkMonitoringComponents(monConfigYaml string) ([]string, []string, string) {
-	// Extract the actual config.yaml content if it exists
+	// Extract the actual config.yaml content
 	configPattern := regexp.MustCompile(`(?s)config\.yaml:\s*\|(.*?)(?:kind:|$)`)
 	configMatch := configPattern.FindStringSubmatch(monConfigYaml)
 
@@ -257,76 +302,100 @@ func checkMonitoringComponents(monConfigYaml string) ([]string, []string, string
 		configYaml = monConfigYaml
 	}
 
-	// List of expected monitoring components
-	expectedComponents := []string{
-		"alertmanagerMain",
-		"prometheusK8s",
-		"thanosQuerier",
+	// List of configurable core platform monitoring components per OpenShift documentation
+	configurableComponents := []string{
 		"prometheusOperator",
-		"metricsServer",
+		"prometheusK8s",
+		"alertmanagerMain",
+		"thanosQuerier",
 		"kubeStateMetrics",
-		"telemeterClient",
-		"openshiftStateMetrics",
-		"nodeExporter",
 		"monitoringPlugin",
-		"prometheusOperatorAdmissionWebhook",
+		"openshiftStateMetrics",
+		"telemeterClient",
+		"metricsServer",
+		"k8sPrometheusAdapter", // Added from the sample config
 	}
 
-	// Track deployed and missing components
-	deployedComponents := []string{}
-	missingComponents := []string{}
+	// Additional components that may be configured
+	additionalComponents := []string{
+		"nodeExporter",
+		"prometheusOperatorAdmissionWebhook",
+		"thanosRuler",
+	}
 
-	// First check for components directly configured in the yaml
-	configuredComponents := make(map[string]bool)
-	for _, component := range expectedComponents {
+	// Combine all expected components
+	allComponents := append(configurableComponents, additionalComponents...)
+
+	// Track configured and unconfigured components
+	configuredComponents := []string{}
+	unconfiguredComponents := []string{}
+
+	// Check which components are explicitly configured in the ConfigMap
+	for _, component := range allComponents {
 		componentPattern := regexp.MustCompile(fmt.Sprintf(`(?m)^[ \t]*%s:`, regexp.QuoteMeta(component)))
 		if componentPattern.MatchString(configYaml) {
-			configuredComponents[component] = true
-		}
-	}
-
-	// Now check if each component is deployed, either by configuration or default deployment
-	for _, component := range expectedComponents {
-		if configuredComponents[component] {
-			// If it's in the config, it's deployed
-			deployedComponents = append(deployedComponents, component)
+			configuredComponents = append(configuredComponents, component)
 		} else {
-			// If not in config, check if it's still deployed by default
-			deployed := isComponentDeployed(component)
-			if deployed {
-				deployedComponents = append(deployedComponents, component)
-			} else {
-				missingComponents = append(missingComponents, component)
+			// Only add to unconfigured list if it's in the core configurable components
+			for _, coreComponent := range configurableComponents {
+				if component == coreComponent {
+					unconfiguredComponents = append(unconfiguredComponents, component)
+					break
+				}
 			}
 		}
 	}
 
-	// Generate detailed output with the desired format
+	// Check if user workload monitoring is enabled
+	uwmEnabled := strings.Contains(configYaml, "enableUserWorkload: true")
+
+	// Generate detailed output
 	var details strings.Builder
-	details.WriteString("== Monitoring Stack Components ==\n")
-	details.WriteString("Monitoring Stack Components:\n\n")
 
-	if len(deployedComponents) > 0 {
-		details.WriteString("Deployed components:\n")
-		for _, component := range deployedComponents {
+	details.WriteString("== Monitoring Stack Components ==\n\n")
+
+	if len(configuredComponents) > 0 {
+		details.WriteString("Components explicitly configured in cluster-monitoring-config:\n")
+		for _, component := range configuredComponents {
 			details.WriteString(fmt.Sprintf("- %s\n", component))
 		}
 		details.WriteString("\n")
+	} else {
+		details.WriteString("WARNING: No monitoring components are explicitly configured in the cluster-monitoring-config ConfigMap.\n")
+		details.WriteString("All components are using default settings which may not be optimal for production.\n\n")
 	}
 
-	if len(missingComponents) > 0 {
-		details.WriteString("Missing components:\n")
-		for _, component := range missingComponents {
+	if len(unconfiguredComponents) > 0 {
+		details.WriteString("WARNING: The following core components are NOT explicitly configured in cluster-monitoring-config:\n")
+		for _, component := range unconfiguredComponents {
 			details.WriteString(fmt.Sprintf("- %s\n", component))
 		}
-		details.WriteString("\n")
+		details.WriteString("\nThese components are running with default settings, which may not be optimal for your environment.\n")
+		details.WriteString("Consider configuring these components explicitly for better control over resources and behavior.\n\n")
 	}
 
-	return deployedComponents, missingComponents, details.String()
+	details.WriteString(fmt.Sprintf("User Workload Monitoring enabled: %v\n", uwmEnabled))
+	if !uwmEnabled {
+		details.WriteString("NOTE: User Workload Monitoring is not enabled. Consider enabling it to monitor application workloads.\n")
+	}
+
+	// Check if components are actually running
+	details.WriteString("\nVerifying component status in the cluster:\n")
+
+	for _, component := range allComponents {
+		isRunning := isComponentRunning(component)
+		status := "✅ Running"
+		if !isRunning {
+			status = "❌ Not found or not ready"
+		}
+		details.WriteString(fmt.Sprintf("- %s: %s\n", component, status))
+	}
+
+	return configuredComponents, unconfiguredComponents, details.String()
 }
 
-// isComponentDeployed checks if a monitoring component is deployed by checking for its resources
-func isComponentDeployed(component string) bool {
+// isComponentRunning checks if a monitoring component is actually running in the cluster
+func isComponentRunning(component string) bool {
 	// Map of components to their resource names to check
 	resourceChecks := map[string]struct {
 		resourceType string
@@ -344,91 +413,18 @@ func isComponentDeployed(component string) bool {
 		"nodeExporter":                       {"daemonset", "openshift-monitoring", "node-exporter"},
 		"monitoringPlugin":                   {"deployment", "openshift-monitoring", "monitoring-plugin"},
 		"prometheusOperatorAdmissionWebhook": {"deployment", "openshift-monitoring", "prometheus-operator-admission-webhook"},
+		"thanosRuler":                        {"statefulset", "openshift-monitoring", "thanos-ruler"},
+		"k8sPrometheusAdapter":               {"deployment", "openshift-monitoring", "prometheus-adapter"},
 	}
 
 	check, found := resourceChecks[component]
 	if !found {
-		// Try a fallback approach if the component isn't in our map
-		return checkComponentExistenceWithLabels(component)
+		return false
 	}
 
-	// First try the direct approach with 'oc get' for the specific resource
+	// Run oc command to check if the resource exists
 	out, err := utils.RunCommand("oc", "get", check.resourceType, check.name, "-n", check.namespace)
-	if err == nil && strings.Contains(out, check.name) {
-		return true
-	}
-
-	// For additinal validation, check with a label selector when appropriate
-	var labelSelector string
-	switch component {
-	case "alertmanagerMain":
-		labelSelector = "app=alertmanager"
-	case "prometheusK8s":
-		labelSelector = "app=prometheus"
-	case "thanosQuerier":
-		labelSelector = "app.kubernetes.io/name=thanos-query"
-	case "kubeStateMetrics":
-		labelSelector = "app.kubernetes.io/name=kube-state-metrics"
-	case "metricsServer":
-		labelSelector = "k8s-app=metrics-server"
-	case "nodeExporter":
-		labelSelector = "app.kubernetes.io/name=node-exporter"
-	case "prometheusOperator":
-		labelSelector = "app.kubernetes.io/name=prometheus-operator"
-	case "prometheusOperatorAdmissionWebhook":
-		labelSelector = "app=prometheus-operator-admission-webhook"
-	default:
-		labelSelector = ""
-	}
-
-	if labelSelector != "" {
-		labelOut, err := utils.RunCommand("oc", "get", "all", "-n", "openshift-monitoring", "-l", labelSelector)
-		if err == nil && !strings.Contains(labelOut, "No resources found") {
-			return true
-		}
-	}
-
-	// If all direct checks fail, try the generic approach
-	return checkComponentExistenceWithLabels(component)
-}
-
-// checkComponentExistenceWithLabels is a fallback method to check if a component exists using label selectors
-func checkComponentExistenceWithLabels(component string) bool {
-	// Try to determine a label selector based on the component name
-	var labelSelector string
-
-	switch {
-	case strings.Contains(component, "prometheus"):
-		labelSelector = "app=prometheus"
-	case strings.Contains(component, "alertmanager"):
-		labelSelector = "app=alertmanager"
-	case strings.Contains(component, "thanos"):
-		labelSelector = "app.kubernetes.io/name=thanos"
-	case strings.Contains(component, "metrics"):
-		labelSelector = "k8s-app=metrics-server"
-	case strings.Contains(component, "node"):
-		labelSelector = "app.kubernetes.io/name=node-exporter"
-	case strings.Contains(component, "operator"):
-		labelSelector = "app.kubernetes.io/name=prometheus-operator"
-	default:
-		// Try a generic attempt based on the component name
-		componentName := strings.ToLower(component)
-		// Remove common prefixes/suffixes
-		componentName = strings.TrimPrefix(componentName, "prometheus")
-		componentName = strings.TrimPrefix(componentName, "k8s")
-		componentName = strings.TrimSuffix(componentName, "Main")
-
-		// Convert camel case to kebab case for labels
-		re := regexp.MustCompile("([a-z0-9])([A-Z])")
-		componentName = re.ReplaceAllString(componentName, "${1}-${2}")
-		componentName = strings.ToLower(componentName)
-
-		labelSelector = fmt.Sprintf("app=%s", componentName)
-	}
-
-	// Try to find resources with matching labels in the monitoring namespace
-	out, err := utils.RunCommand("oc", "get", "all", "-n", "openshift-monitoring", "-l", labelSelector)
-	return err == nil && strings.TrimSpace(out) != "" && !strings.Contains(out, "No resources found")
+	return err == nil && strings.Contains(out, check.name)
 }
 
 // getMonitoringConfig gets the monitoring configuration from the cluster-monitoring-config ConfigMap
