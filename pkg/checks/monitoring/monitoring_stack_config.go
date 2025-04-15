@@ -365,29 +365,21 @@ func checkResourceLimits(monConfigYaml string) (bool, string) {
 
 // checkNodePlacement checks if node placement is configured for monitoring components
 func checkNodePlacement(monConfigYaml string) (bool, string, []string) {
-	// Updated regex patterns that correctly detect nodeSelector and tolerations
-	nodeSelectorPattern := regexp.MustCompile(`(?m)^\s*(\w+):\s*$(?:\s*.*$)*?^\s*nodeSelector:`)
-	tolerationsPattern := regexp.MustCompile(`(?m)^\s*(\w+):\s*$(?:\s*.*$)*?^\s*tolerations:`)
+	// Extract the actual config.yaml content
+	configPattern := regexp.MustCompile(`(?s)config\.yaml:\s*\|(.*?)(?:kind:|$)`)
+	configMatch := configPattern.FindStringSubmatch(monConfigYaml)
 
-	// Find all component names that have nodeSelector configured
-	nodeSelectorMatches := nodeSelectorPattern.FindAllStringSubmatch(monConfigYaml, -1)
+	var configYaml string
+	if len(configMatch) >= 2 {
+		configYaml = configMatch[1]
+	} else {
+		// Fall back to the original content if we can't extract config.yaml specifically
+		configYaml = monConfigYaml
+	}
+
+	// Simple direct check for each component by name
 	componentsWithNodeSelector := make(map[string]bool)
-	for _, match := range nodeSelectorMatches {
-		if len(match) >= 2 {
-			componentsWithNodeSelector[match[1]] = true
-		}
-	}
-
-	// Find all component names that have tolerations configured
-	tolerationsMatches := tolerationsPattern.FindAllStringSubmatch(monConfigYaml, -1)
 	componentsWithTolerations := make(map[string]bool)
-	for _, match := range tolerationsMatches {
-		if len(match) >= 2 {
-			componentsWithTolerations[match[1]] = true
-		}
-	}
-
-	var details strings.Builder
 
 	// List of monitoring components to check
 	monitoringComponents := []string{
@@ -402,10 +394,47 @@ func checkNodePlacement(monConfigYaml string) (bool, string, []string) {
 		"k8sPrometheusAdapter",
 	}
 
+	// Check each component directly in the yaml
+	for _, component := range monitoringComponents {
+		// Check for the component section in the yaml
+		componentPattern := regexp.MustCompile(fmt.Sprintf(`(?m)^[ \t]*%s:`, regexp.QuoteMeta(component)))
+		if componentPattern.MatchString(configYaml) {
+			// Extract the component's configuration block
+			componentBlockPattern := regexp.MustCompile(fmt.Sprintf(`(?m)^[ \t]*%s:.*?\n((?:[ \t]+.*\n)*)`, regexp.QuoteMeta(component)))
+			componentMatches := componentBlockPattern.FindStringSubmatch(configYaml)
+
+			if len(componentMatches) >= 2 {
+				componentBlock := componentMatches[1]
+
+				// Check for nodeSelector
+				if strings.Contains(componentBlock, "nodeSelector:") {
+					componentsWithNodeSelector[component] = true
+				}
+
+				// Check for tolerations
+				if strings.Contains(componentBlock, "tolerations:") {
+					componentsWithTolerations[component] = true
+				}
+			}
+		}
+	}
+
+	var details strings.Builder
+
 	// Check each component for proper node placement configuration
 	var missingPlacementComponents []string
 
 	for _, component := range monitoringComponents {
+		// Check if component exists in config (we look for the component name followed by a colon)
+		componentPattern := regexp.MustCompile(fmt.Sprintf(`(?m)^[ \t]*%s:`, regexp.QuoteMeta(component)))
+		componentExists := componentPattern.MatchString(configYaml)
+
+		if !componentExists {
+			details.WriteString(fmt.Sprintf("Component %s is not configured in the monitoring config\n", component))
+			missingPlacementComponents = append(missingPlacementComponents, component)
+			continue
+		}
+
 		hasNodeSelector := componentsWithNodeSelector[component]
 		hasTolerations := componentsWithTolerations[component]
 
@@ -432,13 +461,55 @@ func checkNodePlacement(monConfigYaml string) (bool, string, []string) {
 	if hasInfraNodes {
 		details.WriteString("\nInfrastructure nodes found in the cluster\n")
 
-		// Check if monitoring pods are running on infra nodes
-		monPodsOnInfraNodes, err := utils.RunCommand("oc", "get", "pods", "-n", "openshift-monitoring", "-o", "wide", "|", "grep", "-E", "prometheus|alertmanager|thanos", "|", "grep", "-E", "$(oc get nodes -l node-role.kubernetes.io/infra= -o name | cut -d/ -f2 | paste -sd\"|\" -)")
+		// Get monitoring pods
+		monPodsOut, err := utils.RunCommand("oc", "get", "pods", "-n", "openshift-monitoring", "-o", "wide")
+		if err == nil && monPodsOut != "" {
+			// Get infra node names
+			infraNodeNames, err := utils.RunCommand("oc", "get", "nodes", "-l", "node-role.kubernetes.io/infra=", "-o", "jsonpath={.items[*].metadata.name}")
+			if err == nil && infraNodeNames != "" {
+				// Create a map for faster lookup
+				infraNodes := make(map[string]bool)
+				for _, nodeName := range strings.Split(infraNodeNames, " ") {
+					if nodeName != "" {
+						infraNodes[nodeName] = true
+					}
+				}
 
-		if err == nil && monPodsOnInfraNodes != "" {
-			details.WriteString("\nMonitoring pods are running on infrastructure nodes\n")
+				// Check if monitoring pods are running on infra nodes
+				monPodLines := strings.Split(monPodsOut, "\n")
+				podsOnInfraNodes := false
+				if len(monPodLines) > 1 { // Skip header line
+					for _, line := range monPodLines[1:] {
+						if line == "" {
+							continue
+						}
+						fields := strings.Fields(line)
+						if len(fields) >= 7 { // Check if the line has enough fields
+							podName := fields[0]
+							nodeName := fields[6]
+							// Check for monitoring components and if they're on infra nodes
+							if (strings.Contains(podName, "prometheus") ||
+								strings.Contains(podName, "alertmanager") ||
+								strings.Contains(podName, "thanos") ||
+								strings.Contains(podName, "state-metrics") ||
+								strings.Contains(podName, "telemeter")) && infraNodes[nodeName] {
+								podsOnInfraNodes = true
+								break
+							}
+						}
+					}
+				}
+
+				if podsOnInfraNodes {
+					details.WriteString("\nMonitoring pods are running on infrastructure nodes\n")
+				} else {
+					details.WriteString("\nNo monitoring pods found running on infrastructure nodes\n")
+				}
+			} else {
+				details.WriteString("\nCould not determine infrastructure node names\n")
+			}
 		} else {
-			details.WriteString("\nNo monitoring pods found running on infrastructure nodes\n")
+			details.WriteString("\nCould not get information about monitoring pods\n")
 		}
 	} else {
 		details.WriteString("\nNo infrastructure nodes found in the cluster\n")
