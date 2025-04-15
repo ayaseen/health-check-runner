@@ -101,6 +101,33 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 		recommendations = append(recommendations, "Create a cluster-monitoring-config ConfigMap in the openshift-monitoring namespace to customize the monitoring stack")
 	}
 
+	// Define monitoring components to check
+	monitoringComponents := []string{
+		"prometheusOperator",
+		"prometheusK8s",
+		"alertmanagerMain",
+		"thanosQuerier",
+		"kubeStateMetrics",
+		"monitoringPlugin",
+		"openshiftStateMetrics",
+		"telemeterClient",
+		"k8sPrometheusAdapter", // This corresponds to "Prometheus Adapter" or "Metrics Server"
+	}
+
+	// Check if user workload monitoring is enabled
+	userWorkloadEnabled := strings.Contains(monConfigYaml, "enableUserWorkload: true")
+	if userWorkloadEnabled {
+		detailedOut.WriteString("== User Workload Monitoring ==\n")
+		detailedOut.WriteString("User workload monitoring is enabled\n\n")
+	} else {
+		detailedOut.WriteString("== User Workload Monitoring ==\n")
+		detailedOut.WriteString("User workload monitoring is not enabled\n\n")
+		if isMultiNode && nodeCount > 3 {
+			issues = append(issues, "user workload monitoring is not enabled in a multi-node cluster")
+			recommendations = append(recommendations, "Enable user workload monitoring to monitor application metrics")
+		}
+	}
+
 	// Check for persistent storage configuration
 	hasPVC, pvcDetails := checkPersistentStorage(client, monConfigYaml)
 	detailedOut.WriteString("== Persistent Storage Configuration ==\n")
@@ -124,15 +151,60 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Check for node placement configuration
-	hasNodePlacement, placementDetails := checkNodePlacement(monConfigYaml)
 	detailedOut.WriteString("== Node Placement Configuration ==\n")
-	detailedOut.WriteString(placementDetails)
-	detailedOut.WriteString("\n\n")
 
-	if !hasNodePlacement && nodeCount > 3 {
-		issues = append(issues, "monitoring components not configured for specific node placement in a cluster with multiple nodes")
-		recommendations = append(recommendations, "Configure nodeSelector or tolerations to place monitoring components on dedicated infrastructure nodes")
+	// Check each component for proper node placement
+	var missingPlacementComponents []string
+
+	for _, component := range monitoringComponents {
+		hasNodeSelector := strings.Contains(monConfigYaml, component+":")
+		if hasNodeSelector {
+			hasNodeSelector = strings.Contains(monConfigYaml, component+":")
+			hasNodeSelector = hasNodeSelector && (strings.Contains(monConfigYaml, component+":\\s*\\n\\s*nodeSelector:") ||
+				regexp.MustCompile(component+`:\s*\n(\s+\w+\w*:.*\n)*\s+nodeSelector:`).MatchString(monConfigYaml))
+
+			hasTolerations := strings.Contains(monConfigYaml, component+":")
+			hasTolerations = hasTolerations && (strings.Contains(monConfigYaml, component+":\\s*\\n\\s*tolerations:") ||
+				regexp.MustCompile(component+`:\s*\n(\s+\w+\w*:.*\n)*\s+tolerations:`).MatchString(monConfigYaml))
+
+			if !hasNodeSelector || !hasTolerations {
+				missingPlacementComponents = append(missingPlacementComponents, component)
+			}
+
+			detailedOut.WriteString(fmt.Sprintf("Component %s has nodeSelector: %v, tolerations: %v\n",
+				component, hasNodeSelector, hasTolerations))
+		} else {
+			missingPlacementComponents = append(missingPlacementComponents, component)
+			detailedOut.WriteString(fmt.Sprintf("Component %s is not configured in the monitoring config\n", component))
+		}
 	}
+
+	// Check if any components are missing placement configs
+	if len(missingPlacementComponents) > 0 && nodeCount > 3 {
+		issueText := fmt.Sprintf("missing node placement configuration for components: %s", strings.Join(missingPlacementComponents, ", "))
+		issues = append(issues, issueText)
+		recommendations = append(recommendations, "Configure nodeSelector and tolerations for all monitoring components to place them on infrastructure nodes")
+		detailedOut.WriteString(fmt.Sprintf("\nWARNING: Missing node placement configuration for components: %s\n",
+			strings.Join(missingPlacementComponents, ", ")))
+	} else if len(missingPlacementComponents) == 0 {
+		detailedOut.WriteString("\nAll monitoring components have proper node placement configuration\n")
+	}
+
+	// Check for infrastructure nodes
+	infraNodesOut, err := utils.RunCommand("oc", "get", "nodes", "-l", "node-role.kubernetes.io/infra=")
+	hasInfraNodes := err == nil && !strings.Contains(infraNodesOut, "No resources found")
+
+	if hasInfraNodes {
+		detailedOut.WriteString("\nInfrastructure nodes found in the cluster\n")
+	} else {
+		detailedOut.WriteString("\nNo infrastructure nodes found in the cluster\n")
+		if nodeCount > 3 {
+			issues = append(issues, "no infrastructure nodes found in a multi-node cluster")
+			recommendations = append(recommendations, "Create dedicated infrastructure nodes for monitoring components")
+		}
+	}
+
+	detailedOut.WriteString("\n")
 
 	// Check for retention time and size configuration
 	hasRetentionConfig, retentionDetails := checkRetentionConfig(monConfigYaml)
@@ -181,6 +253,7 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	detailedOut.WriteString("4. Set appropriate retention time and size for Prometheus data\n")
 	detailedOut.WriteString("5. Configure remote write for long-term metrics storage\n")
 	detailedOut.WriteString("6. Set up alert routing to ensure notifications reach the right people\n")
+	detailedOut.WriteString("7. Enable user workload monitoring for application metrics\n")
 	detailedOut.WriteString("\n")
 
 	// If there are no issues, return OK
