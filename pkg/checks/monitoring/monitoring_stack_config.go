@@ -101,19 +101,6 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 		recommendations = append(recommendations, "Create a cluster-monitoring-config ConfigMap in the openshift-monitoring namespace to customize the monitoring stack")
 	}
 
-	// Define monitoring components to check
-	monitoringComponents := []string{
-		"prometheusOperator",
-		"prometheusK8s",
-		"alertmanagerMain",
-		"thanosQuerier",
-		"kubeStateMetrics",
-		"monitoringPlugin",
-		"openshiftStateMetrics",
-		"telemeterClient",
-		"k8sPrometheusAdapter", // This corresponds to "Prometheus Adapter" or "Metrics Server"
-	}
-
 	// Check if user workload monitoring is enabled
 	userWorkloadEnabled := strings.Contains(monConfigYaml, "enableUserWorkload: true")
 	if userWorkloadEnabled {
@@ -151,60 +138,19 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Check for node placement configuration
+	hasNodePlacement, nodeDetails, missingComponents := checkNodePlacement(monConfigYaml)
 	detailedOut.WriteString("== Node Placement Configuration ==\n")
+	detailedOut.WriteString(nodeDetails)
+	detailedOut.WriteString("\n\n")
 
-	// Check each component for proper node placement
-	var missingPlacementComponents []string
-
-	for _, component := range monitoringComponents {
-		hasNodeSelector := strings.Contains(monConfigYaml, component+":")
-		if hasNodeSelector {
-			hasNodeSelector = strings.Contains(monConfigYaml, component+":")
-			hasNodeSelector = hasNodeSelector && (strings.Contains(monConfigYaml, component+":\\s*\\n\\s*nodeSelector:") ||
-				regexp.MustCompile(component+`:\s*\n(\s+\w+\w*:.*\n)*\s+nodeSelector:`).MatchString(monConfigYaml))
-
-			hasTolerations := strings.Contains(monConfigYaml, component+":")
-			hasTolerations = hasTolerations && (strings.Contains(monConfigYaml, component+":\\s*\\n\\s*tolerations:") ||
-				regexp.MustCompile(component+`:\s*\n(\s+\w+\w*:.*\n)*\s+tolerations:`).MatchString(monConfigYaml))
-
-			if !hasNodeSelector || !hasTolerations {
-				missingPlacementComponents = append(missingPlacementComponents, component)
-			}
-
-			detailedOut.WriteString(fmt.Sprintf("Component %s has nodeSelector: %v, tolerations: %v\n",
-				component, hasNodeSelector, hasTolerations))
+	if !hasNodePlacement && nodeCount > 3 {
+		if len(missingComponents) > 0 {
+			issues = append(issues, fmt.Sprintf("node placement configuration incomplete for components: %s", strings.Join(missingComponents, ", ")))
 		} else {
-			missingPlacementComponents = append(missingPlacementComponents, component)
-			detailedOut.WriteString(fmt.Sprintf("Component %s is not configured in the monitoring config\n", component))
+			issues = append(issues, "node placement configuration incomplete for monitoring components")
 		}
-	}
-
-	// Check if any components are missing placement configs
-	if len(missingPlacementComponents) > 0 && nodeCount > 3 {
-		issueText := fmt.Sprintf("missing node placement configuration for components: %s", strings.Join(missingPlacementComponents, ", "))
-		issues = append(issues, issueText)
 		recommendations = append(recommendations, "Configure nodeSelector and tolerations for all monitoring components to place them on infrastructure nodes")
-		detailedOut.WriteString(fmt.Sprintf("\nWARNING: Missing node placement configuration for components: %s\n",
-			strings.Join(missingPlacementComponents, ", ")))
-	} else if len(missingPlacementComponents) == 0 {
-		detailedOut.WriteString("\nAll monitoring components have proper node placement configuration\n")
 	}
-
-	// Check for infrastructure nodes
-	infraNodesOut, err := utils.RunCommand("oc", "get", "nodes", "-l", "node-role.kubernetes.io/infra=")
-	hasInfraNodes := err == nil && !strings.Contains(infraNodesOut, "No resources found")
-
-	if hasInfraNodes {
-		detailedOut.WriteString("\nInfrastructure nodes found in the cluster\n")
-	} else {
-		detailedOut.WriteString("\nNo infrastructure nodes found in the cluster\n")
-		if nodeCount > 3 {
-			issues = append(issues, "no infrastructure nodes found in a multi-node cluster")
-			recommendations = append(recommendations, "Create dedicated infrastructure nodes for monitoring components")
-		}
-	}
-
-	detailedOut.WriteString("\n")
 
 	// Check for retention time and size configuration
 	hasRetentionConfig, retentionDetails := checkRetentionConfig(monConfigYaml)
@@ -418,47 +364,68 @@ func checkResourceLimits(monConfigYaml string) (bool, string) {
 }
 
 // checkNodePlacement checks if node placement is configured for monitoring components
-func checkNodePlacement(monConfigYaml string) (bool, string) {
-	// Check for nodeSelector or tolerations in the config
-	hasNodeSelector := strings.Contains(monConfigYaml, "nodeSelector")
-	hasTolerations := strings.Contains(monConfigYaml, "tolerations")
+func checkNodePlacement(monConfigYaml string) (bool, string, []string) {
+	// Updated regex patterns that correctly detect nodeSelector and tolerations
+	nodeSelectorPattern := regexp.MustCompile(`(?m)^\s*(\w+):\s*$(?:\s*.*$)*?^\s*nodeSelector:`)
+	tolerationsPattern := regexp.MustCompile(`(?m)^\s*(\w+):\s*$(?:\s*.*$)*?^\s*tolerations:`)
+
+	// Find all component names that have nodeSelector configured
+	nodeSelectorMatches := nodeSelectorPattern.FindAllStringSubmatch(monConfigYaml, -1)
+	componentsWithNodeSelector := make(map[string]bool)
+	for _, match := range nodeSelectorMatches {
+		if len(match) >= 2 {
+			componentsWithNodeSelector[match[1]] = true
+		}
+	}
+
+	// Find all component names that have tolerations configured
+	tolerationsMatches := tolerationsPattern.FindAllStringSubmatch(monConfigYaml, -1)
+	componentsWithTolerations := make(map[string]bool)
+	for _, match := range tolerationsMatches {
+		if len(match) >= 2 {
+			componentsWithTolerations[match[1]] = true
+		}
+	}
 
 	var details strings.Builder
-	if hasNodeSelector {
-		details.WriteString("NodeSelector is configured for monitoring components\n")
 
-		// Try to extract nodeSelector configurations
-		nodeSelectorConfigs := regexp.MustCompile(`(?s)(prometheus|alertmanager|thanosQuerier)K?8?s?:\s*\n\s*nodeSelector:\s*\n([\s\S]*?)(?:\n\w|\z)`).FindAllStringSubmatch(monConfigYaml, -1)
-
-		if len(nodeSelectorConfigs) > 0 {
-			for _, match := range nodeSelectorConfigs {
-				if len(match) >= 3 {
-					details.WriteString(fmt.Sprintf("\nNodeSelector configuration for %s:\n%s\n", match[1], match[2]))
-				}
-			}
-		}
-	} else {
-		details.WriteString("No nodeSelector configuration found\n")
+	// List of monitoring components to check
+	monitoringComponents := []string{
+		"prometheusOperator",
+		"prometheusK8s",
+		"alertmanagerMain",
+		"thanosQuerier",
+		"kubeStateMetrics",
+		"monitoringPlugin",
+		"openshiftStateMetrics",
+		"telemeterClient",
+		"k8sPrometheusAdapter",
 	}
 
-	if hasTolerations {
-		details.WriteString("\nTolerations are configured for monitoring components\n")
+	// Check each component for proper node placement configuration
+	var missingPlacementComponents []string
 
-		// Try to extract tolerations configurations
-		tolerationConfigs := regexp.MustCompile(`(?s)(prometheus|alertmanager|thanosQuerier)K?8?s?:\s*\n\s*tolerations:\s*\n([\s\S]*?)(?:\n\w|\z)`).FindAllStringSubmatch(monConfigYaml, -1)
+	for _, component := range monitoringComponents {
+		hasNodeSelector := componentsWithNodeSelector[component]
+		hasTolerations := componentsWithTolerations[component]
 
-		if len(tolerationConfigs) > 0 {
-			for _, match := range tolerationConfigs {
-				if len(match) >= 3 {
-					details.WriteString(fmt.Sprintf("\nTolerations configuration for %s:\n%s\n", match[1], match[2]))
-				}
-			}
+		details.WriteString(fmt.Sprintf("Component %s has nodeSelector: %v, tolerations: %v\n",
+			component, hasNodeSelector, hasTolerations))
+
+		if !hasNodeSelector || !hasTolerations {
+			missingPlacementComponents = append(missingPlacementComponents, component)
 		}
-	} else {
-		details.WriteString("\nNo tolerations configuration found\n")
 	}
 
-	// Check if monitoring components are running on infra nodes
+	// Add summary information about missing configurations
+	if len(missingPlacementComponents) > 0 {
+		details.WriteString(fmt.Sprintf("\nWARNING: Missing node placement configuration for components: %s\n",
+			strings.Join(missingPlacementComponents, ", ")))
+	} else {
+		details.WriteString("\nAll monitoring components have proper node placement configuration\n")
+	}
+
+	// Check for infrastructure nodes
 	infraNodesOut, err := utils.RunCommand("oc", "get", "nodes", "-l", "node-role.kubernetes.io/infra=")
 	hasInfraNodes := err == nil && !strings.Contains(infraNodesOut, "No resources found")
 
@@ -477,7 +444,7 @@ func checkNodePlacement(monConfigYaml string) (bool, string) {
 		details.WriteString("\nNo infrastructure nodes found in the cluster\n")
 	}
 
-	return hasNodeSelector || hasTolerations, details.String()
+	return len(missingPlacementComponents) == 0, details.String(), missingPlacementComponents
 }
 
 // checkRetentionConfig checks if retention time and size are configured for Prometheus
