@@ -469,10 +469,16 @@ func checkRemoteWriteConfig(monConfigYaml string) (bool, string) {
 
 // checkAlertRouting checks if alert routing is configured
 func checkAlertRouting() (bool, string) {
-	// Get the alertmanager-main secret
-	out, err := utils.RunCommand("oc", "get", "secret", "alertmanager-main", "-n", "openshift-monitoring", "-o", "jsonpath={.data.alertmanager\\.yaml}", "|", "base64", "-d")
+	// Get the alertmanager-main secret - first get the encoded data
+	encodedOut, err := utils.RunCommand("oc", "get", "secret", "alertmanager-main", "-n", "openshift-monitoring", "-o", "jsonpath={.data.alertmanager\\.yaml}")
 	if err != nil {
-		return false, "Failed to get Alertmanager configuration"
+		return false, "Failed to get Alertmanager configuration: " + err.Error()
+	}
+
+	// Now decode the base64 data - using bash to decode
+	out, err := utils.RunCommandWithInput(encodedOut, "base64", "--decode")
+	if err != nil {
+		return false, "Failed to decode Alertmanager configuration: " + err.Error()
 	}
 
 	// Check if there are receivers configured other than "default" and "watchdog"

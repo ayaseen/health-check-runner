@@ -45,8 +45,8 @@ func NewAlertsForwardingCheck() *AlertsForwardingCheck {
 
 // Run executes the health check
 func (c *AlertsForwardingCheck) Run() (healthcheck.Result, error) {
-	// Get the alertmanager-main secret which contains the configuration
-	out, err := utils.RunCommand("oc", "get", "secret", "alertmanager-main", "-n", "openshift-monitoring", "-o", "jsonpath={.data.alertmanager\\.yaml}", "|", "base64", "-d")
+	// Get the alertmanager-main secret which contains the configuration - first get the encoded data
+	encodedOut, err := utils.RunCommand("oc", "get", "secret", "alertmanager-main", "-n", "openshift-monitoring", "-o", "jsonpath={.data.alertmanager\\.yaml}")
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
@@ -54,6 +54,17 @@ func (c *AlertsForwardingCheck) Run() (healthcheck.Result, error) {
 			"Failed to get Alertmanager configuration",
 			types.ResultKeyRequired,
 		), fmt.Errorf("error getting Alertmanager configuration: %v", err)
+	}
+
+	// Now decode the base64 data - using bash to decode
+	out, err := utils.RunCommandWithInput(encodedOut, "base64", "--decode")
+	if err != nil {
+		return healthcheck.NewResult(
+			c.ID(),
+			types.StatusCritical,
+			"Failed to decode Alertmanager configuration",
+			types.ResultKeyRequired,
+		), fmt.Errorf("error decoding Alertmanager configuration: %v", err)
 	}
 
 	// Get the OpenShift version for recommendations
