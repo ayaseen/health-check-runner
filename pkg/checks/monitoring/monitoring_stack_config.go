@@ -369,8 +369,9 @@ func checkMonitoringComponents(monConfigYaml, version string) ([]string, []strin
 	additionalComponents := []string{
 		"nodeExporter",
 		"prometheusOperatorAdmissionWebhook",
-		"thanosRuler",
 	}
+
+	// Note: thanosRuler is part of user workload monitoring, not included here
 
 	// Combine all expected components
 	allComponents := append(configurableComponents, additionalComponents...)
@@ -463,7 +464,6 @@ func isComponentRunning(component string) bool {
 		"nodeExporter":                       {"daemonset", "openshift-monitoring", "node-exporter"},
 		"monitoringPlugin":                   {"deployment", "openshift-monitoring", "monitoring-plugin"},
 		"prometheusOperatorAdmissionWebhook": {"deployment", "openshift-monitoring", "prometheus-operator-admission-webhook"},
-		"thanosRuler":                        {"statefulset", "openshift-monitoring", "thanos-ruler"},
 		"k8sPrometheusAdapter":               {"deployment", "openshift-monitoring", "prometheus-adapter"},
 	}
 
@@ -549,7 +549,6 @@ func checkPersistentStorage(client dynamic.Interface, monConfigYaml string) (boo
 	// Check for the presence of specific PVCs
 	hasPrometheusPVC := strings.Contains(pvcList, "prometheus-k8s")
 	hasAlertmanagerPVC := strings.Contains(pvcList, "alertmanager-main")
-	hasThanosRulerPVC := strings.Contains(pvcList, "thanos-ruler")
 
 	if hasVolumeClaimTemplate {
 		details.WriteString("Persistent storage is configured in the monitoring config via volumeClaimTemplate\n")
@@ -565,11 +564,7 @@ func checkPersistentStorage(client dynamic.Interface, monConfigYaml string) (boo
 		details.WriteString("Alertmanager PVC found\n")
 	}
 
-	if hasThanosRulerPVC {
-		details.WriteString("Thanos Ruler PVC found\n")
-	}
-
-	return hasVolumeClaimTemplate || hasPrometheusPVC || hasAlertmanagerPVC || hasThanosRulerPVC, details.String()
+	return hasVolumeClaimTemplate || hasPrometheusPVC || hasAlertmanagerPVC, details.String()
 }
 
 // checkResourceLimits checks if resource requests and limits are configured for monitoring components
