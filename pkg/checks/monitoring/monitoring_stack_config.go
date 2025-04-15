@@ -102,7 +102,7 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Check which monitoring components are deployed or missing
-	configuredComponents, unconfiguredComponents, componentDetails := checkMonitoringComponents(monConfigYaml)
+	_, unconfiguredComponents, componentDetails := checkMonitoringComponents(monConfigYaml)
 	detailedOut.WriteString(componentDetails)
 	detailedOut.WriteString("\n\n")
 
