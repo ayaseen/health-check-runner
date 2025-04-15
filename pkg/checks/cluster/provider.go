@@ -30,6 +30,9 @@ func GetChecks() []healthcheck.Check {
 	// Installation Type
 	checks = append(checks, NewInstallationTypeCheck())
 
+	// UPI with MachineSets check
+	checks = append(checks, NewUPIMachineSetCheck())
+
 	// Node Status
 	checks = append(checks, NewNodeStatusCheck())
 
@@ -54,7 +57,7 @@ func GetChecks() []healthcheck.Check {
 	// Default Project Template - comes from security in PDF
 
 	// Default Node Schedule
-	checks = append(checks, NewDefaultNodeScheduleCheck())
+	checks = append(checks, NewDefaultNodeSchedulableCheck())
 
 	// Self-Provisioner - comes from security in PDF
 

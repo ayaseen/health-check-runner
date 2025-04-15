@@ -2,10 +2,10 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
@@ -28,11 +28,11 @@ func NewInfrastructureProviderCheck() *InfrastructureProviderCheck {
 
 // Run executes the health check
 func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
-	// Get the infrastructure provider type
-	out, err := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.spec.platformSpec.type}")
-	if err != nil {
+	// Get the infrastructure provider type from primary path
+	platformType, err := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platform}")
+	if err != nil || platformType == "" {
 		// Try alternative path in newer versions
-		out, err = utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platform}")
+		platformType, err = utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.type}")
 		if err != nil {
 			return healthcheck.NewResult(
 				c.ID(),
@@ -50,10 +50,102 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed infrastructure configuration"
 	}
 
-	// Removed the unused variable 'version' that was retrieved here
+	// Get additional provider-specific information based on the platform type
+	var providerInfo string
+	var additionalInfo string
 
-	providerType := strings.TrimSpace(out)
-	if providerType == "" {
+	platformType = strings.TrimSpace(platformType)
+
+	// Get infrastructure name
+	infraName, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.infrastructureName}")
+	infraName = strings.TrimSpace(infraName)
+
+	// Get control plane and infrastructure topology
+	controlPlaneTopology, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.controlPlaneTopology}")
+	infrastructureTopology, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.infrastructureTopology}")
+
+	switch platformType {
+	case "AWS":
+		// Get AWS region
+		region, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.aws.region}")
+		providerInfo = fmt.Sprintf("AWS Region: %s", strings.TrimSpace(region))
+
+		// Check for custom service endpoints
+		hasCustomEndpoints, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.aws.serviceEndpoints}")
+		if strings.TrimSpace(hasCustomEndpoints) != "" && strings.TrimSpace(hasCustomEndpoints) != "[]" {
+			additionalInfo = "Custom AWS service endpoints are configured."
+		}
+	case "Azure":
+		// Get Azure resource group and cloud name
+		resourceGroup, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.azure.resourceGroupName}")
+		cloudName, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.azure.cloudName}")
+		providerInfo = fmt.Sprintf("Azure Resource Group: %s", strings.TrimSpace(resourceGroup))
+		if strings.TrimSpace(cloudName) != "" {
+			providerInfo += fmt.Sprintf("\nAzure Cloud: %s", strings.TrimSpace(cloudName))
+		}
+	case "GCP":
+		// Get GCP project ID and region
+		projectID, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.gcp.projectID}")
+		region, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.gcp.region}")
+		providerInfo = fmt.Sprintf("GCP Project ID: %s\nGCP Region: %s",
+			strings.TrimSpace(projectID), strings.TrimSpace(region))
+	case "OpenStack":
+		// Get OpenStack cloud name
+		cloudName, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.openstack.cloudName}")
+		providerInfo = fmt.Sprintf("OpenStack Cloud: %s", strings.TrimSpace(cloudName))
+	case "BareMetal":
+		// Check if it has a specific load balancer type
+		loadBalancerType, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.baremetal.loadBalancer.type}")
+		if strings.TrimSpace(loadBalancerType) != "" {
+			providerInfo = fmt.Sprintf("Load Balancer Type: %s", strings.TrimSpace(loadBalancerType))
+		} else {
+			providerInfo = "Bare Metal infrastructure"
+		}
+	case "VSphere":
+		// For vSphere, we might have multiple vCenters
+		vCenters, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.spec.platformSpec.vsphere.vcenters[*].server}")
+		if strings.TrimSpace(vCenters) != "" {
+			providerInfo = fmt.Sprintf("vSphere vCenters: %s", strings.TrimSpace(vCenters))
+		} else {
+			providerInfo = "vSphere infrastructure"
+		}
+	case "oVirt":
+		providerInfo = "oVirt infrastructure"
+	case "IBMCloud":
+		// Get IBM Cloud provider type (Classic, VPC, UPI)
+		providerType, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.ibmcloud.providerType}")
+		location, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.ibmcloud.location}")
+		providerInfo = fmt.Sprintf("IBM Cloud Provider Type: %s\nLocation: %s",
+			strings.TrimSpace(providerType), strings.TrimSpace(location))
+	case "PowerVS":
+		// Get Power VS region and zone
+		region, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.powervs.region}")
+		zone, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.powervs.zone}")
+		providerInfo = fmt.Sprintf("PowerVS Region: %s\nZone: %s",
+			strings.TrimSpace(region), strings.TrimSpace(zone))
+	case "Nutanix":
+		providerInfo = "Nutanix infrastructure"
+	case "None":
+		// For None/AnyPlatform, check if it's External topology (HCP)
+		if controlPlaneTopology == "External" {
+			providerInfo = "Hosted Control Plane (HCP) infrastructure"
+		} else {
+			providerInfo = "No specific cloud provider integration"
+		}
+	case "External":
+		// For External platform, check if there's a platform name
+		platformName, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.platformStatus.external.platformName}")
+		if strings.TrimSpace(platformName) != "" && strings.TrimSpace(platformName) != "Unknown" {
+			providerInfo = fmt.Sprintf("External Platform: %s", strings.TrimSpace(platformName))
+		} else {
+			providerInfo = "Generic external infrastructure provider"
+		}
+	default:
+		providerInfo = fmt.Sprintf("Infrastructure provider: %s", platformType)
+	}
+
+	// If the platform type is empty, we'll mark it as critical
+	if platformType == "" {
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusCritical,
@@ -64,12 +156,27 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 		return result, nil
 	}
 
+	// Build topology information if available
+	var topologyInfo string
+	if controlPlaneTopology != "" && infrastructureTopology != "" {
+		topologyInfo = fmt.Sprintf("\nControl Plane Topology: %s\nInfrastructure Topology: %s",
+			controlPlaneTopology, infrastructureTopology)
+	}
+
+	// Create result with the detected provider information
+	message := fmt.Sprintf("Infrastructure provider type: %s", platformType)
 	result := healthcheck.NewResult(
 		c.ID(),
 		types.StatusOK,
-		fmt.Sprintf("Infrastructure provider type: %s", providerType),
+		message,
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+
+	// Compile the details with all the information we've gathered
+	details := fmt.Sprintf("Infrastructure Name: %s\nPlatform Type: %s\n\n%s%s\n\n%s\n\n%s",
+		infraName, platformType, providerInfo, topologyInfo, additionalInfo, detailedOut)
+
+	result.Detail = details
+
 	return result, nil
 }

@@ -71,6 +71,69 @@ func (c *LoggingStorageCheck) Run() (healthcheck.Result, error) {
 
 // checkLokiStorage checks Loki storage usage
 func checkLokiStorage(c *LoggingStorageCheck, version string) (healthcheck.Result, error) {
+	// First check if S3 storage is used by examining the LokiStack CR
+	lokiStackOut, err := utils.RunCommand("oc", "get", "lokistack", "-n", "openshift-logging", "-o", "yaml")
+
+	// Check if using S3 or similar object storage
+	isObjectStorage := strings.Contains(lokiStackOut, "type: s3") ||
+		strings.Contains(lokiStackOut, "type: gcs") ||
+		strings.Contains(lokiStackOut, "type: azure")
+
+	if isObjectStorage {
+		// For object storage, we should check that everything is configured properly
+		// rather than checking for disk space
+
+		// Check Loki component status
+		if strings.Contains(lokiStackOut, "type: Warning") &&
+			strings.Contains(lokiStackOut, "StorageNeedsSchemaUpdate") {
+
+			result := healthcheck.NewResult(
+				c.ID(),
+				types.StatusWarning,
+				"Loki storage schema needs to be updated",
+				types.ResultKeyRecommended,
+			)
+
+			result.AddRecommendation("Update the Loki storage schema to the latest version")
+			result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index", version))
+
+			result.Detail = lokiStackOut
+			return result, nil
+		}
+
+		// Check if all components are ready
+		if !strings.Contains(lokiStackOut, "reason: ReadyComponents") ||
+			!strings.Contains(lokiStackOut, "status: 'True'") ||
+			!strings.Contains(lokiStackOut, "type: Ready") {
+
+			result := healthcheck.NewResult(
+				c.ID(),
+				types.StatusWarning,
+				"Some Loki components may not be ready - check object storage configuration",
+				types.ResultKeyRecommended,
+			)
+
+			result.AddRecommendation("Verify S3 endpoint is accessible and credentials are correct")
+			result.AddRecommendation("Check object storage bucket permissions")
+			result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index", version))
+
+			result.Detail = lokiStackOut
+			return result, nil
+		}
+
+		// All checks passed
+		result := healthcheck.NewResult(
+			c.ID(),
+			types.StatusOK,
+			"Loki is properly configured with object storage",
+			types.ResultKeyNoChange,
+		)
+
+		result.Detail = lokiStackOut
+		return result, nil
+	}
+
+	// If not using object storage, continue with the original PVC-based checks
 	// Get Loki PVC information
 	pvcOut, err := utils.RunCommand("oc", "get", "pvc", "-n", "openshift-logging", "-l", "app.kubernetes.io/component=loki")
 	if err != nil {
@@ -93,7 +156,8 @@ func checkLokiStorage(c *LoggingStorageCheck, version string) (healthcheck.Resul
 	}
 
 	// Get detailed PVC information
-	detailedPvcOut, _ := utils.RunCommand("oc", "get", "pvc", "-n", "openshift-logging", "-l", "app.kubernetes.io/component=loki", "-o", "yaml")
+	// This could be used in the future for more detailed analysis
+	_, _ = utils.RunCommand("oc", "get", "pvc", "-n", "openshift-logging", "-l", "app.kubernetes.io/component=loki", "-o", "yaml")
 
 	// Get pod disk usage information
 	diskUsageCmd := "oc exec $(oc get pods -n openshift-logging -l app.kubernetes.io/component=loki -o name | head -1) -n openshift-logging -- df -h /var/loki"
@@ -112,14 +176,13 @@ func checkLokiStorage(c *LoggingStorageCheck, version string) (healthcheck.Resul
 	// If we couldn't determine disk usage through exec, check PVC utilization
 	if diskUsage == -1 {
 		// Could implement an alternative check here
-		detailedOut := fmt.Sprintf("PVC Information:\n%s\n\nDisk Usage Command Result:\n%s", pvcOut, diskUsageOut)
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
 			"Could not determine Loki storage usage",
 			types.ResultKeyAdvisory,
 		)
-		result.Detail = detailedOut
+		result.Detail = fmt.Sprintf("PVC Information:\n%s\n\nDisk Usage Command Result:\n%s", pvcOut, diskUsageOut)
 		return result, nil
 	}
 
