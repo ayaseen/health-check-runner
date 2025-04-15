@@ -103,13 +103,16 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 	// Check which monitoring components are deployed or missing
 	_, missingComponents, componentDetails := checkMonitoringComponents(monConfigYaml)
-	detailedOut.WriteString("== Monitoring Stack Components ==\n")
-	detailedOut.WriteString(componentDetails)
-	detailedOut.WriteString("\n\n")
+	detailedOut.WriteString(componentDetails) // Component details already contain the heading
 
 	if len(missingComponents) > 0 {
-		issues = append(issues, fmt.Sprintf("monitoring stack is missing components: %s", strings.Join(missingComponents, ", ")))
-		recommendations = append(recommendations, "Configure all recommended monitoring stack components for comprehensive monitoring")
+		issueMsg := fmt.Sprintf("monitoring stack is missing %d components: %s",
+			len(missingComponents), strings.Join(missingComponents, ", "))
+		issues = append(issues, issueMsg)
+
+		recommendations = append(recommendations,
+			fmt.Sprintf("Configure missing monitoring stack components (%s) for comprehensive monitoring",
+				strings.Join(missingComponents, ", ")))
 	}
 
 	// Note: User workload monitoring is checked by the dedicated UserWorkloadMonitoringCheck
@@ -242,7 +245,7 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 // checkMonitoringComponents checks which monitoring components are deployed or missing
 func checkMonitoringComponents(monConfigYaml string) ([]string, []string, string) {
-	// Extract the actual config.yaml content
+	// Extract the actual config.yaml content if it exists
 	configPattern := regexp.MustCompile(`(?s)config\.yaml:\s*\|(.*?)(?:kind:|$)`)
 	configMatch := configPattern.FindStringSubmatch(monConfigYaml)
 
@@ -273,14 +276,22 @@ func checkMonitoringComponents(monConfigYaml string) ([]string, []string, string
 	deployedComponents := []string{}
 	missingComponents := []string{}
 
-	// Check each component in the yaml
+	// First check for components directly configured in the yaml
+	configuredComponents := make(map[string]bool)
 	for _, component := range expectedComponents {
-		// Check for the component section in the yaml
 		componentPattern := regexp.MustCompile(fmt.Sprintf(`(?m)^[ \t]*%s:`, regexp.QuoteMeta(component)))
 		if componentPattern.MatchString(configYaml) {
+			configuredComponents[component] = true
+		}
+	}
+
+	// Now check if each component is deployed, either by configuration or default deployment
+	for _, component := range expectedComponents {
+		if configuredComponents[component] {
+			// If it's in the config, it's deployed
 			deployedComponents = append(deployedComponents, component)
 		} else {
-			// Check if component is deployed even though not explicitly configured
+			// If not in config, check if it's still deployed by default
 			deployed := isComponentDeployed(component)
 			if deployed {
 				deployedComponents = append(deployedComponents, component)
@@ -290,9 +301,9 @@ func checkMonitoringComponents(monConfigYaml string) ([]string, []string, string
 		}
 	}
 
-	// Generate detailed output
+	// Generate detailed output with the desired format
 	var details strings.Builder
-
+	details.WriteString("== Monitoring Stack Components ==\n")
 	details.WriteString("Monitoring Stack Components:\n\n")
 
 	if len(deployedComponents) > 0 {
@@ -337,12 +348,87 @@ func isComponentDeployed(component string) bool {
 
 	check, found := resourceChecks[component]
 	if !found {
-		return false
+		// Try a fallback approach if the component isn't in our map
+		return checkComponentExistenceWithLabels(component)
 	}
 
-	// Run oc command to check if the resource exists
+	// First try the direct approach with 'oc get' for the specific resource
 	out, err := utils.RunCommand("oc", "get", check.resourceType, check.name, "-n", check.namespace)
-	return err == nil && strings.Contains(out, check.name)
+	if err == nil && strings.Contains(out, check.name) {
+		return true
+	}
+
+	// For additinal validation, check with a label selector when appropriate
+	var labelSelector string
+	switch component {
+	case "alertmanagerMain":
+		labelSelector = "app=alertmanager"
+	case "prometheusK8s":
+		labelSelector = "app=prometheus"
+	case "thanosQuerier":
+		labelSelector = "app.kubernetes.io/name=thanos-query"
+	case "kubeStateMetrics":
+		labelSelector = "app.kubernetes.io/name=kube-state-metrics"
+	case "metricsServer":
+		labelSelector = "k8s-app=metrics-server"
+	case "nodeExporter":
+		labelSelector = "app.kubernetes.io/name=node-exporter"
+	case "prometheusOperator":
+		labelSelector = "app.kubernetes.io/name=prometheus-operator"
+	case "prometheusOperatorAdmissionWebhook":
+		labelSelector = "app=prometheus-operator-admission-webhook"
+	default:
+		labelSelector = ""
+	}
+
+	if labelSelector != "" {
+		labelOut, err := utils.RunCommand("oc", "get", "all", "-n", "openshift-monitoring", "-l", labelSelector)
+		if err == nil && !strings.Contains(labelOut, "No resources found") {
+			return true
+		}
+	}
+
+	// If all direct checks fail, try the generic approach
+	return checkComponentExistenceWithLabels(component)
+}
+
+// checkComponentExistenceWithLabels is a fallback method to check if a component exists using label selectors
+func checkComponentExistenceWithLabels(component string) bool {
+	// Try to determine a label selector based on the component name
+	var labelSelector string
+
+	switch {
+	case strings.Contains(component, "prometheus"):
+		labelSelector = "app=prometheus"
+	case strings.Contains(component, "alertmanager"):
+		labelSelector = "app=alertmanager"
+	case strings.Contains(component, "thanos"):
+		labelSelector = "app.kubernetes.io/name=thanos"
+	case strings.Contains(component, "metrics"):
+		labelSelector = "k8s-app=metrics-server"
+	case strings.Contains(component, "node"):
+		labelSelector = "app.kubernetes.io/name=node-exporter"
+	case strings.Contains(component, "operator"):
+		labelSelector = "app.kubernetes.io/name=prometheus-operator"
+	default:
+		// Try a generic attempt based on the component name
+		componentName := strings.ToLower(component)
+		// Remove common prefixes/suffixes
+		componentName = strings.TrimPrefix(componentName, "prometheus")
+		componentName = strings.TrimPrefix(componentName, "k8s")
+		componentName = strings.TrimSuffix(componentName, "Main")
+
+		// Convert camel case to kebab case for labels
+		re := regexp.MustCompile("([a-z0-9])([A-Z])")
+		componentName = re.ReplaceAllString(componentName, "${1}-${2}")
+		componentName = strings.ToLower(componentName)
+
+		labelSelector = fmt.Sprintf("app=%s", componentName)
+	}
+
+	// Try to find resources with matching labels in the monitoring namespace
+	out, err := utils.RunCommand("oc", "get", "all", "-n", "openshift-monitoring", "-l", labelSelector)
+	return err == nil && strings.TrimSpace(out) != "" && !strings.Contains(out, "No resources found")
 }
 
 // getMonitoringConfig gets the monitoring configuration from the cluster-monitoring-config ConfigMap
