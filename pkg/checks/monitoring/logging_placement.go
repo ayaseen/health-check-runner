@@ -9,7 +9,7 @@ import (
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
-// LoggingPlacementCheck checks if Elasticsearch pods are placed on appropriate nodes
+// LoggingPlacementCheck checks if logging components are placed on appropriate nodes
 type LoggingPlacementCheck struct {
 	healthcheck.BaseCheck
 }
@@ -20,7 +20,7 @@ func NewLoggingPlacementCheck() *LoggingPlacementCheck {
 		BaseCheck: healthcheck.NewBaseCheck(
 			"logging-placement",
 			"Logging Component Placement",
-			"Checks if Elasticsearch pods are scheduled on appropriate nodes",
+			"Checks if logging components are scheduled on appropriate nodes",
 			types.CategoryOpReady,
 		),
 	}
@@ -28,19 +28,19 @@ func NewLoggingPlacementCheck() *LoggingPlacementCheck {
 
 // Run executes the health check
 func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
-	// First check if logging is installed
-	isInstalled, err := isLoggingInstalled()
+	// Detect logging configuration
+	loggingInfo, err := DetectLoggingConfiguration()
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
 			types.StatusCritical,
-			"Failed to check OpenShift Logging installation",
+			"Failed to detect logging configuration",
 			types.ResultKeyRequired,
-		), fmt.Errorf("error checking logging installation: %v", err)
+		), fmt.Errorf("error detecting logging configuration: %v", err)
 	}
 
 	// If logging is not installed, return NotApplicable
-	if !isInstalled {
+	if loggingInfo.Type == LoggingTypeNone {
 		return healthcheck.NewResult(
 			c.ID(),
 			types.StatusNotApplicable,
@@ -49,18 +49,7 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 		), nil
 	}
 
-	// Get Elasticsearch pods
-	out, err := utils.RunCommand("oc", "get", "pods", "-n", "openshift-logging", "-l", "component=elasticsearch", "-o", "wide")
-	if err != nil {
-		return healthcheck.NewResult(
-			c.ID(),
-			types.StatusCritical,
-			"Failed to get Elasticsearch pods",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error getting Elasticsearch pods: %v", err)
-	}
-
-	// Get node information
+	// Check if infrastructure nodes exist
 	nodeOut, err := utils.RunCommand("oc", "get", "nodes", "-l", "node-role.kubernetes.io/infra=", "-o", "name")
 	if err != nil || nodeOut == "" {
 		// There are no infra nodes defined, so this check is not applicable
@@ -72,7 +61,7 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 		), nil
 	}
 
-	// Check if all pods are on infra nodes
+	// Get infrastructure node names
 	infraNodeNames := []string{}
 	for _, line := range strings.Split(nodeOut, "\n") {
 		if line != "" {
@@ -84,10 +73,38 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
-	allOnInfraNodes := true
-	podsOnNonInfraNodes := []string{}
+	// Check pod placement based on logging type
+	var allOnInfraNodes bool
+	var podsOnNonInfraNodes []string
+	var podOut string
 
-	for _, line := range strings.Split(out, "\n") {
+	if loggingInfo.Type == LoggingTypeLoki {
+		// Check Loki pods
+		podOut, err = utils.RunCommand("oc", "get", "pods", "-n", "openshift-logging", "-l", "app.kubernetes.io/component=loki", "-o", "wide")
+		if err != nil {
+			return healthcheck.NewResult(
+				c.ID(),
+				types.StatusCritical,
+				"Failed to get Loki pods",
+				types.ResultKeyRequired,
+			), fmt.Errorf("error getting Loki pods: %v", err)
+		}
+	} else {
+		// Check Elasticsearch pods
+		podOut, err = utils.RunCommand("oc", "get", "pods", "-n", "openshift-logging", "-l", "component=elasticsearch", "-o", "wide")
+		if err != nil {
+			return healthcheck.NewResult(
+				c.ID(),
+				types.StatusCritical,
+				"Failed to get Elasticsearch pods",
+				types.ResultKeyRequired,
+			), fmt.Errorf("error getting Elasticsearch pods: %v", err)
+		}
+	}
+
+	// Check if all pods are on infrastructure nodes
+	allOnInfraNodes = true
+	for _, line := range strings.Split(podOut, "\n") {
 		if line != "" && !strings.HasPrefix(line, "NAME") { // Skip header
 			fields := strings.Fields(line)
 			if len(fields) >= 7 { // Ensure we have enough fields to access node name
@@ -113,35 +130,50 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 	// Get the OpenShift version for recommendations
 	version, verErr := utils.GetOpenShiftMajorMinorVersion()
 	if verErr != nil {
-		version = "4.10" // Fallback version
+		version = "4.14" // Update to a more recent default version
 	}
 
 	if !allOnInfraNodes {
+		var componentName string
+		if loggingInfo.Type == LoggingTypeLoki {
+			componentName = "Loki"
+		} else {
+			componentName = "Elasticsearch"
+		}
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
-			"Some Elasticsearch pods are not scheduled on infrastructure nodes",
+			fmt.Sprintf("Some %s pods are not scheduled on infrastructure nodes", componentName),
 			types.ResultKeyRecommended,
 		)
 
-		result.AddRecommendation("Move Elasticsearch pods to infrastructure nodes")
+		result.AddRecommendation(fmt.Sprintf("Move %s pods to infrastructure nodes", componentName))
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index#infrastructure-moving-logging_cluster-logging-moving", version))
 
-		detail := fmt.Sprintf("Elasticsearch pods not on infrastructure nodes:\n%s\n\nInfrastructure nodes:\n%s\n\nPod details:\n%s",
+		detail := fmt.Sprintf("%s pods not on infrastructure nodes:\n%s\n\nInfrastructure nodes:\n%s\n\nPod details:\n%s",
+			componentName,
 			strings.Join(podsOnNonInfraNodes, "\n"),
 			nodeOut,
-			out)
+			podOut)
 		result.Detail = detail
 		return result, nil
 	}
 
-	// All pods are on infra nodes
+	// All pods are on infrastructure nodes
+	var componentName string
+	if loggingInfo.Type == LoggingTypeLoki {
+		componentName = "Loki"
+	} else {
+		componentName = "Elasticsearch"
+	}
+
 	result := healthcheck.NewResult(
 		c.ID(),
 		types.StatusOK,
-		"All Elasticsearch pods are scheduled on infrastructure nodes",
+		fmt.Sprintf("All %s pods are scheduled on infrastructure nodes", componentName),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = out
+	result.Detail = podOut
 	return result, nil
 }

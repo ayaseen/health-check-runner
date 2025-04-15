@@ -10,7 +10,7 @@ func GetChecks() []healthcheck.Check {
 
 	// Following the order in the PDF (Op-Ready category):
 
-	// Logging forwarders for audit logs
+	// Logging forwarders for operations (infrastructure and audit) logs
 	checks = append(checks, NewLoggingForwardersOpsCheck())
 
 	// Logging forwarders for application logs
@@ -30,8 +30,7 @@ func GetChecks() []healthcheck.Check {
 	checks = append(checks, NewServiceMonitorCheck())
 
 	// Alerts forwarding
-	// checks = append(checks, NewAlertsForwardingCheck())
-	// Mentioned in PDF but not implemented
+	checks = append(checks, NewAlertsForwardingCheck())
 
 	// Monitoring storage
 	checks = append(checks, NewMonitoringStorageCheck())

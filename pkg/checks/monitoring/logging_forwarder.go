@@ -2,10 +2,8 @@ package monitoring
 
 import (
 	"fmt"
-	"github.com/ayaseen/health-check-runner/pkg/types"
-	"strings"
-
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
@@ -28,19 +26,19 @@ func NewLoggingForwarderCheck() *LoggingForwarderCheck {
 
 // Run executes the health check
 func (c *LoggingForwarderCheck) Run() (healthcheck.Result, error) {
-	// First check if logging is installed
-	isInstalled, err := isLoggingInstalled()
+	// Detect logging configuration
+	loggingInfo, err := DetectLoggingConfiguration()
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
 			types.StatusCritical,
-			"Failed to check OpenShift Logging installation",
+			"Failed to detect logging configuration",
 			types.ResultKeyRequired,
-		), fmt.Errorf("error checking logging installation: %v", err)
+		), fmt.Errorf("error detecting logging configuration: %v", err)
 	}
 
 	// If logging is not installed, return NotApplicable
-	if !isInstalled {
+	if loggingInfo.Type == LoggingTypeNone {
 		return healthcheck.NewResult(
 			c.ID(),
 			types.StatusNotApplicable,
@@ -49,49 +47,57 @@ func (c *LoggingForwarderCheck) Run() (healthcheck.Result, error) {
 		), nil
 	}
 
-	// Check for ClusterLogForwarder
-	out, err := utils.RunCommand("oc", "get", "clusterlogforwarder", "-n", "openshift-logging", "-o", "yaml")
-	if err != nil {
-		// ClusterLogForwarder might not exist
-		return healthcheck.NewResult(
-			c.ID(),
-			types.StatusWarning,
-			"Log forwarding is not configured",
-			types.ResultKeyRecommended,
-		), nil
-	}
-
-	// Check if it's properly configured with outputs, pipelines, etc.
-	emptyConfig := strings.Contains(out, "outputs: []") || strings.Contains(out, "pipelines: []") || strings.Contains(out, "inputs: []")
-
 	// Get the OpenShift version for recommendations
 	version, verErr := utils.GetOpenShiftMajorMinorVersion()
 	if verErr != nil {
-		version = "4.10" // Fallback version
+		version = "4.14" // Update to a more recent default version
 	}
 
-	if emptyConfig {
+	// Check if external forwarding is configured
+	if !loggingInfo.HasExternalForwarder {
+		var detailedOut string
+		var message string
+
+		if loggingInfo.Type == LoggingTypeLoki {
+			detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogforwarders.observability.openshift.io", "-n", "openshift-logging", "-o", "yaml")
+			message = "Loki logging is configured but no external forwarding is set up"
+		} else {
+			detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogging", "-n", "openshift-logging", "-o", "yaml")
+			message = "Traditional logging is configured but no external forwarding is set up"
+		}
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
-			"Log forwarding is configured but has empty pipelines or outputs",
+			message,
 			types.ResultKeyRecommended,
 		)
 
-		result.AddRecommendation("Configure proper log forwarding for long-term storage")
+		result.AddRecommendation("Configure external log forwarding for long-term storage and better log management")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index#cluster-logging-external", version))
 
-		result.Detail = out
+		result.Detail = detailedOut
 		return result, nil
 	}
 
-	// Log forwarding is properly configured
+	// External forwarding is configured
+	var detailedOut string
+	var message string
+
+	if loggingInfo.Type == LoggingTypeLoki {
+		detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogforwarders.observability.openshift.io", "-n", "openshift-logging", "-o", "yaml")
+		message = "Loki logging with external forwarding is properly configured"
+	} else {
+		detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogforwarder", "-n", "openshift-logging", "-o", "yaml")
+		message = "Traditional logging with external forwarding is properly configured"
+	}
+
 	result := healthcheck.NewResult(
 		c.ID(),
 		types.StatusOK,
-		"Log forwarding is properly configured",
+		message,
 		types.ResultKeyNoChange,
 	)
-	result.Detail = out
+	result.Detail = detailedOut
 	return result, nil
 }

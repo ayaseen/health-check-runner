@@ -2,10 +2,8 @@ package monitoring
 
 import (
 	"fmt"
-	"github.com/ayaseen/health-check-runner/pkg/types"
-	"strings"
-
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
@@ -28,39 +26,55 @@ func NewLoggingInstallCheck() *LoggingInstallCheck {
 
 // Run executes the health check
 func (c *LoggingInstallCheck) Run() (healthcheck.Result, error) {
-	// Check if the ClusterLogging CRD exists and "instance" is deployed
-	out, err := utils.RunCommand("oc", "get", "clusterlogging", "-n", "openshift-logging")
+	// Detect logging configuration
+	loggingInfo, err := DetectLoggingConfiguration()
 	if err != nil {
-		// If an error occurred, logging might not be installed
 		return healthcheck.NewResult(
 			c.ID(),
-			types.StatusWarning,
-			"OpenShift Logging is not installed",
-			types.ResultKeyRecommended,
-		), nil
+			types.StatusCritical,
+			"Failed to detect logging configuration",
+			types.ResultKeyRequired,
+		), fmt.Errorf("error detecting logging configuration: %v", err)
 	}
 
 	// Get detailed information for the report
-	detailedOut, err := utils.RunCommand("oc", "get", "clusterlogging", "-n", "openshift-logging", "-o", "yaml")
-	if err != nil {
-		// Non-critical error, we can continue without detailed output
-		detailedOut = "Failed to get detailed logging information"
-	}
-
-	// Check if "instance" is deployed and "Managed"
-	isConfigured := strings.Contains(out, "instance") && strings.Contains(out, "Managed")
-
-	if !isConfigured {
-		// Get the OpenShift version for recommendations
-		version, verErr := utils.GetOpenShiftMajorMinorVersion()
-		if verErr != nil {
-			version = "4.10" // Fallback version
+	var detailedOut string
+	if loggingInfo.Type == LoggingTypeLoki {
+		clfoOut, detailErr := utils.RunCommand("oc", "get", "clusterlogforwarders.observability.openshift.io", "-n", "openshift-logging", "-o", "yaml")
+		if detailErr == nil {
+			detailedOut = clfoOut
+		} else {
+			detailedOut = "Failed to get detailed Loki logging information"
 		}
 
+		// Add Loki Stack info
+		lokiOut, lokiErr := utils.RunCommand("oc", "get", "lokistack", "-n", "openshift-logging", "-o", "yaml")
+		if lokiErr == nil {
+			detailedOut += "\n\n=== Loki Stack Configuration ===\n" + lokiOut
+		}
+	} else if loggingInfo.Type == LoggingTypeTraditional {
+		clOut, detailErr := utils.RunCommand("oc", "get", "clusterlogging", "-n", "openshift-logging", "-o", "yaml")
+		if detailErr == nil {
+			detailedOut = clOut
+		} else {
+			detailedOut = "Failed to get detailed traditional logging information"
+		}
+	} else {
+		detailedOut = "No logging configuration found"
+	}
+
+	// Get the OpenShift version for recommendations
+	version, verErr := utils.GetOpenShiftMajorMinorVersion()
+	if verErr != nil {
+		version = "4.14" // Update to a more recent default version
+	}
+
+	// Generate result based on the detected configuration
+	if loggingInfo.Type == LoggingTypeNone {
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
-			"OpenShift Logging is not properly configured",
+			"OpenShift Logging is not installed",
 			types.ResultKeyRecommended,
 		)
 
@@ -69,15 +83,24 @@ func (c *LoggingInstallCheck) Run() (healthcheck.Result, error) {
 
 		result.Detail = detailedOut
 		return result, nil
+	} else if loggingInfo.Type == LoggingTypeLoki {
+		result := healthcheck.NewResult(
+			c.ID(),
+			types.StatusOK,
+			"OpenShift Logging with Loki is installed and configured",
+			types.ResultKeyNoChange,
+		)
+		result.Detail = detailedOut
+		return result, nil
+	} else {
+		// Traditional logging
+		result := healthcheck.NewResult(
+			c.ID(),
+			types.StatusOK,
+			"OpenShift Logging with Elasticsearch is installed and configured",
+			types.ResultKeyNoChange,
+		)
+		result.Detail = detailedOut
+		return result, nil
 	}
-
-	// Logging is installed and configured
-	result := healthcheck.NewResult(
-		c.ID(),
-		types.StatusOK,
-		"OpenShift Logging is installed and configured",
-		types.ResultKeyNoChange,
-	)
-	result.Detail = detailedOut
-	return result, nil
 }
