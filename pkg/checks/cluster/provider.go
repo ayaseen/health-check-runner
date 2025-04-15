@@ -57,25 +57,7 @@ func GetChecks() []healthcheck.Check {
 	// Default Project Template - comes from security in PDF
 
 	// Default Node Schedule
-	checks = append(checks, NewDefaultNodeSchedulableCheck())
-
-	// Self-Provisioner - comes from security in PDF
-
-	// Kubeadmin user - comes from security in PDF
-
-	// Network Policy - comes from networking in PDF
-
-	// Identity Provider - comes from security in PDF
-
-	// User Workload Monitoring - comes from monitoring in PDF
-
-	// OpenShift Logging - comes from monitoring in PDF
-
-	// ETCD backup - comes from security in PDF
-
-	// ETCD Encryption - comes from security in PDF
-
-	// ETCD Performance - comes from security in PDF
+	checks = append(checks, NewDefaultNodeScheduleCheck()) // Fixed function name here
 
 	// Infra machine config pool
 	checks = append(checks, NewInfraMachineConfigPoolCheck())
