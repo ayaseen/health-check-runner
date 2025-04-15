@@ -25,10 +25,9 @@ func GetChecks() []healthcheck.Check {
 	// Identity Provider checks
 	checks = append(checks, NewIdentityProviderCheck())
 
-	// ETCD backup, encryption, and health checks
+	// ETCD backup and encryption checks
 	checks = append(checks, NewEtcdBackupCheck())
 	checks = append(checks, NewEtcdEncryptionCheck())
-	checks = append(checks, NewEtcdHealthCheck())
 
 	// Elevated privileges - in App Dev category in PDF but implementation is in security
 	checks = append(checks, NewElevatedPrivilegesCheck())

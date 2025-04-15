@@ -65,7 +65,9 @@ func GetChecks() []healthcheck.Check {
 	// Kubelet Configuration
 	checks = append(checks, NewKubeletGarbageCollectionCheck())
 
-	// EmptyDir Volumes - comes from applications in PDF
+	// ETCD health and performance checks
+	checks = append(checks, NewEtcdHealthCheck())
+	checks = append(checks, NewEtcdPerformanceCheck())
 
 	// Openshift Proxy Settings
 	checks = append(checks, NewProxySettingsCheck())
