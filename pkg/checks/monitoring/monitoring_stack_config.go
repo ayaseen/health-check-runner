@@ -101,6 +101,17 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 		recommendations = append(recommendations, "Create a cluster-monitoring-config ConfigMap in the openshift-monitoring namespace to customize the monitoring stack")
 	}
 
+	// Check which monitoring components are deployed or missing
+	deployedComponents, missingComponents, componentDetails := checkMonitoringComponents(monConfigYaml)
+	detailedOut.WriteString("== Monitoring Stack Components ==\n")
+	detailedOut.WriteString(componentDetails)
+	detailedOut.WriteString("\n\n")
+
+	if len(missingComponents) > 0 {
+		issues = append(issues, fmt.Sprintf("monitoring stack is missing components: %s", strings.Join(missingComponents, ", ")))
+		recommendations = append(recommendations, "Configure all recommended monitoring stack components for comprehensive monitoring")
+	}
+
 	// Check if user workload monitoring is enabled
 	userWorkloadEnabled := strings.Contains(monConfigYaml, "enableUserWorkload: true")
 	if userWorkloadEnabled {
@@ -138,14 +149,14 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Check for node placement configuration
-	hasNodePlacement, nodeDetails, missingComponents := checkNodePlacement(monConfigYaml)
+	hasNodePlacement, nodeDetails, missingPlacementComponents := checkNodePlacement(monConfigYaml)
 	detailedOut.WriteString("== Node Placement Configuration ==\n")
 	detailedOut.WriteString(nodeDetails)
 	detailedOut.WriteString("\n\n")
 
 	if !hasNodePlacement && nodeCount > 3 {
-		if len(missingComponents) > 0 {
-			issues = append(issues, fmt.Sprintf("node placement configuration incomplete for components: %s", strings.Join(missingComponents, ", ")))
+		if len(missingPlacementComponents) > 0 {
+			issues = append(issues, fmt.Sprintf("node placement configuration incomplete for components: %s", strings.Join(missingPlacementComponents, ", ")))
 		} else {
 			issues = append(issues, "node placement configuration incomplete for monitoring components")
 		}
@@ -238,6 +249,111 @@ func (c *MonitoringStackConfigCheck) Run() (healthcheck.Result, error) {
 
 	result.Detail = detailedOut.String()
 	return result, nil
+}
+
+// checkMonitoringComponents checks which monitoring components are deployed or missing
+func checkMonitoringComponents(monConfigYaml string) ([]string, []string, string) {
+	// Extract the actual config.yaml content
+	configPattern := regexp.MustCompile(`(?s)config\.yaml:\s*\|(.*?)(?:kind:|$)`)
+	configMatch := configPattern.FindStringSubmatch(monConfigYaml)
+
+	var configYaml string
+	if len(configMatch) >= 2 {
+		configYaml = configMatch[1]
+	} else {
+		// Fall back to the original content if we can't extract config.yaml specifically
+		configYaml = monConfigYaml
+	}
+
+	// List of expected monitoring components
+	expectedComponents := []string{
+		"alertmanagerMain",
+		"prometheusK8s",
+		"thanosQuerier",
+		"prometheusOperator",
+		"metricsServer",
+		"kubeStateMetrics",
+		"telemeterClient",
+		"openshiftStateMetrics",
+		"nodeExporter",
+		"monitoringPlugin",
+		"prometheusOperatorAdmissionWebhook",
+	}
+
+	// Track deployed and missing components
+	deployedComponents := []string{}
+	missingComponents := []string{}
+
+	// Check each component in the yaml
+	for _, component := range expectedComponents {
+		// Check for the component section in the yaml
+		componentPattern := regexp.MustCompile(fmt.Sprintf(`(?m)^[ \t]*%s:`, regexp.QuoteMeta(component)))
+		if componentPattern.MatchString(configYaml) {
+			deployedComponents = append(deployedComponents, component)
+		} else {
+			// Check if component is deployed even though not explicitly configured
+			deployed := isComponentDeployed(component)
+			if deployed {
+				deployedComponents = append(deployedComponents, component)
+			} else {
+				missingComponents = append(missingComponents, component)
+			}
+		}
+	}
+
+	// Generate detailed output
+	var details strings.Builder
+
+	details.WriteString("Monitoring Stack Components:\n\n")
+
+	if len(deployedComponents) > 0 {
+		details.WriteString("Deployed components:\n")
+		for _, component := range deployedComponents {
+			details.WriteString(fmt.Sprintf("- %s\n", component))
+		}
+		details.WriteString("\n")
+	}
+
+	if len(missingComponents) > 0 {
+		details.WriteString("Missing components:\n")
+		for _, component := range missingComponents {
+			details.WriteString(fmt.Sprintf("- %s\n", component))
+		}
+		details.WriteString("\n")
+	}
+
+	return deployedComponents, missingComponents, details.String()
+}
+
+// isComponentDeployed checks if a monitoring component is deployed by checking for its resources
+func isComponentDeployed(component string) bool {
+	// Map of components to their resource names to check
+	resourceChecks := map[string]struct {
+		resourceType string
+		namespace    string
+		name         string
+	}{
+		"alertmanagerMain":                   {"statefulset", "openshift-monitoring", "alertmanager-main"},
+		"prometheusK8s":                      {"statefulset", "openshift-monitoring", "prometheus-k8s"},
+		"thanosQuerier":                      {"deployment", "openshift-monitoring", "thanos-querier"},
+		"prometheusOperator":                 {"deployment", "openshift-monitoring", "prometheus-operator"},
+		"metricsServer":                      {"deployment", "openshift-monitoring", "metrics-server"},
+		"kubeStateMetrics":                   {"deployment", "openshift-monitoring", "kube-state-metrics"},
+		"telemeterClient":                    {"deployment", "openshift-monitoring", "telemeter-client"},
+		"openshiftStateMetrics":              {"deployment", "openshift-monitoring", "openshift-state-metrics"},
+		"nodeExporter":                       {"daemonset", "openshift-monitoring", "node-exporter"},
+		"monitoringPlugin":                   {"deployment", "openshift-monitoring", "monitoring-plugin"},
+		"prometheusOperatorAdmissionWebhook": {"deployment", "openshift-monitoring", "prometheus-operator-admission-webhook"},
+	}
+
+	check, found := resourceChecks[component]
+	if !found {
+		return false
+	}
+
+	// Run oc command to check if the resource exists
+	out, err := utils.RunCommand("oc", "get", check.resourceType, check.name, "-n", check.namespace)
+	return err == nil && strings.Contains(out, check.name)
 }
 
 // getMonitoringConfig gets the monitoring configuration from the cluster-monitoring-config ConfigMap
