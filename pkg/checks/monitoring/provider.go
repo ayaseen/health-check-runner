@@ -26,6 +26,9 @@ func GetChecks() []healthcheck.Check {
 
 	// Following the order in the PDF (Op-Ready category):
 
+	// Enhanced monitoring stack configuration check
+	checks = append(checks, NewMonitoringStackConfigCheck())
+
 	// Logging forwarders for operations (infrastructure and audit) logs
 	checks = append(checks, NewLoggingForwardersOpsCheck())
 
