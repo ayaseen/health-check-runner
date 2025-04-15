@@ -113,12 +113,13 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 	detailedOut.WriteString("== User Workload Monitoring Configuration ==\n\n")
 
 	if monConfigExists {
-		detailedOut.WriteString("Cluster Monitoring Config exists:\n")
+		detailedOut.WriteString("Cluster Monitoring Config exists:\n\n")
+		detailedOut.WriteString("[source, yaml]\n----\n")
 		detailedOut.WriteString(monConfigYaml)
-		detailedOut.WriteString("\n\n")
+		detailedOut.WriteString("\n----\n\n")
 		detailedOut.WriteString(fmt.Sprintf("User Workload Monitoring enabled in config: %v\n", uwmEnabled))
 	} else {
-		detailedOut.WriteString("No cluster-monitoring-config ConfigMap found\n")
+		detailedOut.WriteString("No cluster-monitoring-config ConfigMap found\n\n")
 	}
 
 	detailedOut.WriteString(fmt.Sprintf("User Workload Monitoring namespace exists: %v\n\n", uwmNamespaceExists))
@@ -131,9 +132,10 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 		detailedOut.WriteString("== User Workload Monitoring Components ==\n\n")
 
 		if uwmConfigExists {
-			detailedOut.WriteString("User Workload Monitoring Config exists:\n")
+			detailedOut.WriteString("User Workload Monitoring Config exists:\n\n")
+			detailedOut.WriteString("[source, yaml]\n----\n")
 			detailedOut.WriteString(uwmConfigYaml)
-			detailedOut.WriteString("\n\n")
+			detailedOut.WriteString("\n----\n\n")
 
 			// Check user workload monitoring components
 			configuredComponents, missingComponents, componentDetails := checkUserWorkloadComponents(uwmConfigYaml)
@@ -156,7 +158,7 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 
 			// Check for persistent storage configuration
 			hasPersistentStorage, storageDetails := checkUserWorkloadPersistentStorage(uwmConfigYaml)
-			detailedOut.WriteString("\n== User Workload Monitoring Storage ==\n")
+			detailedOut.WriteString("\n== User Workload Monitoring Storage ==\n\n")
 			detailedOut.WriteString(storageDetails)
 
 			if !hasPersistentStorage {
@@ -380,7 +382,7 @@ func checkUserWorkloadComponents(uwmConfigYaml string) ([]string, []string, stri
 	var details strings.Builder
 
 	if len(configuredComponents) > 0 {
-		details.WriteString("Components explicitly configured in user-workload-monitoring-config:\n")
+		details.WriteString("Components explicitly configured in user-workload-monitoring-config:\n\n")
 		for _, component := range configuredComponents {
 			details.WriteString(fmt.Sprintf("- %s\n", component))
 		}
@@ -391,7 +393,7 @@ func checkUserWorkloadComponents(uwmConfigYaml string) ([]string, []string, stri
 	}
 
 	if len(missingComponents) > 0 {
-		details.WriteString("WARNING: The following required components are NOT explicitly configured:\n")
+		details.WriteString("WARNING: The following required components are NOT explicitly configured:\n\n")
 		for _, component := range missingComponents {
 			details.WriteString(fmt.Sprintf("- %s\n", component))
 		}
@@ -400,7 +402,7 @@ func checkUserWorkloadComponents(uwmConfigYaml string) ([]string, []string, stri
 	}
 
 	// Check if components are actually running
-	details.WriteString("Verifying component status in the cluster:\n")
+	details.WriteString("Verifying component status in the cluster:\n\n")
 
 	for _, component := range requiredComponents {
 		isRunning := isUserWorkloadComponentRunning(component)
@@ -450,7 +452,7 @@ func checkUserWorkloadComponentsRunning() (bool, string) {
 
 	allRunning := true
 	var details strings.Builder
-	details.WriteString("User Workload Monitoring components status:\n")
+	details.WriteString("User Workload Monitoring components status:\n\n")
 
 	for _, component := range requiredComponents {
 		isRunning := isUserWorkloadComponentRunning(component)
@@ -475,11 +477,12 @@ func checkUserWorkloadPersistentStorage(uwmConfigYaml string) (bool, string) {
 
 	var details strings.Builder
 	if err != nil {
-		details.WriteString("Failed to retrieve PVCs in openshift-user-workload-monitoring namespace\n")
+		details.WriteString("Failed to retrieve PVCs in openshift-user-workload-monitoring namespace\n\n")
 	} else {
-		details.WriteString("PVCs in openshift-user-workload-monitoring namespace:\n")
+		details.WriteString("PVCs in openshift-user-workload-monitoring namespace:\n\n")
+		details.WriteString("[source, bash]\n----\n")
 		details.WriteString(pvcList)
-		details.WriteString("\n")
+		details.WriteString("\n----\n\n")
 	}
 
 	// Check for the presence of specific PVCs
@@ -488,21 +491,21 @@ func checkUserWorkloadPersistentStorage(uwmConfigYaml string) (bool, string) {
 	hasAlertmanagerPVC := strings.Contains(pvcList, "alertmanager-user-workload")
 
 	if hasVolumeClaimTemplate {
-		details.WriteString("Persistent storage is configured in the user workload monitoring config via volumeClaimTemplate\n")
+		details.WriteString("Persistent storage is configured in the user workload monitoring config via volumeClaimTemplate\n\n")
 	} else {
-		details.WriteString("No volumeClaimTemplate found in the user workload monitoring config\n")
+		details.WriteString("No volumeClaimTemplate found in the user workload monitoring config\n\n")
 	}
 
 	if hasPrometheusPVC {
-		details.WriteString("Prometheus PVC found\n")
+		details.WriteString("Prometheus PVC found\n\n")
 	}
 
 	if hasThanosRulerPVC {
-		details.WriteString("Thanos Ruler PVC found\n")
+		details.WriteString("Thanos Ruler PVC found\n\n")
 	}
 
 	if hasAlertmanagerPVC {
-		details.WriteString("Alertmanager PVC found\n")
+		details.WriteString("Alertmanager PVC found\n\n")
 	}
 
 	return hasVolumeClaimTemplate || hasPrometheusPVC || hasThanosRulerPVC || hasAlertmanagerPVC, details.String()
