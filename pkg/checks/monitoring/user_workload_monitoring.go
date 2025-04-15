@@ -1,21 +1,3 @@
-/*
-Author: Amjad Yaseen
-Email: ayaseen@redhat.com
-Date: 2023-03-06
-Modified: 2025-04-15
-
-This file implements health checks for user workload monitoring. It:
-
-- Verifies if monitoring for user-defined projects is enabled
-- Checks the cluster-monitoring-config ConfigMap for proper settings
-- Examines the existence of the openshift-user-workload-monitoring namespace
-- Verifies correct configuration of required monitoring components for user workloads
-- Provides recommendations for enabling application monitoring
-- Helps ensure proper visibility into application performance
-
-This check helps administrators configure proper monitoring for application workloads beyond the default system monitoring.
-*/
-
 package monitoring
 
 import (
@@ -110,14 +92,13 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 
 	// Create detailed information for the report
 	var detailedOut strings.Builder
-	detailedOut.WriteString("== User Workload Monitoring Configuration ==\n\n")
+	detailedOut.WriteString("User Workload Monitoring Configuration\n\n")
 
 	if monConfigExists {
 		detailedOut.WriteString("Cluster Monitoring Config exists:\n\n")
-		detailedOut.WriteString("[source, yaml]\n----\n")
 		detailedOut.WriteString(monConfigYaml)
-		detailedOut.WriteString("\n----\n\n")
-		detailedOut.WriteString(fmt.Sprintf("User Workload Monitoring enabled in config: %v\n", uwmEnabled))
+		detailedOut.WriteString("\n\n")
+		detailedOut.WriteString(fmt.Sprintf("User Workload Monitoring enabled in config: %v\n\n", uwmEnabled))
 	} else {
 		detailedOut.WriteString("No cluster-monitoring-config ConfigMap found\n\n")
 	}
@@ -129,13 +110,12 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 		// Get the user-workload-monitoring-config ConfigMap
 		uwmConfigExists, uwmConfigYaml := getUserWorkloadMonitoringConfig(client)
 
-		detailedOut.WriteString("== User Workload Monitoring Components ==\n\n")
+		detailedOut.WriteString("User Workload Monitoring Components\n\n")
 
 		if uwmConfigExists {
 			detailedOut.WriteString("User Workload Monitoring Config exists:\n\n")
-			detailedOut.WriteString("[source, yaml]\n----\n")
 			detailedOut.WriteString(uwmConfigYaml)
-			detailedOut.WriteString("\n----\n\n")
+			detailedOut.WriteString("\n\n")
 
 			// Check user workload monitoring components
 			configuredComponents, missingComponents, componentDetails := checkUserWorkloadComponents(uwmConfigYaml)
@@ -158,7 +138,7 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 
 			// Check for persistent storage configuration
 			hasPersistentStorage, storageDetails := checkUserWorkloadPersistentStorage(uwmConfigYaml)
-			detailedOut.WriteString("\n== User Workload Monitoring Storage ==\n\n")
+			detailedOut.WriteString("\nUser Workload Monitoring Storage\n\n")
 			detailedOut.WriteString(storageDetails)
 
 			if !hasPersistentStorage {
@@ -480,9 +460,8 @@ func checkUserWorkloadPersistentStorage(uwmConfigYaml string) (bool, string) {
 		details.WriteString("Failed to retrieve PVCs in openshift-user-workload-monitoring namespace\n\n")
 	} else {
 		details.WriteString("PVCs in openshift-user-workload-monitoring namespace:\n\n")
-		details.WriteString("[source, bash]\n----\n")
 		details.WriteString(pvcList)
-		details.WriteString("\n----\n\n")
+		details.WriteString("\n\n")
 	}
 
 	// Check for the presence of specific PVCs
