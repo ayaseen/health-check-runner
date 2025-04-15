@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -37,14 +36,12 @@ func (c *EtcdPerformanceCheck) Run() (healthcheck.Result, error) {
 
 	// Variables to track performance issues
 	var performanceIssues []string
-	hasWarnings := false
 	hasCritical := false
 
 	// Check for slow compaction issues
 	compactionStats, compactionIssues := checkCompactionPerformance()
 	if len(compactionIssues) > 0 {
 		performanceIssues = append(performanceIssues, compactionIssues...)
-		hasWarnings = true
 		details.WriteString("== Compaction Performance ==\n")
 		details.WriteString(compactionStats)
 		details.WriteString("\n\n")
@@ -59,7 +56,6 @@ func (c *EtcdPerformanceCheck) Run() (healthcheck.Result, error) {
 	applyStats, applyIssues := checkApplyEntriesPerformance()
 	if len(applyIssues) > 0 {
 		performanceIssues = append(performanceIssues, applyIssues...)
-		hasWarnings = true
 		if strings.Contains(applyStats, "excessive delays") {
 			hasCritical = true
 		}
@@ -77,7 +73,6 @@ func (c *EtcdPerformanceCheck) Run() (healthcheck.Result, error) {
 	heartbeatStats, heartbeatIssues := checkHeartbeatPerformance()
 	if len(heartbeatIssues) > 0 {
 		performanceIssues = append(performanceIssues, heartbeatIssues...)
-		hasWarnings = true
 		if strings.Contains(heartbeatStats, "frequent failures") {
 			hasCritical = true
 		}
@@ -95,7 +90,6 @@ func (c *EtcdPerformanceCheck) Run() (healthcheck.Result, error) {
 	clockDriftStats, clockDriftIssues := checkClockDriftIssues()
 	if len(clockDriftIssues) > 0 {
 		performanceIssues = append(performanceIssues, clockDriftIssues...)
-		hasWarnings = true
 		details.WriteString("== Clock Synchronization ==\n")
 		details.WriteString(clockDriftStats)
 		details.WriteString("\n\n")
@@ -110,7 +104,6 @@ func (c *EtcdPerformanceCheck) Run() (healthcheck.Result, error) {
 	diagStats, diagIssues := runEtcdDiagnostics()
 	if len(diagIssues) > 0 {
 		performanceIssues = append(performanceIssues, diagIssues...)
-		hasWarnings = true
 		details.WriteString("== ETCD Diagnostics ==\n")
 		details.WriteString(diagStats)
 		details.WriteString("\n\n")
@@ -125,7 +118,6 @@ func (c *EtcdPerformanceCheck) Run() (healthcheck.Result, error) {
 	resourceStats, resourceIssues := checkNodeResourceUsage()
 	if len(resourceIssues) > 0 {
 		performanceIssues = append(performanceIssues, resourceIssues...)
-		hasWarnings = true
 		details.WriteString("== Node Resource Usage ==\n")
 		details.WriteString(resourceStats)
 		details.WriteString("\n\n")
