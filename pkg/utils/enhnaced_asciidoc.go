@@ -172,41 +172,59 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 				continue
 			}
 
-			// Add section header with check name
-			sb.WriteString("== " + check.Name() + "\n\n")
-
-			// Add result key formatted as a centered table (exactly like old report)
-			sb.WriteString(formatResultKeyAsCenteredTable(result.ResultKey) + "\n\n")
-
-			// Add detailed output if available, properly formatted
-			if result.Detail != "" {
-				sb.WriteString("[source, bash]\n----\n")
-				sb.WriteString(result.Detail)
-				sb.WriteString("\n----\n\n")
-			}
-
-			// Add observation section
-			sb.WriteString("**Observation**\n\n")
-			sb.WriteString(result.Message + "\n\n")
-
-			// Add recommendation section
-			sb.WriteString("**Recommendation**\n\n")
-			if len(result.Recommendations) > 0 {
-				for _, rec := range result.Recommendations {
-					sb.WriteString(rec + "\n\n")
-				}
-			} else {
-				sb.WriteString("None\n\n")
-			}
-
-			// Add reference links section (similar to old report)
-			sb.WriteString("*Reference Link(s)*\n\n")
-			sb.WriteString(fmt.Sprintf("* https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/\n\n", version))
+			// Generate the detailed check section
+			sb.WriteString(FormatCheckDetail(check, result, version))
 		}
 	}
 
 	// Reset bgcolor for future tables - exactly as in old report
 	sb.WriteString("// Reset bgcolor for future tables\n[grid=none,frame=none]\n|===\n|{set:cellbgcolor!}\n|===\n\n")
+
+	return sb.String()
+}
+
+// FormatCheckDetail formats detailed information about a check
+func FormatCheckDetail(check types.Check, result types.Result, version string) string {
+	var sb strings.Builder
+
+	// Add section with check name
+	sb.WriteString(fmt.Sprintf("== %s\n\n", check.Name()))
+
+	// Add result status
+	sb.WriteString(GetChanges(result.ResultKey) + "\n\n")
+
+	// Add detail if available
+	if result.Detail != "" {
+		// Check if the detail already contains source blocks or formatted content
+		if isAlreadyFormatted(result.Detail) {
+			// If content is already formatted, include it as is
+			sb.WriteString(result.Detail)
+			sb.WriteString("\n\n")
+		} else {
+			// Otherwise, wrap it in a source block
+			sb.WriteString("[source, bash]\n----\n")
+			sb.WriteString(result.Detail)
+			sb.WriteString("\n----\n\n")
+		}
+	}
+
+	// Add observation
+	sb.WriteString("**Observation**\n\n")
+	sb.WriteString(result.Message + "\n\n")
+
+	// Add recommendations
+	sb.WriteString("**Recommendation**\n\n")
+	if len(result.Recommendations) > 0 {
+		for _, rec := range result.Recommendations {
+			sb.WriteString(rec + "\n\n")
+		}
+	} else {
+		sb.WriteString("None\n\n")
+	}
+
+	// Add reference links
+	sb.WriteString("*Reference Link(s)*\n\n")
+	sb.WriteString(fmt.Sprintf("* https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/\n\n", version))
 
 	return sb.String()
 }

@@ -24,6 +24,13 @@ import (
 	"github.com/ayaseen/health-check-runner/pkg/types"
 )
 
+// isAlreadyFormatted checks if text already contains source blocks or other formatting
+func isAlreadyFormatted(text string) bool {
+	return strings.Contains(text, "[source,") ||
+		strings.Contains(text, "[source, ") ||
+		strings.Contains(text, "----")
+}
+
 // GenerateFullAsciiDocReport generates a complete AsciiDoc report for all health checks
 func GenerateFullAsciiDocReport(title string, checks []types.Check, results map[string]types.Result) string {
 	var sb strings.Builder
@@ -72,7 +79,7 @@ func GenerateFullAsciiDocReport(title string, checks []types.Check, results map[
 			continue
 		}
 
-		sb.WriteString(GenerateAsciiDocCheckSection(check, result, version))
+		sb.WriteString(FormatCheckDetail(check, result, version))
 		sb.WriteString("\n\n")
 	}
 
@@ -133,9 +140,17 @@ func FormatCheckDetail(check types.Check, result types.Result, version string) s
 
 	// Add detail if available
 	if result.Detail != "" {
-		sb.WriteString("[source, bash]\n----\n")
-		sb.WriteString(result.Detail)
-		sb.WriteString("\n----\n\n")
+		// Check if the detail already contains source blocks or formatted content
+		if isAlreadyFormatted(result.Detail) {
+			// If content is already formatted, include it as is
+			sb.WriteString(result.Detail)
+			sb.WriteString("\n\n")
+		} else {
+			// Otherwise, wrap it in a source block
+			sb.WriteString("[source, bash]\n----\n")
+			sb.WriteString(result.Detail)
+			sb.WriteString("\n----\n\n")
+		}
 	}
 
 	// Add observation
@@ -159,7 +174,7 @@ func FormatCheckDetail(check types.Check, result types.Result, version string) s
 	return sb.String()
 }
 
-// GetResultByStatus returns a map of results grouped by status
+// GetResultsByStatus returns a map of results grouped by status
 func GetResultsByStatus(results map[string]types.Result) map[types.Status][]types.Result {
 	resultsByStatus := make(map[types.Status][]types.Result)
 
