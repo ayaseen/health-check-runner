@@ -65,6 +65,14 @@ func (c *CNINetworkPluginCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed network configuration"
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailedOut string
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut = fmt.Sprintf("Network Configuration:\n[source, yaml]\n----\n%s\n----\n\n", detailedOut)
+	} else {
+		formattedDetailedOut = "Network Configuration: No information available\n\n"
+	}
+
 	// Check if the CNI type is OVNKubernetes, which is the recommended type
 	if cniType == "OVNKubernetes" {
 		result := healthcheck.NewResult(
@@ -73,7 +81,7 @@ func (c *CNINetworkPluginCheck) Run() (healthcheck.Result, error) {
 			fmt.Sprintf("Cluster is using the recommended CNI network plugin: %s", cniType),
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 
@@ -93,7 +101,7 @@ func (c *CNINetworkPluginCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Consider using OVNKubernetes as the CNI network plugin")
 	}
 
-	result.Detail = detailedOut
+	result.Detail = formattedDetailedOut
 
 	return result, nil
 }
@@ -141,6 +149,14 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 		), fmt.Errorf("error getting network policies: %v", err)
 	}
 
+	// Format the detailed output with proper spacing
+	var formattedDetailedOut string
+	if strings.TrimSpace(out) != "" {
+		formattedDetailedOut = fmt.Sprintf("Network Policies:\n[source, bash]\n----\n%s\n----\n\n", out)
+	} else {
+		formattedDetailedOut = "Network Policies: No information available\n\n"
+	}
+
 	// Check if any network policies exist
 	lines := strings.Split(out, "\n")
 	if len(lines) <= 1 { // Only header line or empty
@@ -150,7 +166,7 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 			"No network policies found in the cluster",
 			types.ResultKeyRecommended,
 		)
-		result.Detail = "No network policies configured"
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 
@@ -170,7 +186,7 @@ func (c *NetworkPolicyCheck) Run() (healthcheck.Result, error) {
 		types.ResultKeyNoChange,
 	)
 
-	result.Detail = out
+	result.Detail = formattedDetailedOut
 
 	return result, nil
 }

@@ -67,6 +67,42 @@ func (c *IngressControllerReplicaCheck) Run() (healthcheck.Result, error) {
 		version = "4.10" // Default to a known version if we can't determine
 	}
 
+	// Get detailed information for the report
+	detailedOut, err := utils.RunCommand("oc", "get", "ingresscontroller/default", "-n", "openshift-ingress-operator", "-o", "yaml")
+	if err != nil {
+		// Non-critical error, we can continue without detailed output
+		detailedOut = "Failed to get detailed ingress controller configuration"
+	}
+
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailedOut strings.Builder
+	formattedDetailedOut.WriteString("=== Ingress Controller Replica Analysis ===\n\n")
+
+	// Add main ingress controller configuration with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut.WriteString("Ingress Controller Configuration:\n[source, yaml]\n----\n")
+		formattedDetailedOut.WriteString(detailedOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Ingress Controller Configuration: No information available\n\n")
+	}
+
+	// Get router deployment information
+	routerDeploymentOut, _ := utils.RunCommand("oc", "get", "deployment", "-n", "openshift-ingress", "-l", "ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default")
+	if strings.TrimSpace(routerDeploymentOut) != "" {
+		formattedDetailedOut.WriteString("Router Deployment:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(routerDeploymentOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	}
+
+	// Get router pods information
+	routerPodsOut, _ := utils.RunCommand("oc", "get", "pods", "-n", "openshift-ingress", "-l", "ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default")
+	if strings.TrimSpace(routerPodsOut) != "" {
+		formattedDetailedOut.WriteString("Router Pods:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(routerPodsOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	}
+
 	if replicaStr == "" {
 		// No replica count specified, likely using default (auto-scaling)
 		result := healthcheck.NewResult(
@@ -77,6 +113,11 @@ func (c *IngressControllerReplicaCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Configure a specific replica count for better control over the ingress controller scaling")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/networking/index#configuring-ingress", version))
+
+		formattedDetailedOut.WriteString("No explicit replica count found in the ingress controller configuration.\n")
+		formattedDetailedOut.WriteString("The ingress controller is likely using the default auto-scaling configuration.\n\n")
+
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -90,12 +131,9 @@ func (c *IngressControllerReplicaCheck) Run() (healthcheck.Result, error) {
 		), fmt.Errorf("error parsing ingress controller replicas: %v", err)
 	}
 
-	// Get detailed information for the report
-	detailedOut, err := utils.RunCommand("oc", "get", "ingresscontroller/default", "-n", "openshift-ingress-operator", "-o", "yaml")
-	if err != nil {
-		// Non-critical error, we can continue without detailed output
-		detailedOut = "Failed to get detailed ingress controller configuration"
-	}
+	// Add replica count information to the detail output
+	formattedDetailedOut.WriteString(fmt.Sprintf("Configured Replica Count: %d\n\n", replicas))
+	formattedDetailedOut.WriteString("Recommendation: Production environments should have at least 3 replicas for high availability.\n\n")
 
 	// Recommended minimum is 3 for high availability
 	if replicas >= 3 {
@@ -105,7 +143,7 @@ func (c *IngressControllerReplicaCheck) Run() (healthcheck.Result, error) {
 			fmt.Sprintf("Ingress controller has sufficient replicas: %d", replicas),
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -118,7 +156,7 @@ func (c *IngressControllerReplicaCheck) Run() (healthcheck.Result, error) {
 
 	result.AddRecommendation("Increase the number of ingress controller replicas to at least 3 for high availability")
 	result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/networking/index#configuring-ingress", version))
-	result.Detail = detailedOut
+	result.Detail = formattedDetailedOut.String()
 
 	return result, nil
 }

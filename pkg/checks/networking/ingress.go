@@ -102,6 +102,34 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed ingress controller configuration"
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailedOut strings.Builder
+	formattedDetailedOut.WriteString("=== Comprehensive Ingress Controller Analysis ===\n\n")
+
+	// Add main ingress controller configuration with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut.WriteString("Ingress Controller Configuration:\n[source, yaml]\n----\n")
+		formattedDetailedOut.WriteString(detailedOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Ingress Controller Configuration: No information available\n\n")
+	}
+
+	// Add individual check results
+	formattedDetailedOut.WriteString("=== Individual Check Results ===\n\n")
+	formattedDetailedOut.WriteString("Type Check: " + typeResult.Message + "\n\n")
+	formattedDetailedOut.WriteString("Placement Check: " + placementResult.Message + "\n\n")
+	formattedDetailedOut.WriteString("Replica Check: " + replicaResult.Message + "\n\n")
+	formattedDetailedOut.WriteString("Certificate Check: " + certResult.Message + "\n\n")
+
+	// Add router pods information
+	routerPodsOut, _ := utils.RunCommand("oc", "get", "pods", "-n", "openshift-ingress", "-l", "ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default", "-o", "wide")
+	if strings.TrimSpace(routerPodsOut) != "" {
+		formattedDetailedOut.WriteString("Router Pods:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(routerPodsOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	}
+
 	// If there are no issues, return OK result
 	if len(issues) == 0 {
 		result := healthcheck.NewResult(
@@ -110,7 +138,7 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 			"Ingress controller is properly configured",
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -134,15 +162,18 @@ func (c *IngressControllerCheck) Run() (healthcheck.Result, error) {
 		resultKey,
 	)
 
-	// Add the issues as details
-	detailedResult := "Issues:\n" + strings.Join(issues, "\n") + "\n\n" + detailedOut
+	// Add issues section
+	formattedDetailedOut.WriteString("=== Configuration Issues ===\n\n")
+	for _, issue := range issues {
+		formattedDetailedOut.WriteString("- " + issue + "\n")
+	}
+	formattedDetailedOut.WriteString("\n")
 
 	// Add the recommendations
 	for _, rec := range recommendedActions {
 		result.AddRecommendation(rec)
 	}
 
-	result.Detail = detailedResult
-
+	result.Detail = formattedDetailedOut.String()
 	return result, nil
 }

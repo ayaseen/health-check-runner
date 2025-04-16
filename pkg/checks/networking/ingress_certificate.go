@@ -56,8 +56,17 @@ func (c *DefaultIngressCertificateCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed ingress controller configuration"
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailedOut string
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut = fmt.Sprintf("Ingress Controller Configuration:\n[source, yaml]\n----\n%s\n----\n\n", detailedOut)
+	} else {
+		formattedDetailedOut = "Ingress Controller Configuration: No information available\n\n"
+	}
+
 	// Check if the certificate exists in the namespace
 	var certExists bool
+	var secretDetailsOut string
 	if customCertConfigured {
 		// Extract the secret name from the output if possible
 		secretName := "unknown"
@@ -69,7 +78,22 @@ func (c *DefaultIngressCertificateCheck) Run() (healthcheck.Result, error) {
 		// Check if the secret exists
 		secretOut, err := utils.RunCommand("oc", "get", "secret", secretName, "-n", "openshift-ingress")
 		certExists = err == nil && strings.Contains(secretOut, secretName)
+
+		// Add certificate secret information if available
+		if certExists {
+			secretDetails, _ := utils.RunCommand("oc", "get", "secret", secretName, "-n", "openshift-ingress", "-o", "yaml")
+			if strings.TrimSpace(secretDetails) != "" {
+				secretDetailsOut = fmt.Sprintf("Certificate Secret:\n[source, yaml]\n----\n%s\n----\n\n", secretDetails)
+			}
+		} else {
+			secretDetailsOut = fmt.Sprintf("Certificate Secret '%s': Not found\n\n", secretName)
+		}
+	} else {
+		secretDetailsOut = "No custom certificate configured\n\n"
 	}
+
+	// Append secret details to the formatted output
+	formattedDetailedOut += secretDetailsOut
 
 	// Get OpenShift version for documentation links
 	version, verErr := utils.GetOpenShiftMajorMinorVersion()
@@ -87,7 +111,7 @@ func (c *DefaultIngressCertificateCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Configure a custom certificate for the default ingress controller to avoid browser security warnings")
 		result.AddRecommendation(fmt.Sprintf("Refer to the documentation at https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/security/certificates/replacing-default-ingress-certificate", version))
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 
@@ -100,7 +124,7 @@ func (c *DefaultIngressCertificateCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Verify that the certificate secret exists in the openshift-ingress namespace")
 		result.AddRecommendation(fmt.Sprintf("Refer to the documentation at https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/security/certificates/replacing-default-ingress-certificate", version))
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 
@@ -111,6 +135,6 @@ func (c *DefaultIngressCertificateCheck) Run() (healthcheck.Result, error) {
 		"Custom certificate is properly configured for the default ingress controller",
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailedOut
 	return result, nil
 }
