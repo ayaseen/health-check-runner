@@ -340,6 +340,72 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Application Probes Analysis ===\n\n")
+
+	// Add workload statistics with proper formatting
+	formattedDetailOut.WriteString("Workload Statistics:\n")
+	formattedDetailOut.WriteString(fmt.Sprintf("- Total User Workloads: %d\n", totalWorkloads))
+	formattedDetailOut.WriteString(fmt.Sprintf("- Workloads Missing Readiness Probes: %d", workloadsWithoutReadinessProbe))
+
+	if totalWorkloads > 0 {
+		readinessProbePercentage := float64(workloadsWithoutReadinessProbe) / float64(totalWorkloads) * 100
+		formattedDetailOut.WriteString(fmt.Sprintf(" (%.1f%%)\n", readinessProbePercentage))
+	} else {
+		formattedDetailOut.WriteString(" (N/A)\n")
+	}
+
+	formattedDetailOut.WriteString(fmt.Sprintf("- Workloads Missing Liveness Probes: %d", workloadsWithoutLivenessProbe))
+
+	if totalWorkloads > 0 {
+		livenessProbePercentage := float64(workloadsWithoutLivenessProbe) / float64(totalWorkloads) * 100
+		formattedDetailOut.WriteString(fmt.Sprintf(" (%.1f%%)\n", livenessProbePercentage))
+	} else {
+		formattedDetailOut.WriteString(" (N/A)\n")
+	}
+
+	formattedDetailOut.WriteString(fmt.Sprintf("- Workloads Missing Both Probes: %d", workloadsWithoutBothProbes))
+
+	if totalWorkloads > 0 {
+		bothProbesPercentage := float64(workloadsWithoutBothProbes) / float64(totalWorkloads) * 100
+		formattedDetailOut.WriteString(fmt.Sprintf(" (%.1f%%)\n\n", bothProbesPercentage))
+	} else {
+		formattedDetailOut.WriteString(" (N/A)\n\n")
+	}
+
+	// Add affected namespaces information with proper formatting
+	if len(namespacesWithoutProbes) > 0 {
+		formattedDetailOut.WriteString("Affected Namespaces:\n[source, text]\n----\n")
+		for _, ns := range namespacesWithoutProbes {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", ns))
+		}
+		formattedDetailOut.WriteString("----\n\n")
+	} else if totalWorkloads > 0 {
+		formattedDetailOut.WriteString("Affected Namespaces: None (all namespaces have properly configured probes)\n\n")
+	}
+
+	// Add workload details with proper formatting
+	if len(workloadsWithoutProbesDetails) > 0 {
+		formattedDetailOut.WriteString("Workloads Missing Probes:\n[source, text]\n----\n")
+		for _, detail := range workloadsWithoutProbesDetails {
+			formattedDetailOut.WriteString(detail + "\n")
+		}
+		formattedDetailOut.WriteString("----\n\n")
+	}
+
+	// Add probe documentation
+	formattedDetailOut.WriteString("=== Probe Information ===\n\n")
+	formattedDetailOut.WriteString("What are Readiness and Liveness Probes?\n\n")
+	formattedDetailOut.WriteString("Readiness Probe: Determines if a container is ready to accept traffic. When a pod's readiness check fails, it is removed from service load balancers.\n\n")
+	formattedDetailOut.WriteString("Liveness Probe: Determines if a container is still running as expected. When a liveness check fails, Kubernetes will restart the container.\n\n")
+	formattedDetailOut.WriteString("Benefits of using probes:\n")
+	formattedDetailOut.WriteString("- Prevents traffic from being sent to unready containers\n")
+	formattedDetailOut.WriteString("- Automatically restarts unhealthy containers\n")
+	formattedDetailOut.WriteString("- Improves application resilience and availability\n")
+	formattedDetailOut.WriteString("- Facilitates smoother deployments and updates\n")
+	formattedDetailOut.WriteString("- Provides better visibility into application health\n\n")
+
 	// If there are no workloads, return NotApplicable
 	if totalWorkloads == 0 {
 		return healthcheck.NewResult(
@@ -355,22 +421,6 @@ func (c *ProbesCheck) Run() (healthcheck.Result, error) {
 	livenessProbePercentage := float64(workloadsWithoutLivenessProbe) / float64(totalWorkloads) * 100
 	bothProbesPercentage := float64(workloadsWithoutBothProbes) / float64(totalWorkloads) * 100
 
-	// Prepare a detailed description of what readiness and liveness probes are
-	probeDescription := `
-What are Readiness and Liveness Probes?
-
-Readiness Probe: Determines if a container is ready to accept traffic. When a pod's readiness check fails, it is removed from service load balancers.
-
-Liveness Probe: Determines if a container is still running as expected. When a liveness check fails, Kubernetes will restart the container.
-
-Benefits of using probes:
-- Prevents traffic from being sent to unready containers
-- Automatically restarts unhealthy containers
-- Improves application resilience and availability
-- Facilitates smoother deployments and updates
-- Provides better visibility into application health
-`
-
 	// If all workloads have both probes, the check passes
 	if workloadsWithoutReadinessProbe == 0 && workloadsWithoutLivenessProbe == 0 {
 		result := healthcheck.NewResult(
@@ -379,7 +429,7 @@ Benefits of using probes:
 			fmt.Sprintf("All %d user workloads have readiness and liveness probes configured", totalWorkloads),
 			types.ResultKeyNoChange,
 		)
-		result.Detail = probeDescription
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -419,24 +469,7 @@ Benefits of using probes:
 	result.AddRecommendation("Configure readiness and liveness probes for all user workloads")
 	result.AddRecommendation("Follow the Kubernetes documentation on pod lifecycle and probes: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes")
 
-	// Add detailed information
-	detail := fmt.Sprintf("Summary:\n"+
-		"- Total user workloads: %d\n"+
-		"- Workloads missing readiness probes: %d (%.1f%%)\n"+
-		"- Workloads missing liveness probes: %d (%.1f%%)\n"+
-		"- Workloads missing both probes: %d (%.1f%%)\n\n"+
-		"Affected namespaces:\n- %s\n\n"+
-		"Affected workloads:\n%s\n\n%s",
-		totalWorkloads,
-		workloadsWithoutReadinessProbe, readinessProbePercentage,
-		workloadsWithoutLivenessProbe, livenessProbePercentage,
-		workloadsWithoutBothProbes, bothProbesPercentage,
-		strings.Join(namespacesWithoutProbes, "\n- "),
-		strings.Join(workloadsWithoutProbesDetails, "\n"),
-		probeDescription)
-
-	result.Detail = detail
-
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }
 

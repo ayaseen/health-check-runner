@@ -140,6 +140,85 @@ func (c *ResourceQuotasCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Resource Quotas and Limits Analysis ===\n\n")
+
+	// Add namespace statistics with proper formatting
+	formattedDetailOut.WriteString("Namespace Statistics:\n")
+	formattedDetailOut.WriteString(fmt.Sprintf("- Total User Namespaces: %d\n", totalUserNamespaces))
+	formattedDetailOut.WriteString(fmt.Sprintf("- Namespaces with Resource Quotas: %d", namespacesWithResourceQuotas))
+
+	if totalUserNamespaces > 0 {
+		quotasPercentage := float64(namespacesWithResourceQuotas) / float64(totalUserNamespaces) * 100
+		formattedDetailOut.WriteString(fmt.Sprintf(" (%.1f%%)\n", quotasPercentage))
+	} else {
+		formattedDetailOut.WriteString(" (N/A)\n")
+	}
+
+	formattedDetailOut.WriteString(fmt.Sprintf("- Namespaces with Limit Ranges: %d", namespacesWithLimitRanges))
+
+	if totalUserNamespaces > 0 {
+		limitsPercentage := float64(namespacesWithLimitRanges) / float64(totalUserNamespaces) * 100
+		formattedDetailOut.WriteString(fmt.Sprintf(" (%.1f%%)\n", limitsPercentage))
+	} else {
+		formattedDetailOut.WriteString(" (N/A)\n")
+	}
+
+	formattedDetailOut.WriteString(fmt.Sprintf("- Namespaces with Both: %d", namespacesWithBoth))
+
+	if totalUserNamespaces > 0 {
+		bothPercentage := float64(namespacesWithBoth) / float64(totalUserNamespaces) * 100
+		formattedDetailOut.WriteString(fmt.Sprintf(" (%.1f%%)\n\n", bothPercentage))
+	} else {
+		formattedDetailOut.WriteString(" (N/A)\n\n")
+	}
+
+	// Add namespaces without quotas information with proper formatting
+	if len(namespacesWithoutQuotas) > 0 {
+		formattedDetailOut.WriteString("Namespaces Without Resource Quotas:\n[source, text]\n----\n")
+		for _, ns := range namespacesWithoutQuotas {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", ns))
+		}
+		formattedDetailOut.WriteString("----\n\n")
+	} else if totalUserNamespaces > 0 {
+		formattedDetailOut.WriteString("Namespaces Without Resource Quotas: None (all namespaces have resource quotas)\n\n")
+	}
+
+	// Add namespaces without limits information with proper formatting
+	if len(namespacesWithoutLimits) > 0 {
+		formattedDetailOut.WriteString("Namespaces Without Limit Ranges:\n[source, text]\n----\n")
+		for _, ns := range namespacesWithoutLimits {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", ns))
+		}
+		formattedDetailOut.WriteString("----\n\n")
+	} else if totalUserNamespaces > 0 {
+		formattedDetailOut.WriteString("Namespaces Without Limit Ranges: None (all namespaces have limit ranges)\n\n")
+	}
+
+	// Add namespaces without both information with proper formatting
+	if len(namespacesWithoutBoth) > 0 {
+		formattedDetailOut.WriteString("Namespaces Without Both Resource Quotas and Limit Ranges:\n[source, text]\n----\n")
+		for _, ns := range namespacesWithoutBoth {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", ns))
+		}
+		formattedDetailOut.WriteString("----\n\n")
+	} else if totalUserNamespaces > 0 {
+		formattedDetailOut.WriteString("Namespaces Without Both: None (all namespaces have both resource quotas and limit ranges)\n\n")
+	}
+
+	// Add resource quotas and limit ranges documentation
+	formattedDetailOut.WriteString("=== Resource Management Information ===\n\n")
+	formattedDetailOut.WriteString("What are Resource Quotas and Limit Ranges?\n\n")
+	formattedDetailOut.WriteString("Resource Quotas: Define the total amount of resources a namespace can use. They limit the total CPU, memory, and other resources that can be consumed by all pods in a namespace.\n\n")
+	formattedDetailOut.WriteString("Limit Ranges: Define default resource limits and requests for containers in a namespace. They can also enforce minimum and maximum resource usage limits.\n\n")
+	formattedDetailOut.WriteString("Benefits of using Resource Quotas and Limit Ranges:\n")
+	formattedDetailOut.WriteString("- Prevent resource starvation by limiting the total resources a namespace can consume\n")
+	formattedDetailOut.WriteString("- Ensure fair resource allocation across namespaces\n")
+	formattedDetailOut.WriteString("- Protect against runaway applications that might consume all available resources\n")
+	formattedDetailOut.WriteString("- Enforce resource constraints and prevent resource leaks\n")
+	formattedDetailOut.WriteString("- Help with capacity planning and cost management\n\n")
+
 	// If there are no user namespaces, return NotApplicable
 	if totalUserNamespaces == 0 {
 		return healthcheck.NewResult(
@@ -150,27 +229,6 @@ func (c *ResourceQuotasCheck) Run() (healthcheck.Result, error) {
 		), nil
 	}
 
-	// Calculate percentages
-	quotasPercentage := float64(namespacesWithResourceQuotas) / float64(totalUserNamespaces) * 100
-	limitsPercentage := float64(namespacesWithLimitRanges) / float64(totalUserNamespaces) * 100
-	bothPercentage := float64(namespacesWithBoth) / float64(totalUserNamespaces) * 100
-
-	// Prepare a detailed description of what resource quotas and limit ranges are
-	quotasDescription := `
-What are Resource Quotas and Limit Ranges?
-
-Resource Quotas: Define the total amount of resources a namespace can use. They limit the total CPU, memory, and other resources that can be consumed by all pods in a namespace.
-
-Limit Ranges: Define default resource limits and requests for containers in a namespace. They can also enforce minimum and maximum resource usage limits.
-
-Benefits of using Resource Quotas and Limit Ranges:
-- Prevent resource starvation by limiting the total resources a namespace can consume
-- Ensure fair resource allocation across namespaces
-- Protect against runaway applications that might consume all available resources
-- Enforce resource constraints and prevent resource leaks
-- Help with capacity planning and cost management
-`
-
 	// If all namespaces have both resource quotas and limit ranges, the check passes
 	if namespacesWithBoth == totalUserNamespaces {
 		result := healthcheck.NewResult(
@@ -179,11 +237,16 @@ Benefits of using Resource Quotas and Limit Ranges:
 			fmt.Sprintf("All %d user namespaces have both resource quotas and limit ranges configured", totalUserNamespaces),
 			types.ResultKeyNoChange,
 		)
-		result.Detail = quotasDescription
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
-	// Create result based on the percentage of namespaces with resource quotas and limit ranges
+	// Calculate percentages
+	quotasPercentage := float64(namespacesWithResourceQuotas) / float64(totalUserNamespaces) * 100
+	limitsPercentage := float64(namespacesWithLimitRanges) / float64(totalUserNamespaces) * 100
+	bothPercentage := float64(namespacesWithBoth) / float64(totalUserNamespaces) * 100
+
+	// Create result based on the percentage of namespaces with resource constraints
 	var status types.Status
 	var resultKey types.ResultKey
 	var message string
@@ -220,25 +283,6 @@ Benefits of using Resource Quotas and Limit Ranges:
 	result.AddRecommendation("Follow the Kubernetes documentation on resource quotas: https://kubernetes.io/docs/concepts/policy/resource-quotas/")
 	result.AddRecommendation("Follow the Kubernetes documentation on limit ranges: https://kubernetes.io/docs/concepts/policy/limit-range/")
 
-	// Add detailed information
-	detail := fmt.Sprintf("Summary:\n"+
-		"- Total user namespaces: %d\n"+
-		"- Namespaces with resource quotas: %d (%.1f%%)\n"+
-		"- Namespaces with limit ranges: %d (%.1f%%)\n"+
-		"- Namespaces with both: %d (%.1f%%)\n\n"+
-		"Namespaces without resource quotas:\n- %s\n\n"+
-		"Namespaces without limit ranges:\n- %s\n\n"+
-		"Namespaces without both:\n- %s\n\n%s",
-		totalUserNamespaces,
-		namespacesWithResourceQuotas, quotasPercentage,
-		namespacesWithLimitRanges, limitsPercentage,
-		namespacesWithBoth, bothPercentage,
-		strings.Join(namespacesWithoutQuotas, "\n- "),
-		strings.Join(namespacesWithoutLimits, "\n- "),
-		strings.Join(namespacesWithoutBoth, "\n- "),
-		quotasDescription)
-
-	result.Detail = detail
-
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

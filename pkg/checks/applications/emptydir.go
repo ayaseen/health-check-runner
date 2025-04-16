@@ -210,6 +210,57 @@ func (c *EmptyDirVolumeCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== EmptyDir Volume Usage Analysis ===\n\n")
+
+	// Add emptyDir usage summary
+	formattedDetailOut.WriteString(fmt.Sprintf("Total user workloads analyzed: %d\n", totalWorkloads))
+	formattedDetailOut.WriteString(fmt.Sprintf("Workloads using emptyDir volumes: %d\n", workloadsWithEmptyDir))
+
+	if totalWorkloads > 0 {
+		emptyDirPercentage := float64(workloadsWithEmptyDir) / float64(totalWorkloads) * 100
+		formattedDetailOut.WriteString(fmt.Sprintf("EmptyDir usage: %.1f%%\n\n", emptyDirPercentage))
+	} else {
+		formattedDetailOut.WriteString("EmptyDir usage: N/A (no workloads found)\n\n")
+	}
+
+	// Add affected namespaces information with proper formatting
+	if len(namespacesWithEmptyDir) > 0 {
+		formattedDetailOut.WriteString("Affected Namespaces:\n[source, text]\n----\n")
+		for _, ns := range namespacesWithEmptyDir {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", ns))
+		}
+		formattedDetailOut.WriteString("----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Affected Namespaces: None\n\n")
+	}
+
+	// Add workload details with proper formatting
+	if len(workloadsWithEmptyDirDetails) > 0 {
+		formattedDetailOut.WriteString("Workloads Using EmptyDir Volumes:\n[source, text]\n----\n")
+		for _, detail := range workloadsWithEmptyDirDetails {
+			formattedDetailOut.WriteString(detail + "\n")
+		}
+		formattedDetailOut.WriteString("----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Workloads Using EmptyDir Volumes: None\n\n")
+	}
+
+	// Add emptyDir documentation
+	formattedDetailOut.WriteString("=== EmptyDir Volume Information ===\n\n")
+	formattedDetailOut.WriteString("What are emptyDir Volumes?\n\n")
+	formattedDetailOut.WriteString("An emptyDir volume is created when a Pod is assigned to a node, and exists as long as that Pod is running on that node. When a Pod is removed from a node for any reason, the data in the emptyDir is deleted permanently.\n\n")
+	formattedDetailOut.WriteString("Risks of using emptyDir volumes:\n")
+	formattedDetailOut.WriteString("- Data loss: All data is lost when the pod is deleted or rescheduled\n")
+	formattedDetailOut.WriteString("- No persistence across pod restarts or rescheduling\n")
+	formattedDetailOut.WriteString("- Not suitable for stateful applications that need data persistence\n")
+	formattedDetailOut.WriteString("- No data sharing between different pods or nodes\n\n")
+	formattedDetailOut.WriteString("Recommended alternatives:\n")
+	formattedDetailOut.WriteString("- PersistentVolumeClaims (PVCs) for persistent storage\n")
+	formattedDetailOut.WriteString("- ConfigMaps or Secrets for configuration data\n")
+	formattedDetailOut.WriteString("- External storage services for important data\n\n")
+
 	// If there are no workloads, return NotApplicable
 	if totalWorkloads == 0 {
 		return healthcheck.NewResult(
@@ -232,24 +283,6 @@ func (c *EmptyDirVolumeCheck) Run() (healthcheck.Result, error) {
 
 	// Calculate percentage of workloads using emptyDir volumes
 	emptyDirPercentage := float64(workloadsWithEmptyDir) / float64(totalWorkloads) * 100
-
-	// Prepare a detailed description of emptyDir volumes
-	emptyDirDescription := `
-What are emptyDir Volumes?
-
-An emptyDir volume is created when a Pod is assigned to a node, and exists as long as that Pod is running on that node. When a Pod is removed from a node for any reason, the data in the emptyDir is deleted permanently.
-
-Risks of using emptyDir volumes:
-- Data loss: All data is lost when the pod is deleted or rescheduled
-- No persistence across pod restarts or rescheduling
-- Not suitable for stateful applications that need data persistence
-- No data sharing between different pods or nodes
-
-Recommended alternatives:
-- PersistentVolumeClaims (PVCs) for persistent storage
-- ConfigMaps or Secrets for configuration data
-- External storage services for important data
-`
 
 	// Create result based on the percentage of workloads using emptyDir volumes
 	var status types.Status
@@ -281,19 +314,6 @@ Recommended alternatives:
 	result.AddRecommendation("Review existing workloads using emptyDir to ensure they don't store important data")
 	result.AddRecommendation("Follow the Kubernetes documentation on volumes: https://kubernetes.io/docs/concepts/storage/volumes/")
 
-	// Add detailed information
-	detail := fmt.Sprintf("Summary:\n"+
-		"- Total user workloads: %d\n"+
-		"- Workloads using emptyDir volumes: %d (%.1f%%)\n\n"+
-		"Affected namespaces:\n- %s\n\n"+
-		"Affected workloads:\n%s\n\n%s",
-		totalWorkloads,
-		workloadsWithEmptyDir, emptyDirPercentage,
-		strings.Join(namespacesWithEmptyDir, "\n- "),
-		strings.Join(workloadsWithEmptyDirDetails, "\n"),
-		emptyDirDescription)
-
-	result.Detail = detail
-
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

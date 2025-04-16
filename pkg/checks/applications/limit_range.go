@@ -113,10 +113,52 @@ func (c *LimitRangeCheck) Run() (healthcheck.Result, error) {
 
 	// Get detailed information for the report
 	detailedOut, err := utils.RunCommand("oc", "get", "limitranges", "--all-namespaces")
-	if err != nil {
-		// Non-critical error, we can continue without detailed output
-		detailedOut = "Failed to get detailed LimitRange information"
+
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== LimitRange Configuration Analysis ===\n\n")
+
+	// Add LimitRange overview with proper formatting
+	if err == nil && strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("LimitRanges Overview:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("LimitRanges Overview: No information available\n\n")
 	}
+
+	// Add namespace statistics with proper formatting
+	formattedDetailOut.WriteString("=== Namespace Statistics ===\n\n")
+	formattedDetailOut.WriteString(fmt.Sprintf("Total User Namespaces: %d\n", totalUserNamespaces))
+	formattedDetailOut.WriteString(fmt.Sprintf("Namespaces with LimitRanges: %d\n", namespacesWithLimitRanges))
+
+	if totalUserNamespaces > 0 {
+		limitRangePercentage := float64(namespacesWithLimitRanges) / float64(totalUserNamespaces) * 100
+		formattedDetailOut.WriteString(fmt.Sprintf("LimitRange Coverage: %.1f%%\n\n", limitRangePercentage))
+	} else {
+		formattedDetailOut.WriteString("LimitRange Coverage: N/A (no user namespaces found)\n\n")
+	}
+
+	// Add list of namespaces without LimitRanges with proper formatting
+	if len(namespacesWithoutLimitRanges) > 0 {
+		formattedDetailOut.WriteString("Namespaces Without LimitRanges:\n[source, text]\n----\n")
+		for _, ns := range namespacesWithoutLimitRanges {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", ns))
+		}
+		formattedDetailOut.WriteString("----\n\n")
+	} else if totalUserNamespaces > 0 {
+		formattedDetailOut.WriteString("Namespaces Without LimitRanges: None (all namespaces have LimitRanges)\n\n")
+	}
+
+	// Add LimitRange information section
+	formattedDetailOut.WriteString("=== LimitRange Information ===\n\n")
+	formattedDetailOut.WriteString("LimitRange resources in Kubernetes provide constraints to limit resource consumption per container or pod in a namespace.\n\n")
+	formattedDetailOut.WriteString("Benefits of using LimitRanges:\n")
+	formattedDetailOut.WriteString("- Prevent users from creating pods that exceed specific resource limits\n")
+	formattedDetailOut.WriteString("- Set default resource requests and limits when not specified in workloads\n")
+	formattedDetailOut.WriteString("- Enforce minimum resource requirements for critical workloads\n")
+	formattedDetailOut.WriteString("- Help prevent resource starvation by setting maximum constraints\n")
+	formattedDetailOut.WriteString("- Improve overall cluster efficiency and resource utilization\n\n")
 
 	// If there are no user namespaces, return NotApplicable
 	if totalUserNamespaces == 0 {
@@ -141,7 +183,7 @@ func (c *LimitRangeCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Configure LimitRange resources in your namespaces to control resource usage")
 		result.AddRecommendation("Follow best practices for resource management: https://kubernetes.io/docs/concepts/policy/limit-range/")
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	} else if limitRangePercentage < 50 {
 		result := healthcheck.NewResult(
@@ -153,8 +195,7 @@ func (c *LimitRangeCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Configure LimitRange resources in all namespaces to control resource usage")
 		result.AddRecommendation("Set up a default project template including LimitRange")
-		result.Detail = fmt.Sprintf("Namespaces without LimitRange:\n- %s\n\n%s",
-			strings.Join(namespacesWithoutLimitRanges, "\n- "), detailedOut)
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	} else if limitRangePercentage < 100 {
 		result := healthcheck.NewResult(
@@ -165,8 +206,7 @@ func (c *LimitRangeCheck) Run() (healthcheck.Result, error) {
 			types.ResultKeyAdvisory,
 		)
 		result.AddRecommendation("Configure LimitRange resources in all remaining namespaces")
-		result.Detail = fmt.Sprintf("Namespaces without LimitRange:\n- %s\n\n%s",
-			strings.Join(namespacesWithoutLimitRanges, "\n- "), detailedOut)
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -177,6 +217,6 @@ func (c *LimitRangeCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("All %d user namespaces have LimitRange configured", totalUserNamespaces),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }
