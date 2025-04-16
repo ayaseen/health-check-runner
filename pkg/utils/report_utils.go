@@ -25,7 +25,6 @@ import (
 )
 
 // IsAlreadyFormatted checks if text already contains source blocks or other formatting
-// This function is used by all report generation utilities to detect pre-formatted AsciiDoc content
 func IsAlreadyFormatted(text string) bool {
 	// Check for AsciiDoc source blocks with different variations
 	if strings.Contains(text, "[source,") ||
@@ -48,7 +47,40 @@ func IsAlreadyFormatted(text string) bool {
 		return true
 	}
 
+	// Check for complex YAML or JSON structure
+	if (strings.Contains(text, "apiVersion:") && strings.Contains(text, "kind:")) ||
+		(strings.Contains(text, "metadata:") && strings.Contains(text, "spec:")) {
+		return true
+	}
+
 	return false
+}
+
+// FormatAsCodeBlock formats text as a source code block with the appropriate language
+// Ensures proper AsciiDoc format with correct delimiter spacing
+func FormatAsCodeBlock(content string, language string) string {
+	// Skip if already formatted
+	if IsAlreadyFormatted(content) {
+		return content
+	}
+
+	// Default to yaml for structured data with common patterns
+	if language == "" {
+		if (strings.Contains(content, "apiVersion:") && strings.Contains(content, "kind:")) ||
+			(strings.Contains(content, "metadata:") && strings.Contains(content, "spec:")) {
+			language = "yaml"
+		} else if strings.HasPrefix(strings.TrimSpace(content), "{") && strings.Contains(content, "\":") {
+			language = "json"
+		} else if strings.Contains(content, "NAME") && strings.Contains(content, "READY") {
+			language = "bash"
+		} else {
+			language = "text"
+		}
+	}
+
+	// Ensure proper spacing in the AsciiDoc format
+	// This is the critical fix - ensuring the exact format expected by AsciiDoc
+	return fmt.Sprintf("[source, %s]\n----\n%s\n----\n", language, content)
 }
 
 // GenerateFullAsciiDocReport generates a complete AsciiDoc report for all health checks
@@ -174,10 +206,9 @@ func FormatCheckDetail(check types.Check, result types.Result, version string) s
 				}
 			}
 		} else {
-			// Otherwise, wrap it in a source block
-			sb.WriteString("[source, bash]\n----\n")
-			sb.WriteString(result.Detail)
-			sb.WriteString("\n----\n\n")
+			// Identify appropriate language based on content pattern and format it
+			language := ""
+			sb.WriteString(FormatAsCodeBlock(result.Detail, language))
 		}
 	}
 

@@ -253,8 +253,21 @@ func (r *Reporter) generateAsciiDoc() (string, error) {
 							}
 						}
 					} else {
-						// Otherwise, wrap in source block
-						sb.WriteString("[source, bash]\n----\n")
+						// Identify appropriate language for source block
+						language := "text"
+
+						// Try to detect the language based on content
+						if (strings.Contains(result.Detail, "apiVersion:") && strings.Contains(result.Detail, "kind:")) ||
+							(strings.Contains(result.Detail, "metadata:") && strings.Contains(result.Detail, "spec:")) {
+							language = "yaml"
+						} else if strings.HasPrefix(strings.TrimSpace(result.Detail), "{") && strings.Contains(result.Detail, "\":") {
+							language = "json"
+						} else if strings.Contains(result.Detail, "NAME") && strings.Contains(result.Detail, "READY") {
+							language = "bash"
+						}
+
+						// Format the content with proper source block
+						sb.WriteString(fmt.Sprintf("[source, %s]\n----\n", language))
 						sb.WriteString(result.Detail)
 						sb.WriteString("\n----\n\n")
 					}

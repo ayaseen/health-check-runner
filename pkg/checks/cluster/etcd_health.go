@@ -18,19 +18,14 @@ This check helps ensure the stability of the control plane by monitoring the cri
 package cluster
 
 import (
-	"context"
 	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 // EtcdHealthCheck checks the health of the etcd cluster and its performance
@@ -102,6 +97,21 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 	// Get etcd performance metrics
 	perfResult, perfDetails := checkEtcdPerformance()
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailedOut string
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut = fmt.Sprintf("ETCD Operator Information:\n[source, yaml]\n----\n%s\n----\n\n", detailedOut)
+	} else {
+		formattedDetailedOut = "ETCD Operator Information: No information available\n\n"
+	}
+
+	var formattedPodsOut string
+	if strings.TrimSpace(etcdPodsOut) != "" {
+		formattedPodsOut = fmt.Sprintf("ETCD Pods Information:\n[source, bash]\n----\n%s\n----\n\n", etcdPodsOut)
+	} else {
+		formattedPodsOut = "ETCD Pods Information: No information available\n\n"
+	}
+
 	// If etcd is degraded or not available, the check fails
 	if degraded == "True" || available != "True" || !allPodsRunning {
 		status := types.StatusCritical
@@ -148,11 +158,10 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 			result.AddRecommendation("Check network latency between etcd nodes (should be below 2ms for optimal performance)")
 		}
 
-		// Add detailed information
-		fullDetail := fmt.Sprintf("ETCD Operator Information:\n%s\n\nETCD Pods Information:\n%s\n\nETCD Performance Information:\n%s",
-			detailedOut, etcdPodsOut, perfDetails)
-		result.Detail = fullDetail
+		// Combine all the sections with proper formatting
+		fullDetail := formattedDetailedOut + formattedPodsOut + "ETCD Performance Information:\n\n" + perfDetails
 
+		result.Detail = fullDetail
 		return result, nil
 	}
 
@@ -171,11 +180,10 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Check network latency between etcd nodes (should be below 2ms for optimal performance)")
 		result.AddRecommendation("Consult the documentation at https://docs.openshift.com/container-platform/latest/scalability_and_performance/recommended-host-practices.html#recommended-etcd-practices_recommended-host-practices")
 
-		// Add detailed information
-		fullDetail := fmt.Sprintf("ETCD Operator Information:\n%s\n\nETCD Pods Information:\n%s\n\nETCD Performance Information:\n%s",
-			detailedOut, etcdPodsOut, perfDetails)
-		result.Detail = fullDetail
+		// Combine all the sections with proper formatting
+		fullDetail := formattedDetailedOut + formattedPodsOut + "ETCD Performance Information:\n\n" + perfDetails
 
+		result.Detail = fullDetail
 		return result, nil
 	}
 
@@ -186,8 +194,11 @@ func (c *EtcdHealthCheck) Run() (healthcheck.Result, error) {
 		"ETCD cluster is healthy and performing well",
 		types.ResultKeyNoChange,
 	)
-	result.Detail = fmt.Sprintf("ETCD Operator Information:\n%s\n\nETCD Pods Information:\n%s\n\nETCD Performance Information:\n%s",
-		detailedOut, etcdPodsOut, perfDetails)
+
+	// Combine all the sections with proper formatting
+	fullDetail := formattedDetailedOut + formattedPodsOut + "ETCD Performance Information:\n\n" + perfDetails
+
+	result.Detail = fullDetail
 	return result, nil
 }
 
@@ -197,7 +208,7 @@ type EtcdPerformanceResult struct {
 	Issues  []string // List of identified issues
 }
 
-// checkEtcdPerformance checks etcd performance metrics
+// Improved checkEtcdPerformance function with correct AsciiDoc formatting
 func checkEtcdPerformance() (EtcdPerformanceResult, string) {
 	result := EtcdPerformanceResult{
 		Healthy: true,
@@ -209,16 +220,20 @@ func checkEtcdPerformance() (EtcdPerformanceResult, string) {
 
 	// Check for slow compaction
 	compactionOut, err := utils.RunCommand("oc", "logs", "--tail=500", "-n", "openshift-etcd", "-l", "app=etcd", "-c", "etcd", "|", "grep", "-i", "finished scheduled compaction")
-	if err == nil {
+	if err == nil && compactionOut != "" {
 		details.WriteString("Compaction times:\n")
+		details.WriteString("[source, text]\n----\n")
 		details.WriteString(compactionOut)
-		details.WriteString("\n")
+		details.WriteString("\n----\n\n")
 
 		// Parse compaction times
 		compactionPattern := regexp.MustCompile(`finished scheduled compaction.*took\s+(\d+\.\d+)(m?s)`)
 		matches := compactionPattern.FindAllStringSubmatch(compactionOut, -1)
 
 		slowCompactions := 0
+		verySlowCompactions := 0
+		var compactionTimes []float64
+
 		for _, match := range matches {
 			if len(match) >= 3 {
 				duration, _ := strconv.ParseFloat(match[1], 64)
@@ -232,128 +247,163 @@ func checkEtcdPerformance() (EtcdPerformanceResult, string) {
 					duration *= 1000
 				}
 
-				// Check if duration is above threshold (100ms for small clusters, 800ms for large)
+				compactionTimes = append(compactionTimes, duration)
+
+				// Check thresholds
 				if duration > 800 {
+					verySlowCompactions++
+				} else if duration > 100 {
 					slowCompactions++
 				}
 			}
 		}
 
-		if slowCompactions > 0 {
+		// Calculate average compaction time
+		var avgCompactionTime float64
+		if len(compactionTimes) > 0 {
+			sum := 0.0
+			for _, time := range compactionTimes {
+				sum += time
+			}
+			avgCompactionTime = sum / float64(len(compactionTimes))
+		}
+
+		details.WriteString("Compaction statistics:\n")
+		details.WriteString(fmt.Sprintf("- Total compactions analyzed: %d\n", len(compactionTimes)))
+		details.WriteString(fmt.Sprintf("- Average compaction time: %.2f ms\n", avgCompactionTime))
+		details.WriteString(fmt.Sprintf("- Slow compactions (> 100ms): %d\n", slowCompactions))
+		details.WriteString(fmt.Sprintf("- Very slow compactions (> 800ms): %d\n\n", verySlowCompactions))
+
+		// For small clusters, compaction should be below 10ms
+		// For large clusters, compaction should be below 100ms
+		if verySlowCompactions > 0 {
 			result.Healthy = false
-			result.Issues = append(result.Issues, fmt.Sprintf("slow etcd compactions detected (%d instances)", slowCompactions))
-			details.WriteString("WARNING: Slow compactions detected. This indicates disk performance issues.\n\n")
-		} else {
-			details.WriteString("Compaction times are within acceptable range.\n\n")
+			result.Issues = append(result.Issues, fmt.Sprintf("very slow etcd compactions detected (%d instances > 800ms)", verySlowCompactions))
+			details.WriteString("WARNING: Very slow compactions detected. This indicates severe disk performance issues.\n\n")
+		} else if slowCompactions > 3 { // Allow a few slow compactions as normal
+			result.Healthy = false
+			result.Issues = append(result.Issues, fmt.Sprintf("slow etcd compactions detected (%d instances > 100ms)", slowCompactions))
+			details.WriteString("WARNING: Multiple slow compactions detected. This may indicate disk performance issues.\n\n")
+		}
+
+		if avgCompactionTime > 50 { // Average should be much lower than the occasional spikes
+			result.Healthy = false
+			result.Issues = append(result.Issues, fmt.Sprintf("high average etcd compaction time (%.1fms)", avgCompactionTime))
+			details.WriteString("WARNING: Average compaction time is higher than expected.\n\n")
 		}
 	}
 
-	// Check for "took too long" messages
+	// Check for "took too long" issues
 	tookTooLongOut, err := utils.RunCommand("oc", "logs", "--tail=500", "-n", "openshift-etcd", "-l", "app=etcd", "-c", "etcd", "|", "grep", "-i", "took too long")
 	if err == nil && tookTooLongOut != "" {
-		details.WriteString("Slow apply entries:\n")
+		details.WriteString("Apply entries performance logs:\n")
+		details.WriteString("[source, text]\n----\n")
 		details.WriteString(tookTooLongOut)
-		details.WriteString("\n")
+		details.WriteString("\n----\n\n")
 
-		result.Healthy = false
-		result.Issues = append(result.Issues, "etcd entries taking too long to apply")
-		details.WriteString("WARNING: Entries taking too long to apply. This indicates disk performance issues.\n\n")
+		// Count occurrences
+		lines := strings.Split(tookTooLongOut, "\n")
+		numOccurrences := 0
+		for _, line := range lines {
+			if strings.TrimSpace(line) != "" {
+				numOccurrences++
+			}
+		}
+
+		// Look for time patterns like "(123.45ms)" to analyze severity
+		timePattern := regexp.MustCompile(`took too long \(([0-9.]+)ms\)`)
+		matches := timePattern.FindAllStringSubmatch(tookTooLongOut, -1)
+
+		var highDelays int
+		var veryHighDelays int
+		for _, match := range matches {
+			if len(match) >= 2 {
+				delay, _ := strconv.ParseFloat(match[1], 64)
+				if delay > 500 {
+					veryHighDelays++
+				} else if delay > 100 {
+					highDelays++
+				}
+			}
+		}
+
+		details.WriteString("Apply entries statistics:\n")
+		details.WriteString(fmt.Sprintf("- Total 'took too long' messages: %d\n", numOccurrences))
+		details.WriteString(fmt.Sprintf("- High delay entries (> 100ms): %d\n", highDelays))
+		details.WriteString(fmt.Sprintf("- Very high delay entries (> 500ms): %d\n\n", veryHighDelays))
+
+		// Evaluate the severity
+		if numOccurrences > 20 || veryHighDelays > 5 {
+			result.Healthy = false
+			result.Issues = append(result.Issues, fmt.Sprintf("excessive delays applying etcd entries (%d occurrences)", numOccurrences))
+			details.WriteString("CRITICAL: Frequent delays applying etcd entries. This indicates serious disk performance issues.\n\n")
+		} else if numOccurrences > 5 || highDelays > 2 {
+			result.Healthy = false
+			result.Issues = append(result.Issues, fmt.Sprintf("delays applying etcd entries (%d occurrences)", numOccurrences))
+			details.WriteString("WARNING: Delays applying etcd entries. This indicates disk performance issues.\n\n")
+		}
 	} else {
-		details.WriteString("No 'took too long' messages found (good).\n\n")
+		details.WriteString("No 'took too long' messages found in recent logs (good).\n\n")
 	}
 
 	// Check for heartbeat issues
 	heartbeatOut, err := utils.RunCommand("oc", "logs", "--tail=500", "-n", "openshift-etcd", "-l", "app=etcd", "-c", "etcd", "|", "grep", "-i", "failed to send out heartbeat")
 	if err == nil && heartbeatOut != "" {
 		details.WriteString("Heartbeat issues:\n")
+		details.WriteString("[source, text]\n----\n")
 		details.WriteString(heartbeatOut)
-		details.WriteString("\n")
+		details.WriteString("\n----\n\n")
 
-		result.Healthy = false
-		result.Issues = append(result.Issues, "etcd heartbeat issues detected")
-		details.WriteString("WARNING: Heartbeat issues detected. This typically indicates resource constraints.\n\n")
-	} else {
-		details.WriteString("No heartbeat issues found (good).\n\n")
-	}
-
-	// Check for clock drift
-	clockDriftOut, err := utils.RunCommand("oc", "logs", "--tail=500", "-n", "openshift-etcd", "-l", "app=etcd", "-c", "etcd", "|", "grep", "-i", "clock difference")
-	if err == nil && clockDriftOut != "" {
-		details.WriteString("Clock drift issues:\n")
-		details.WriteString(clockDriftOut)
-		details.WriteString("\n")
-
-		result.Healthy = false
-		result.Issues = append(result.Issues, "etcd clock drift detected")
-		details.WriteString("WARNING: Clock drift detected between etcd members. Check if chrony is properly configured.\n\n")
-	} else {
-		details.WriteString("No clock drift issues found (good).\n\n")
-	}
-
-	// Check disk wal fsync times using etcd diagnostic
-	// Since we don't have direct access to Prometheus in this context, we'll use the etcdctl command to get metrics
-	walFsyncOut, err := utils.RunCommandWithRetry(3, 2*time.Second, "oc", "exec", "-n", "openshift-etcd", "etcd-0", "-c", "etcd", "--", "etcdctl", "--command-timeout=60s", "check", "perf")
-	if err == nil {
-		details.WriteString("ETCD Performance Diagnostic Results:\n")
-		details.WriteString(walFsyncOut)
-		details.WriteString("\n")
-
-		// Check if the output contains warnings about high latency
-		if strings.Contains(walFsyncOut, "FAIL") || strings.Contains(walFsyncOut, "WARNING") {
-			result.Healthy = false
-			result.Issues = append(result.Issues, "etcd performance check indicates high latency")
-			details.WriteString("WARNING: The etcd performance check indicates high latency issues.\n\n")
-		} else {
-			details.WriteString("ETCD performance diagnostics show good results.\n\n")
-		}
-	} else {
-		details.WriteString("Could not run etcd performance diagnostics. This is non-critical.\n\n")
-	}
-
-	// Check CPU usage on etcd nodes
-	clientset, err := getKubernetesClientset()
-	if err == nil {
-		// Get etcd pods
-		pods, err := clientset.CoreV1().Pods("openshift-etcd").List(context.TODO(), metav1.ListOptions{
-			LabelSelector: "app=etcd",
-		})
-
-		if err == nil && len(pods.Items) > 0 {
-			details.WriteString("ETCD Pod Resources:\n")
-
-			for _, pod := range pods.Items {
-				nodeName := pod.Spec.NodeName
-
-				// Get node CPU usage
-				nodeUsage, err := utils.RunCommand("oc", "adm", "top", "node", nodeName)
-				if err == nil {
-					details.WriteString(fmt.Sprintf("Node %s resource usage:\n%s\n", nodeName, nodeUsage))
-
-					// Check for high CPU usage
-					cpuPattern := regexp.MustCompile(`(\d+)%`)
-					cpuMatches := cpuPattern.FindStringSubmatch(nodeUsage)
-
-					if len(cpuMatches) >= 2 {
-						cpuUsage, _ := strconv.Atoi(cpuMatches[1])
-						if cpuUsage > 80 {
-							result.Healthy = false
-							result.Issues = append(result.Issues, fmt.Sprintf("high CPU usage (%d%%) on etcd node %s", cpuUsage, nodeName))
-							details.WriteString(fmt.Sprintf("WARNING: High CPU usage detected on node %s.\n", nodeName))
-						}
-					}
-				}
+		// Count occurrences
+		lines := strings.Split(heartbeatOut, "\n")
+		numOccurrences := 0
+		for _, line := range lines {
+			if strings.TrimSpace(line) != "" {
+				numOccurrences++
 			}
 		}
+
+		details.WriteString("Heartbeat statistics:\n")
+		details.WriteString(fmt.Sprintf("- Total heartbeat failure messages: %d\n\n", numOccurrences))
+
+		// Evaluate the severity
+		if numOccurrences > 20 {
+			result.Healthy = false
+			result.Issues = append(result.Issues, fmt.Sprintf("frequent heartbeat failures (%d occurrences)", numOccurrences))
+			details.WriteString("CRITICAL: Frequent heartbeat failures. This indicates resource constraints or disk performance issues.\n\n")
+		} else if numOccurrences > 5 {
+			result.Healthy = false
+			result.Issues = append(result.Issues, fmt.Sprintf("heartbeat failures (%d occurrences)", numOccurrences))
+			details.WriteString("WARNING: Heartbeat failures detected. This indicates resource constraints or disk performance issues.\n\n")
+		}
+	} else {
+		details.WriteString("No heartbeat issues found in recent logs (good).\n\n")
+	}
+
+	// Check for clock drift issues
+	clockDriftOut, err := utils.RunCommand("oc", "logs", "--tail=500", "-n", "openshift-etcd", "-l", "app=etcd", "-c", "etcd", "|", "grep", "-i", "clock difference")
+	if err == nil && clockDriftOut != "" {
+		details.WriteString("Clock drift logs:\n")
+		details.WriteString("[source, text]\n----\n")
+		details.WriteString(clockDriftOut)
+		details.WriteString("\n----\n\n")
+
+		// Evaluate the severity
+		result.Healthy = false
+		result.Issues = append(result.Issues, "clock drift between etcd nodes")
+		details.WriteString("WARNING: Clock drift detected between etcd nodes. Verify chrony configuration.\n\n")
+	} else {
+		details.WriteString("No clock drift issues found in recent logs (good).\n\n")
 	}
 
 	// Add explanation of good etcd performance characteristics
-	details.WriteString("\n=== ETCD Performance Best Practices ===\n")
+	details.WriteString("=== ETCD Performance Best Practices ===\n")
 	details.WriteString("For optimal etcd performance:\n")
 	details.WriteString("1. Use fast SSD or NVMe storage dedicated to etcd\n")
 	details.WriteString("2. Ensure 99th percentile of fsync is below 10ms\n")
 	details.WriteString("3. Network latency between etcd nodes should be below 2ms\n")
 	details.WriteString("4. CPU should not be overcommitted on etcd nodes\n")
-	details.WriteString("5. Sequential fsync IOPS should be at least 500 for medium/large clusters\n\n")
+	details.WriteString("5. Sequential fsync IOPS should be at least 500 for medium/large clusters\n")
 
 	return result, details.String()
 }

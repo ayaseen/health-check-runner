@@ -209,10 +209,9 @@ func FormatEnhancedCheckDetail(check types.Check, result types.Result, version s
 				}
 			}
 		} else {
-			// Otherwise, wrap it in a source block
-			sb.WriteString("[source, bash]\n----\n")
-			sb.WriteString(result.Detail)
-			sb.WriteString("\n----\n\n")
+			// Use the FormatAsCodeBlock utility to automatically determine the best language
+			// and format the content appropriately
+			sb.WriteString(FormatAsCodeBlock(result.Detail, ""))
 		}
 	}
 

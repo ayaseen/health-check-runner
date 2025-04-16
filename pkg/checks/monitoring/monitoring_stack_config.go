@@ -438,7 +438,7 @@ func checkMonitoringComponents(monConfigYaml, version string) ([]string, []strin
 	}
 
 	// Check if components are actually running
-	details.WriteString("\nVerifying component status in the cluster:\n")
+	details.WriteString("\n\nVerifying component status in the cluster:\n\n")
 
 	for _, component := range allComponents {
 		isRunning := isComponentRunning(component)
@@ -446,7 +446,7 @@ func checkMonitoringComponents(monConfigYaml, version string) ([]string, []strin
 		if !isRunning {
 			status = "❌ Not found or not ready"
 		}
-		details.WriteString(fmt.Sprintf("- %s: %s\n", component, status))
+		details.WriteString(fmt.Sprintf("- %s: %s\n\n", component, status))
 	}
 
 	return configuredComponents, unconfiguredComponents, details.String()
