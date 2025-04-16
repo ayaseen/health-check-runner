@@ -214,13 +214,6 @@ func GenerateAsciiDocReportHeader(title string) string {
 	return sb.String()
 }
 
-// isAlreadyFormatted checks if text already contains source blocks or other formatting
-func isAlreadyFormatted(text string) bool {
-	return strings.Contains(text, "[source,") ||
-		strings.Contains(text, "[source, ") ||
-		strings.Contains(text, "----")
-}
-
 // GenerateAsciiDocCheckSection generates a detailed section for a health check
 func GenerateAsciiDocCheckSection(check types.Check, result types.Result, version string) string {
 	var sb strings.Builder
@@ -230,10 +223,18 @@ func GenerateAsciiDocCheckSection(check types.Check, result types.Result, versio
 
 	if result.Detail != "" {
 		// Check if the detail already contains source blocks or formatted content
-		if isAlreadyFormatted(result.Detail) {
+		if IsAlreadyFormatted(result.Detail) {
 			// If content is already formatted, include it as is
 			sb.WriteString(result.Detail)
-			sb.WriteString("\n\n")
+
+			// Ensure there's proper spacing after the detail
+			if !strings.HasSuffix(result.Detail, "\n\n") {
+				if strings.HasSuffix(result.Detail, "\n") {
+					sb.WriteString("\n")
+				} else {
+					sb.WriteString("\n\n")
+				}
+			}
 		} else {
 			// Otherwise, wrap it in a source block
 			sb.WriteString("[source, bash]\n----\n")

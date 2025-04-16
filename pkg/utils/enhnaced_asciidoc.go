@@ -173,7 +173,7 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 			}
 
 			// Generate the detailed check section
-			sb.WriteString(FormatCheckDetail(check, result, version))
+			sb.WriteString(FormatEnhancedCheckDetail(check, result, version))
 		}
 	}
 
@@ -183,8 +183,8 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 	return sb.String()
 }
 
-// FormatCheckDetail formats detailed information about a check
-func FormatCheckDetail(check types.Check, result types.Result, version string) string {
+// FormatEnhancedCheckDetail formats detailed information about a check for enhanced reports
+func FormatEnhancedCheckDetail(check types.Check, result types.Result, version string) string {
 	var sb strings.Builder
 
 	// Add section with check name
@@ -196,10 +196,18 @@ func FormatCheckDetail(check types.Check, result types.Result, version string) s
 	// Add detail if available
 	if result.Detail != "" {
 		// Check if the detail already contains source blocks or formatted content
-		if isAlreadyFormatted(result.Detail) {
+		if IsAlreadyFormatted(result.Detail) {
 			// If content is already formatted, include it as is
 			sb.WriteString(result.Detail)
-			sb.WriteString("\n\n")
+
+			// Ensure there's proper spacing after the detail
+			if !strings.HasSuffix(result.Detail, "\n\n") {
+				if strings.HasSuffix(result.Detail, "\n") {
+					sb.WriteString("\n")
+				} else {
+					sb.WriteString("\n\n")
+				}
+			}
 		} else {
 			// Otherwise, wrap it in a source block
 			sb.WriteString("[source, bash]\n----\n")

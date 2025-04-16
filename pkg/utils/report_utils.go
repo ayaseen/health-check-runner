@@ -24,11 +24,31 @@ import (
 	"github.com/ayaseen/health-check-runner/pkg/types"
 )
 
-// isAlreadyFormatted checks if text already contains source blocks or other formatting
-func isAlreadyFormatted(text string) bool {
-	return strings.Contains(text, "[source,") ||
+// IsAlreadyFormatted checks if text already contains source blocks or other formatting
+// This function is used by all report generation utilities to detect pre-formatted AsciiDoc content
+func IsAlreadyFormatted(text string) bool {
+	// Check for AsciiDoc source blocks with different variations
+	if strings.Contains(text, "[source,") ||
 		strings.Contains(text, "[source, ") ||
-		strings.Contains(text, "----")
+		strings.Contains(text, "[source=") ||
+		strings.Contains(text, "----") ||
+		strings.Contains(text, "....") {
+		return true
+	}
+
+	// Check for AsciiDoc tables
+	if strings.Contains(text, "|===") ||
+		strings.Contains(text, "[cols=") {
+		return true
+	}
+
+	// Check for other AsciiDoc formatting elements
+	if strings.Contains(text, "== ") ||
+		strings.Contains(text, "=== ") {
+		return true
+	}
+
+	return false
 }
 
 // GenerateFullAsciiDocReport generates a complete AsciiDoc report for all health checks
@@ -141,10 +161,18 @@ func FormatCheckDetail(check types.Check, result types.Result, version string) s
 	// Add detail if available
 	if result.Detail != "" {
 		// Check if the detail already contains source blocks or formatted content
-		if isAlreadyFormatted(result.Detail) {
+		if IsAlreadyFormatted(result.Detail) {
 			// If content is already formatted, include it as is
 			sb.WriteString(result.Detail)
-			sb.WriteString("\n\n")
+
+			// Ensure there's proper spacing after the detail
+			if !strings.HasSuffix(result.Detail, "\n\n") {
+				if strings.HasSuffix(result.Detail, "\n") {
+					sb.WriteString("\n")
+				} else {
+					sb.WriteString("\n\n")
+				}
+			}
 		} else {
 			// Otherwise, wrap it in a source block
 			sb.WriteString("[source, bash]\n----\n")

@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/ayaseen/health-check-runner/pkg/types"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
 // ReportConfig defines the configuration for report generation
@@ -174,13 +175,6 @@ func (r *Reporter) getFilename() string {
 	return filename
 }
 
-// isAlreadyFormatted checks if text already contains source blocks or other formatting
-func isAlreadyFormatted(text string) bool {
-	return strings.Contains(text, "[source,") ||
-		strings.Contains(text, "[source, ") ||
-		strings.Contains(text, "----")
-}
-
 // generateAsciiDoc generates an AsciiDoc report (standard format)
 func (r *Reporter) generateAsciiDoc() (string, error) {
 	var sb strings.Builder
@@ -246,13 +240,21 @@ func (r *Reporter) generateAsciiDoc() (string, error) {
 					sb.WriteString("*Details:*\n\n")
 
 					// Check if content is already formatted
-					if isAlreadyFormatted(result.Detail) {
+					if utils.IsAlreadyFormatted(result.Detail) {
 						// If already formatted, include as is
 						sb.WriteString(result.Detail)
-						sb.WriteString("\n\n")
+
+						// Ensure proper spacing after the detail
+						if !strings.HasSuffix(result.Detail, "\n\n") {
+							if strings.HasSuffix(result.Detail, "\n") {
+								sb.WriteString("\n")
+							} else {
+								sb.WriteString("\n\n")
+							}
+						}
 					} else {
 						// Otherwise, wrap in source block
-						sb.WriteString("----\n")
+						sb.WriteString("[source, bash]\n----\n")
 						sb.WriteString(result.Detail)
 						sb.WriteString("\n----\n\n")
 					}
