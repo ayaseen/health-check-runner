@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/ayaseen/health-check-runner/pkg/types"
-	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
 // ReportConfig defines the configuration for report generation
@@ -238,9 +237,9 @@ func (r *Reporter) generateAsciiDoc() (string, error) {
 
 				if result.Detail != "" {
 					sb.WriteString("*Details:*\n\n")
-					formattedDetail := utils.FormatDetailContent(result.Detail)
-					sb.WriteString(formattedDetail)
-					sb.WriteString("\n\n")
+					sb.WriteString("----\n")
+					sb.WriteString(result.Detail)
+					sb.WriteString("\n----\n\n")
 				}
 
 				sb.WriteString(fmt.Sprintf("*Execution Time:* %s\n\n", result.ExecutionTime))
