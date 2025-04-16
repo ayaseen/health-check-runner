@@ -65,6 +65,29 @@ func (c *EtcdEncryptionCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed API server configuration"
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== ETCD Encryption Analysis ===\n\n")
+
+	// Add API server configuration with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("API Server Configuration:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("API Server Configuration: No information available\n\n")
+	}
+
+	// Add encryption status
+	formattedDetailOut.WriteString("=== Encryption Status ===\n\n")
+	if encryptionType == "aescbc" || encryptionType == "aesgcm" {
+		formattedDetailOut.WriteString(fmt.Sprintf("ETCD encryption is enabled with type: %s\n\n", encryptionType))
+		formattedDetailOut.WriteString("This ensures that sensitive data stored in etcd is properly encrypted.\n\n")
+	} else {
+		formattedDetailOut.WriteString("ETCD encryption is NOT enabled\n\n")
+		formattedDetailOut.WriteString("Without encryption, sensitive data in etcd is stored in plaintext, which could be a security risk.\n\n")
+	}
+
 	// Check if encryption is enabled (aescbc or aesgcm)
 	if encryptionType == "aescbc" || encryptionType == "aesgcm" {
 		result := healthcheck.NewResult(
@@ -73,7 +96,7 @@ func (c *EtcdEncryptionCheck) Run() (healthcheck.Result, error) {
 			fmt.Sprintf("ETCD encryption is enabled with type: %s", encryptionType),
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -88,7 +111,7 @@ func (c *EtcdEncryptionCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Enable etcd encryption to protect sensitive data")
 	result.AddRecommendation("Follow the documentation at https://docs.openshift.com/container-platform/latest/security/encrypting-etcd.html")
 
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut.String()
 
 	return result, nil
 }

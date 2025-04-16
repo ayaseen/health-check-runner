@@ -63,6 +63,19 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed project configuration information"
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Default Project Template Analysis ===\n\n")
+
+	// Add project configuration with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Project Configuration:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Project Configuration: No information available\n\n")
+	}
+
 	// Get OpenShift version for documentation links
 	version, verErr := utils.GetOpenShiftMajorMinorVersion()
 	if verErr != nil {
@@ -82,7 +95,7 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/building_applications/index#configuring-project-creation", version))
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/building_applications/index#quotas-setting-per-project", version))
 
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -93,6 +106,6 @@ func (c *DefaultProjectTemplateCheck) Run() (healthcheck.Result, error) {
 		"Default project template is configured",
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

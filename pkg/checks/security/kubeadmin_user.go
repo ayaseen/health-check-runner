@@ -51,6 +51,30 @@ func (c *KubeadminUserCheck) Run() (healthcheck.Result, error) {
 	// If the command returns without error, the secret exists
 	kubeadminExists := err == nil && strings.TrimSpace(out) != ""
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Kubeadmin User Analysis ===\n\n")
+
+	// Add kubeadmin secret information with proper formatting
+	if strings.TrimSpace(out) != "" {
+		formattedDetailOut.WriteString("Kubeadmin Secret:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(out)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Kubeadmin Secret: Not found\n\n")
+	}
+
+	// Add status explanation
+	formattedDetailOut.WriteString("=== Kubeadmin Status ===\n\n")
+	if kubeadminExists {
+		formattedDetailOut.WriteString("The kubeadmin user still exists in the cluster.\n\n")
+		formattedDetailOut.WriteString("This temporary user is created during installation and should be removed after setting up proper identity providers.\n")
+		formattedDetailOut.WriteString("Leaving this account active poses a security risk as it has full cluster-admin privileges.\n\n")
+	} else {
+		formattedDetailOut.WriteString("The kubeadmin user has been properly removed from the cluster.\n\n")
+		formattedDetailOut.WriteString("This follows the security best practice of removing the default administrator account after setting up proper identity providers.\n\n")
+	}
+
 	// Get OpenShift version for documentation links
 	version, verErr := utils.GetOpenShiftMajorMinorVersion()
 	if verErr != nil {
@@ -69,7 +93,7 @@ func (c *KubeadminUserCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("This user is for temporary post-installation steps and should be removed to avoid potential security breaches")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/removing-kubeadmin", version))
 
-		result.Detail = out
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -80,6 +104,6 @@ func (c *KubeadminUserCheck) Run() (healthcheck.Result, error) {
 		"The kubeadmin user has been removed",
 		types.ResultKeyNoChange,
 	)
-	result.Detail = "Secret 'kubeadmin' not found in 'kube-system' namespace"
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

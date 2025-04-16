@@ -98,14 +98,34 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed OAuth configuration"
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Identity Provider Analysis ===\n\n")
+
+	// Add OAuth configuration with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("OAuth Configuration:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("OAuth Configuration: No information available\n\n")
+	}
+
 	// Get OpenShift version for documentation links
 	version, verErr := utils.GetOpenShiftMajorMinorVersion()
 	if verErr != nil {
 		version = "4.10" // Default to a known version if we can't determine
 	}
 
+	// Add identity provider status information
+	formattedDetailOut.WriteString("=== Identity Provider Status ===\n\n")
+
 	// Check if any identity providers are configured
 	if len(idpConfig.Spec.IdentityProviders) == 0 {
+		formattedDetailOut.WriteString("No identity providers are configured\n\n")
+		formattedDetailOut.WriteString("Without identity providers, users can only authenticate using the kubeadmin user or service accounts.\n")
+		formattedDetailOut.WriteString("This is not recommended for production environments.\n\n")
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusCritical,
@@ -114,7 +134,7 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Configure at least one identity provider for user authentication")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#understanding-identity-provider", version))
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -126,8 +146,15 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// List configured provider types
+	configuredProviders := getProviderTypes(idpConfig.Spec.IdentityProviders)
+	formattedDetailOut.WriteString(fmt.Sprintf("Configured Identity Provider Types: %s\n\n", configuredProviders))
+
 	if len(ldapProviders) == 0 {
 		// No LDAP providers, but other providers exist
+		formattedDetailOut.WriteString("No LDAP provider found. LDAP is recommended for enterprise environments.\n\n")
+		formattedDetailOut.WriteString("Current identity providers may not provide the same level of integration with existing identity management systems.\n\n")
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
@@ -136,7 +163,7 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Configure a central identity provider (LDAP) for better integration with existing identity management systems")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider", version))
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -158,42 +185,66 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Add LDAP provider information
+	formattedDetailOut.WriteString("LDAP Providers:\n")
+	for _, provider := range ldapProviders {
+		formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", provider))
+	}
+	formattedDetailOut.WriteString("\n")
+
 	// If any LDAP providers are insecure
 	if len(insecureProviders) > 0 {
+		formattedDetailOut.WriteString("Insecure LDAP Connections:\n")
+		for _, provider := range insecureProviders {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", provider))
+		}
+		formattedDetailOut.WriteString("\nInsecure LDAP connections transmit credentials in plaintext and are vulnerable to man-in-the-middle attacks.\n\n")
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
 			fmt.Sprintf("LDAP providers are configured but some are using insecure connections: %s", strings.Join(insecureProviders, ", ")),
 			types.ResultKeyRecommended,
 		)
+
 		result.AddRecommendation("Configure LDAP providers to use secure connections (ldaps:// or set insecure to false)")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider", version))
-		result.Detail = detailedOut
+
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
 	// If any LDAP providers are missing search filters
 	if len(noSearchFilterProviders) > 0 {
+		formattedDetailOut.WriteString("LDAP Providers Missing Search Filters:\n")
+		for _, provider := range noSearchFilterProviders {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", provider))
+		}
+		formattedDetailOut.WriteString("\nWithout search filters, LDAP queries may be inefficient or return too many results.\n\n")
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
 			fmt.Sprintf("LDAP providers are configured but some are missing search filters: %s", strings.Join(noSearchFilterProviders, ", ")),
 			types.ResultKeyAdvisory,
 		)
+
 		result.AddRecommendation("Configure LDAP providers with appropriate search filters to limit the scope of user searches")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider", version))
-		result.Detail = detailedOut
+
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
 	// All checks passed
+	formattedDetailOut.WriteString("All LDAP providers are properly configured with secure connections and search filters.\n\n")
 	result := healthcheck.NewResult(
 		c.ID(),
 		types.StatusOK,
 		fmt.Sprintf("LDAP identity providers are properly configured: %s", strings.Join(ldapProviders, ", ")),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }
 

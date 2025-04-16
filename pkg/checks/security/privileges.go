@@ -93,6 +93,10 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 
 	var privilegedWorkloads []PrivilegedWorkload
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Elevated Privileges Analysis ===\n\n")
+
 	// Check all namespaces
 	for _, namespace := range namespaces.Items {
 		// Skip system namespaces
@@ -150,6 +154,78 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 		version = "4.10" // Default to a known version if we can't determine
 	}
 
+	// Add workloads with elevated privileges information
+	if len(privilegedWorkloads) > 0 {
+		// Organize by resource type for better readability
+		deploymentDetails := []string{}
+		dcDetails := []string{}
+		podDetails := []string{}
+		otherDetails := []string{}
+
+		for _, workload := range privilegedWorkloads {
+			detail := fmt.Sprintf("- %s in namespace '%s' (%s)", workload.ResourceName, workload.Namespace, workload.Reason)
+
+			switch workload.ResourceType {
+			case "Deployment":
+				deploymentDetails = append(deploymentDetails, detail)
+			case "DeploymentConfig":
+				dcDetails = append(dcDetails, detail)
+			case "Pod":
+				podDetails = append(podDetails, detail)
+			default:
+				otherDetails = append(otherDetails, fmt.Sprintf("- %s '%s' in namespace '%s' (%s)",
+					workload.ResourceType, workload.ResourceName, workload.Namespace, workload.Reason))
+			}
+		}
+
+		// Add deployments with elevated privileges
+		if len(deploymentDetails) > 0 {
+			formattedDetailOut.WriteString("Deployments with Elevated Privileges:\n[source, text]\n----\n")
+			for _, detail := range deploymentDetails {
+				formattedDetailOut.WriteString(detail + "\n")
+			}
+			formattedDetailOut.WriteString("----\n\n")
+		}
+
+		// Add deployment configs with elevated privileges
+		if len(dcDetails) > 0 {
+			formattedDetailOut.WriteString("DeploymentConfigs with Elevated Privileges:\n[source, text]\n----\n")
+			for _, detail := range dcDetails {
+				formattedDetailOut.WriteString(detail + "\n")
+			}
+			formattedDetailOut.WriteString("----\n\n")
+		}
+
+		// Add pods with elevated privileges
+		if len(podDetails) > 0 {
+			formattedDetailOut.WriteString("Pods with Elevated Privileges:\n[source, text]\n----\n")
+			for _, detail := range podDetails {
+				formattedDetailOut.WriteString(detail + "\n")
+			}
+			formattedDetailOut.WriteString("----\n\n")
+		}
+
+		// Add other resources with elevated privileges
+		if len(otherDetails) > 0 {
+			formattedDetailOut.WriteString("Other Resources with Elevated Privileges:\n[source, text]\n----\n")
+			for _, detail := range otherDetails {
+				formattedDetailOut.WriteString(detail + "\n")
+			}
+			formattedDetailOut.WriteString("----\n\n")
+		}
+
+		// Add explanation of security risks
+		formattedDetailOut.WriteString("=== Security Risks ===\n\n")
+		formattedDetailOut.WriteString("Workloads with elevated privileges pose significant security risks:\n\n")
+		formattedDetailOut.WriteString("- Privileged containers can access host resources and potentially escape container isolation\n")
+		formattedDetailOut.WriteString("- Containers with dangerous capabilities like SYS_ADMIN can perform privileged operations\n")
+		formattedDetailOut.WriteString("- Containers running as root have higher privileges and can pose security risks\n\n")
+		formattedDetailOut.WriteString("These privileges violate the principle of least privilege and increase your security risk surface.\n\n")
+	} else {
+		formattedDetailOut.WriteString("No user workloads with elevated privileges were found.\n\n")
+		formattedDetailOut.WriteString("This is good and follows the principle of least privilege, reducing the security risk surface.\n\n")
+	}
+
 	// If no privileged workloads found
 	if len(privilegedWorkloads) == 0 {
 		result := healthcheck.NewResult(
@@ -158,56 +234,8 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 			"No user workloads using privileged containers were found",
 			types.ResultKeyNoChange,
 		)
+		result.Detail = formattedDetailOut.String()
 		return result, nil
-	}
-
-	// Create detail strings for different workload types
-	var deploymentDetails []string
-	var dcDetails []string
-	var podDetails []string
-	var otherDetails []string
-
-	for _, workload := range privilegedWorkloads {
-		detail := fmt.Sprintf("- %s in namespace '%s' (%s)", workload.ResourceName, workload.Namespace, workload.Reason)
-
-		switch workload.ResourceType {
-		case "Deployment":
-			deploymentDetails = append(deploymentDetails, detail)
-		case "DeploymentConfig":
-			dcDetails = append(dcDetails, detail)
-		case "Pod":
-			podDetails = append(podDetails, detail)
-		default:
-			otherDetails = append(otherDetails, fmt.Sprintf("- %s '%s' in namespace '%s' (%s)",
-				workload.ResourceType, workload.ResourceName, workload.Namespace, workload.Reason))
-		}
-	}
-
-	// Combine all details
-	var allDetails []string
-
-	if len(deploymentDetails) > 0 {
-		allDetails = append(allDetails, "Deployments with elevated privileges:")
-		allDetails = append(allDetails, deploymentDetails...)
-		allDetails = append(allDetails, "")
-	}
-
-	if len(dcDetails) > 0 {
-		allDetails = append(allDetails, "DeploymentConfigs with elevated privileges:")
-		allDetails = append(allDetails, dcDetails...)
-		allDetails = append(allDetails, "")
-	}
-
-	if len(podDetails) > 0 {
-		allDetails = append(allDetails, "Pods with elevated privileges:")
-		allDetails = append(allDetails, podDetails...)
-		allDetails = append(allDetails, "")
-	}
-
-	if len(otherDetails) > 0 {
-		allDetails = append(allDetails, "Other resources with elevated privileges:")
-		allDetails = append(allDetails, otherDetails...)
-		allDetails = append(allDetails, "")
 	}
 
 	// Create result with privileged workloads information
@@ -222,7 +250,7 @@ func (c *ElevatedPrivilegesCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Use restrictive SCCs for user workloads following the principle of least privilege")
 	result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#managing-pod-security-policies", version))
 
-	result.Detail = strings.Join(allDetails, "\n")
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }
 

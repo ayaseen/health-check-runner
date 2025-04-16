@@ -115,6 +115,19 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed SCC configuration"
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Security Context Constraint Analysis ===\n\n")
+
+	// Add SCC configuration with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Restricted SCC Configuration:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Restricted SCC Configuration: No information available\n\n")
+	}
+
 	// Get the important fields from the SCC to compare
 	sccData := scc.Object
 
@@ -158,6 +171,19 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 		modifiedFields = append(modifiedFields, "allowPrivilegedContainer")
 	}
 
+	// Add SCC status information
+	formattedDetailOut.WriteString("=== SCC Status ===\n\n")
+	if !modified {
+		formattedDetailOut.WriteString("The default 'restricted' SCC has not been modified.\n\n")
+		formattedDetailOut.WriteString("This maintains the intended security posture of the OpenShift cluster.\n\n")
+	} else {
+		formattedDetailOut.WriteString("The default 'restricted' SCC has been modified with the following changes:\n\n")
+		for _, field := range modifiedFields {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", field))
+		}
+		formattedDetailOut.WriteString("\nModifying default SCCs is not recommended as they may be reset during cluster upgrades.\n\n")
+	}
+
 	// If not modified, return OK
 	if !modified {
 		result := healthcheck.NewResult(
@@ -166,7 +192,7 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 			"Default security context constraint (restricted) has not been modified",
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -182,7 +208,7 @@ func (c *ClusterDefaultSCCCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Instead, create custom SCCs for specific needs")
 	result.AddRecommendation("Follow the documentation at https://docs.openshift.com/container-platform/latest/authentication/managing-security-context-constraints.html")
 
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut.String()
 
 	return result, nil
 }
