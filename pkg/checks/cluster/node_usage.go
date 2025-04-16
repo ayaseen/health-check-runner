@@ -60,6 +60,18 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 		), fmt.Errorf("error getting node usage: %v", err)
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailedOut strings.Builder
+	formattedDetailedOut.WriteString("=== Node Resource Usage Information ===\n\n")
+
+	if strings.TrimSpace(output) != "" {
+		formattedDetailedOut.WriteString("Node Resource Usage:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(output)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Node Resource Usage: No information available\n\n")
+	}
+
 	// Parse the output to extract CPU and memory usage
 	lines := strings.Split(output, "\n")
 	if len(lines) < 2 {
@@ -77,6 +89,8 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 	// Check usage for each node
 	var highCpuNodes []string
 	var highMemoryNodes []string
+
+	formattedDetailedOut.WriteString("=== Node Resource Analysis ===\n\n")
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -96,6 +110,8 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 		cpuUsageValue, err := parsePercentage(cpuUsage)
 		if err == nil && cpuUsageValue > float64(c.cpuThreshold) {
 			highCpuNodes = append(highCpuNodes, fmt.Sprintf("%s (%.2f%%)", nodeName, cpuUsageValue))
+			formattedDetailedOut.WriteString(fmt.Sprintf("Node %s has high CPU usage: %.2f%% (threshold: %d%%)\n",
+				nodeName, cpuUsageValue, c.cpuThreshold))
 		}
 
 		// Parse memory usage
@@ -103,7 +119,18 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 		memoryUsageValue, err := parsePercentage(memoryUsage)
 		if err == nil && memoryUsageValue > float64(c.memoryThreshold) {
 			highMemoryNodes = append(highMemoryNodes, fmt.Sprintf("%s (%.2f%%)", nodeName, memoryUsageValue))
+			formattedDetailedOut.WriteString(fmt.Sprintf("Node %s has high memory usage: %.2f%% (threshold: %d%%)\n",
+				nodeName, memoryUsageValue, c.memoryThreshold))
 		}
+	}
+	formattedDetailedOut.WriteString("\n")
+
+	// Get additional node information
+	nodeInfo, _ := utils.RunCommand("oc", "get", "nodes", "-o", "wide")
+	if strings.TrimSpace(nodeInfo) != "" {
+		formattedDetailedOut.WriteString("Node Information:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(nodeInfo)
+		formattedDetailedOut.WriteString("\n----\n\n")
 	}
 
 	if len(highCpuNodes) == 0 && len(highMemoryNodes) == 0 {
@@ -113,7 +140,7 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 			"All nodes are within resource usage thresholds",
 			types.ResultKeyNoChange,
 		)
-		result.Detail = output
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -147,7 +174,7 @@ func (c *NodeUsageCheck) Run() (healthcheck.Result, error) {
 
 	result.AddRecommendation("Consider adding more nodes or optimizing workload placement")
 
-	result.Detail = output
+	result.Detail = formattedDetailedOut.String()
 	return result, nil
 }
 

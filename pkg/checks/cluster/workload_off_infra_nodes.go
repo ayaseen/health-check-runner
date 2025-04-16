@@ -143,6 +143,45 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed infrastructure node information"
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Workload Placement Analysis ===\n\n")
+
+	// Add infrastructure nodes information with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Infrastructure Nodes:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Infrastructure Nodes: No information available\n\n")
+	}
+
+	// Add node count information
+	formattedDetailOut.WriteString(fmt.Sprintf("Total Infrastructure Nodes: %d\n", len(infraNodes.Items)))
+	formattedDetailOut.WriteString(fmt.Sprintf("Total User Namespaces: %d\n\n", len(namespaces)))
+
+	// Add user workloads section
+	formattedDetailOut.WriteString("=== User Workloads on Infrastructure Nodes ===\n\n")
+	if len(podsOnInfraNodes) > 0 {
+		formattedDetailOut.WriteString(fmt.Sprintf("Found %d Application/User workloads running on infrastructure nodes:\n\n", len(podsOnInfraNodes)))
+		for _, podInfo := range podsOnInfraNodes {
+			formattedDetailOut.WriteString(podInfo + "\n")
+		}
+		formattedDetailOut.WriteString("\n")
+	} else {
+		formattedDetailOut.WriteString("No user workloads found running on infrastructure nodes (Good)\n\n")
+	}
+
+	// Add best practices section
+	formattedDetailOut.WriteString("=== Best Practices ===\n\n")
+	formattedDetailOut.WriteString("Infrastructure nodes should be dedicated to infrastructure components such as:\n")
+	formattedDetailOut.WriteString("- Registry\n")
+	formattedDetailOut.WriteString("- Router\n")
+	formattedDetailOut.WriteString("- Monitoring\n")
+	formattedDetailOut.WriteString("- Logging\n")
+	formattedDetailOut.WriteString("- Metrics\n\n")
+	formattedDetailOut.WriteString("User workloads should be scheduled on worker nodes to ensure proper resource allocation and prevent interference with critical infrastructure components.\n\n")
+
 	// If no user workloads are running on infrastructure nodes, the check passes
 	if len(podsOnInfraNodes) == 0 {
 		result := healthcheck.NewResult(
@@ -151,7 +190,7 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 			"No user workloads are running on infrastructure nodes",
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -167,11 +206,6 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Add taints to infrastructure nodes to prevent user workloads from running on them")
 	result.AddRecommendation("Consider moving these workloads to worker nodes")
 
-	// Add detailed information
-	detail := fmt.Sprintf("User workloads running on infrastructure nodes:\n%s\n\nInfrastructure nodes:\n%s",
-		strings.Join(podsOnInfraNodes, "\n"),
-		detailedOut)
-
-	result.Detail = detail
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

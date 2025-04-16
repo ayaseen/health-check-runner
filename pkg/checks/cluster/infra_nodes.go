@@ -24,6 +24,7 @@ import (
 	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 // InfrastructureNodesCheck checks if dedicated infrastructure nodes are configured
@@ -77,6 +78,14 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed infrastructure node information"
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailedOut string
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut = fmt.Sprintf("Infrastructure Nodes:\n[source, bash]\n----\n%s\n----\n\n", detailedOut)
+	} else {
+		formattedDetailedOut = "Infrastructure Nodes: No information available\n\n"
+	}
+
 	// Get OpenShift version for documentation links
 	version, verErr := utils.GetOpenShiftMajorMinorVersion()
 	if verErr != nil {
@@ -97,7 +106,7 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Infrastructure nodes allow you to isolate infrastructure workloads to prevent incurring billing costs against subscription counts and to separate maintenance and management")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/solutions/5034771"))
 
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 
@@ -114,7 +123,7 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Both OpenShift Logging and Red Hat OpenShift Service Mesh deploy Elasticsearch, which requires three instances to be installed on different nodes")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/machine_management/index#creating-infrastructure-machinesets", version))
 
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 
@@ -147,7 +156,7 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Add appropriate taints to infrastructure nodes to prevent regular workloads from being scheduled on them")
 		result.AddRecommendation("Use 'oc adm taint nodes <node-name> node-role.kubernetes.io/infra=:NoSchedule'")
 
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 
@@ -157,6 +166,6 @@ func (c *InfrastructureNodesCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("Found %d properly configured infrastructure nodes", infraNodeCount),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailedOut
 	return result, nil
 }

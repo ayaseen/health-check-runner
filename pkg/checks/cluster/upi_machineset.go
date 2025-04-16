@@ -51,6 +51,18 @@ func (c *UPIMachineSetCheck) Run() (healthcheck.Result, error) {
 	cmOutput, cmErr := utils.RunCommand("oc", "get", "cm", "-n", "openshift-config", "openshift-install")
 	isIPI := cmErr == nil && strings.Contains(cmOutput, "openshift-install")
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailedOut strings.Builder
+	formattedDetailedOut.WriteString("=== Installation Type Analysis ===\n\n")
+
+	// Add installation type information
+	if isIPI {
+		formattedDetailedOut.WriteString("Installation Type: IPI (Installer-Provisioned Infrastructure)\n\n")
+		formattedDetailedOut.WriteString("This check is not applicable to IPI installations.\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Installation Type: UPI (User-Provisioned Infrastructure)\n\n")
+	}
+
 	// If this is an IPI installation, this check is not applicable
 	if isIPI {
 		return healthcheck.NewResult(
@@ -76,11 +88,20 @@ func (c *UPIMachineSetCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Add platform type information
+	formattedDetailedOut.WriteString(fmt.Sprintf("Platform Type: %s\n\n", strings.TrimSpace(platformType)))
+
 	// If the platform is None (AnyPlatform), check for control plane topology
 	isHCP := false
 	if strings.TrimSpace(platformType) == "None" {
 		controlPlaneTopology, _ := utils.RunCommand("oc", "get", "infrastructure", "cluster", "-o", "jsonpath={.status.controlPlaneTopology}")
 		isHCP = strings.TrimSpace(controlPlaneTopology) == "External"
+
+		if isHCP {
+			formattedDetailedOut.WriteString("Control Plane Topology: External (Hosted Control Plane)\n\n")
+		} else {
+			formattedDetailedOut.WriteString("Control Plane Topology: Integrated\n\n")
+		}
 	}
 
 	// Check for machinesets in openshift-machine-api namespace
@@ -91,11 +112,21 @@ func (c *UPIMachineSetCheck) Run() (healthcheck.Result, error) {
 	msReplicaOutput, _ := utils.RunCommand("oc", "get", "machinesets.machine.openshift.io", "-n", "openshift-machine-api", "-o", "jsonpath={.items[*].spec.replicas}")
 	hasMachineSetReplicas := msReplicaOutput != "" && strings.TrimSpace(msReplicaOutput) != ""
 
+	// Add MachineSets information
+	if hasMachineSets && strings.TrimSpace(msOutput) != "" {
+		formattedDetailedOut.WriteString("MachineSets Found:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(msOutput)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("MachineSets: None found\n\n")
+	}
+
 	// Get detailed information for the report
 	detailedOut, err := utils.RunCommand("oc", "get", "machinesets", "-n", "openshift-machine-api", "-o", "yaml")
-	if err != nil {
-		// Non-critical error, we can continue without detailed output
-		detailedOut = "Failed to get detailed machineset configuration"
+	if err == nil && strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut.WriteString("MachineSets Detailed Configuration:\n[source, yaml]\n----\n")
+		formattedDetailedOut.WriteString(detailedOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
 	}
 
 	// If this is an HCP cluster, the check is not applicable
@@ -128,7 +159,7 @@ func (c *UPIMachineSetCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Check if MachineSets are properly configured with replica counts")
 		result.AddRecommendation("If MachineSets are not being used, consider removing them to avoid confusion")
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -138,6 +169,13 @@ func (c *UPIMachineSetCheck) Run() (healthcheck.Result, error) {
 
 	machineSetSummary, _ := utils.RunCommand("oc", "get", "machinesets", "-n", "openshift-machine-api", "-o", "custom-columns=NAME:.metadata.name,REPLICAS:.spec.replicas")
 
+	// Add MachineSets summary information
+	if strings.TrimSpace(machineSetSummary) != "" {
+		formattedDetailedOut.WriteString("MachineSets Summary:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(machineSetSummary)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	}
+
 	// Machine sets are properly configured in a UPI installation
 	result := healthcheck.NewResult(
 		c.ID(),
@@ -145,6 +183,6 @@ func (c *UPIMachineSetCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("UPI installation with %s configured MachineSets", machineSetCount),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = fmt.Sprintf("MachineSets summary:\n\n%s\n\nDetailed configuration:\n%s", machineSetSummary, detailedOut)
+	result.Detail = formattedDetailedOut.String()
 	return result, nil
 }

@@ -161,6 +161,42 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 		providerInfo = fmt.Sprintf("Infrastructure provider: %s", platformType)
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Infrastructure Provider Information ===\n\n")
+
+	// Add infrastructure basics
+	formattedDetailOut.WriteString(fmt.Sprintf("Infrastructure Name: %s\n", infraName))
+	formattedDetailOut.WriteString(fmt.Sprintf("Platform Type: %s\n\n", platformType))
+
+	// Add provider-specific information
+	formattedDetailOut.WriteString("Provider Details:\n")
+	formattedDetailOut.WriteString(providerInfo)
+	formattedDetailOut.WriteString("\n\n")
+
+	// Add topology information if available
+	if controlPlaneTopology != "" && infrastructureTopology != "" {
+		formattedDetailOut.WriteString("Topology Information:\n")
+		formattedDetailOut.WriteString(fmt.Sprintf("- Control Plane Topology: %s\n", controlPlaneTopology))
+		formattedDetailOut.WriteString(fmt.Sprintf("- Infrastructure Topology: %s\n\n", infrastructureTopology))
+	}
+
+	// Add additional information if available
+	if additionalInfo != "" {
+		formattedDetailOut.WriteString("Additional Information:\n")
+		formattedDetailOut.WriteString(additionalInfo)
+		formattedDetailOut.WriteString("\n\n")
+	}
+
+	// Add raw configuration with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Infrastructure Configuration:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Infrastructure Configuration: No information available\n\n")
+	}
+
 	// If the platform type is empty, we'll mark it as critical
 	if platformType == "" {
 		result := healthcheck.NewResult(
@@ -169,15 +205,8 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 			"No infrastructure provider type detected",
 			types.ResultKeyRequired,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
-	}
-
-	// Build topology information if available
-	var topologyInfo string
-	if controlPlaneTopology != "" && infrastructureTopology != "" {
-		topologyInfo = fmt.Sprintf("\nControl Plane Topology: %s\nInfrastructure Topology: %s",
-			controlPlaneTopology, infrastructureTopology)
 	}
 
 	// Create result with the detected provider information
@@ -189,11 +218,6 @@ func (c *InfrastructureProviderCheck) Run() (healthcheck.Result, error) {
 		types.ResultKeyNoChange,
 	)
 
-	// Compile the details with all the information we've gathered
-	details := fmt.Sprintf("Infrastructure Name: %s\nPlatform Type: %s\n\n%s%s\n\n%s\n\n%s",
-		infraName, platformType, providerInfo, topologyInfo, additionalInfo, detailedOut)
-
-	result.Detail = details
-
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

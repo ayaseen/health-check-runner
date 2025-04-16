@@ -92,9 +92,49 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 
 	// Get the output of 'oc get nodes' for detailed information
 	detailedOut, err := utils.RunCommand("oc", "get", "nodes")
-	if err != nil {
-		// Non-critical error, we can continue without detailed output
-		detailedOut = "Failed to get detailed node status"
+
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailedOut strings.Builder
+	formattedDetailedOut.WriteString("=== Node Status Analysis ===\n\n")
+
+	// Add node overview with proper formatting
+	if err == nil && strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut.WriteString("Node Overview:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(detailedOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Node Overview: No information available\n\n")
+	}
+
+	// Get extended node information including roles, versions, etc.
+	extendedNodeInfo, _ := utils.RunCommand("oc", "get", "nodes", "-o", "wide")
+	if strings.TrimSpace(extendedNodeInfo) != "" {
+		formattedDetailedOut.WriteString("Detailed Node Information:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(extendedNodeInfo)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	}
+
+	// Add node conditions information
+	formattedDetailedOut.WriteString("=== Node Status Summary ===\n\n")
+	formattedDetailedOut.WriteString(fmt.Sprintf("Total Nodes: %d\n", len(nodes.Items)))
+	formattedDetailedOut.WriteString(fmt.Sprintf("Ready Nodes: %d\n", len(nodes.Items)-len(notReadyNodes)))
+	formattedDetailedOut.WriteString(fmt.Sprintf("Not Ready Nodes: %d\n\n", len(notReadyNodes)))
+
+	if len(notReadyNodes) > 0 {
+		formattedDetailedOut.WriteString("Nodes Not Ready:\n")
+		for _, nodeName := range notReadyNodes {
+			formattedDetailedOut.WriteString(fmt.Sprintf("- %s\n", nodeName))
+		}
+		formattedDetailedOut.WriteString("\n")
+
+		// Add troubleshooting guidance for not ready nodes
+		formattedDetailedOut.WriteString("=== Troubleshooting Guidance ===\n\n")
+		formattedDetailedOut.WriteString("For not ready nodes, check the following:\n\n")
+		formattedDetailedOut.WriteString("1. Check node logs: `oc adm node-logs <node-name>`\n")
+		formattedDetailedOut.WriteString("2. Check node diagnostics: `oc debug node/<node-name>`\n")
+		formattedDetailedOut.WriteString("3. Check kubelet status on the node\n")
+		formattedDetailedOut.WriteString("4. Verify network connectivity to the node\n")
+		formattedDetailedOut.WriteString("5. Check for resource constraints (disk space, memory)\n\n")
 	}
 
 	if len(notReadyNodes) == 0 {
@@ -104,7 +144,7 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 			fmt.Sprintf("All %d nodes are ready", len(nodes.Items)),
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -120,6 +160,6 @@ func (c *NodeStatusCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Check node logs using 'oc adm node-logs <node-name>'")
 	result.AddRecommendation("Check node diagnostics using 'oc debug node/<node-name>'")
 
-	result.Detail = detailedOut
+	result.Detail = formattedDetailedOut.String()
 	return result, nil
 }

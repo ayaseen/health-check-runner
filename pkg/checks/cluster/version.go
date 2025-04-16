@@ -82,6 +82,29 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 		), fmt.Errorf("error getting detailed cluster version: %v", err)
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailedOut strings.Builder
+	formattedDetailedOut.WriteString("=== Cluster Version Analysis ===\n\n")
+	formattedDetailedOut.WriteString(fmt.Sprintf("Current Version: %s\n", currentVersion))
+	formattedDetailedOut.WriteString(fmt.Sprintf("Latest Available Version: %s\n\n", c.latestVersion))
+
+	// Add detailed cluster version information
+	if len(detailedOut) > 0 {
+		formattedDetailedOut.WriteString("Cluster Version Details:\n[source, yaml]\n----\n")
+		formattedDetailedOut.WriteString(string(detailedOut))
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Cluster Version Details: No information available\n\n")
+	}
+
+	// Try to get update history
+	updateHistory, _ := exec.Command("oc", "get", "clusterversion", "-o", "jsonpath={.items[].status.history}").Output()
+	if len(updateHistory) > 0 {
+		formattedDetailedOut.WriteString("Update History:\n[source, json]\n----\n")
+		formattedDetailedOut.WriteString(string(updateHistory))
+		formattedDetailedOut.WriteString("\n----\n\n")
+	}
+
 	// Compare versions
 	result, err := compareVersions(currentVersion, c.latestVersion)
 	if err != nil {
@@ -91,6 +114,18 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 			"Failed to compare versions",
 			types.ResultKeyRequired,
 		), fmt.Errorf("error comparing versions: %v", err)
+	}
+
+	// Add version comparison results
+	formattedDetailedOut.WriteString("=== Version Comparison ===\n\n")
+	if result < 0 {
+		formattedDetailedOut.WriteString(fmt.Sprintf("The cluster version %s is older than the latest available version %s.\n\n",
+			currentVersion, c.latestVersion))
+	} else if result == 0 {
+		formattedDetailedOut.WriteString(fmt.Sprintf("The cluster is running the latest version %s.\n\n", currentVersion))
+	} else {
+		formattedDetailedOut.WriteString(fmt.Sprintf("The cluster version %s is newer than our reference version %s.\n\n",
+			currentVersion, c.latestVersion))
 	}
 
 	if result < 0 {
@@ -104,7 +139,7 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 
 		checkResult.AddRecommendation(fmt.Sprintf("Update to the latest version %s", c.latestVersion))
 		checkResult.AddRecommendation("Follow the upgrade documentation at https://docs.openshift.com/container-platform/latest/updating/updating-cluster.html")
-		checkResult.Detail = string(detailedOut)
+		checkResult.Detail = formattedDetailedOut.String()
 
 		return checkResult, nil
 	}
@@ -117,7 +152,7 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 		types.ResultKeyNoChange,
 	)
 
-	checkResult.Detail = string(detailedOut)
+	checkResult.Detail = formattedDetailedOut.String()
 
 	return checkResult, nil
 }

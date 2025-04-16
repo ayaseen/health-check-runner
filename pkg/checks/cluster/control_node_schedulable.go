@@ -101,6 +101,55 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed control plane node information"
 	}
 
+	// Get taint information for all control plane nodes
+	taintInfo, err := utils.RunCommand("oc", "get", "nodes", "-l", "node-role.kubernetes.io/master=", "-o", "jsonpath={range .items[*]}{.metadata.name}{\": \"}{.spec.taints}{\"\\n\"}{end}")
+	if err != nil {
+		taintInfo = "Failed to get taint information"
+	}
+
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Control Plane Node Schedulability Analysis ===\n\n")
+
+	// Add control plane node information with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Control Plane Nodes:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Control Plane Nodes: No information available\n\n")
+	}
+
+	// Add taint information with proper formatting
+	if strings.TrimSpace(taintInfo) != "" {
+		formattedDetailOut.WriteString("Taint Information:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(taintInfo)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Taint Information: No information available\n\n")
+	}
+
+	// Add schedulability summary
+	formattedDetailOut.WriteString("=== Schedulability Summary ===\n\n")
+	formattedDetailOut.WriteString(fmt.Sprintf("Total Control Plane Nodes: %d\n", len(nodes.Items)))
+	formattedDetailOut.WriteString(fmt.Sprintf("Schedulable Control Plane Nodes: %d\n\n", len(schedulableControlNodes)))
+
+	if len(schedulableControlNodes) > 0 {
+		formattedDetailOut.WriteString("Control plane nodes allowing regular workloads:\n")
+		for _, nodeName := range schedulableControlNodes {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", nodeName))
+		}
+		formattedDetailOut.WriteString("\n")
+	}
+
+	// Add best practices section
+	formattedDetailOut.WriteString("=== Best Practices ===\n\n")
+	formattedDetailOut.WriteString("Control plane nodes should be dedicated to control plane components to ensure stability and performance of the Kubernetes control plane.\n\n")
+	formattedDetailOut.WriteString("To prevent scheduling of regular workloads on control plane nodes, either:\n")
+	formattedDetailOut.WriteString("1. Add the NoSchedule taint: 'node-role.kubernetes.io/master=:NoSchedule'\n")
+	formattedDetailOut.WriteString("2. Mark the node as unschedulable using 'oc adm cordon <node-name>'\n\n")
+	formattedDetailOut.WriteString("This ensures that only pods with matching tolerations (typically control plane components) will be scheduled on these nodes.\n\n")
+
 	if len(schedulableControlNodes) == 0 {
 		result := healthcheck.NewResult(
 			c.ID(),
@@ -108,7 +157,7 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 			"All control plane nodes are properly configured to prevent regular workloads",
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -125,6 +174,6 @@ func (c *ControlNodeSchedulableCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Add NoSchedule taints to control plane nodes using 'oc adm taint nodes <node-name> node-role.kubernetes.io/master=:NoSchedule'")
 	result.AddRecommendation("Alternatively, mark control plane nodes as unschedulable using 'oc adm cordon <node-name>'")
 
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

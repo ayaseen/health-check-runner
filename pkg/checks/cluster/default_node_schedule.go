@@ -71,7 +71,7 @@ func (c *DefaultNodeScheduleCheck) Run() (healthcheck.Result, error) {
 		), fmt.Errorf("error retrieving nodes: %v", err)
 	}
 
-	// Get the scheduler configuration
+	// Check if the scheduler configuration
 	schedulerConfig, err := utils.RunCommand("oc", "get", "configmap", "scheduler-config", "-n", "openshift-kube-scheduler", "-o", "yaml")
 
 	customSchedulerConfig := err == nil && strings.Contains(schedulerConfig, "policy:")
@@ -121,6 +121,60 @@ func (c *DefaultNodeScheduleCheck) Run() (healthcheck.Result, error) {
 		version = "4.10" // Default to a known version if we can't determine
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Node Scheduling Configuration Analysis ===\n\n")
+
+	// Add node list with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Cluster Nodes:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Cluster Nodes: No information available\n\n")
+	}
+
+	// Add node role summary
+	formattedDetailOut.WriteString("=== Node Role Distribution ===\n\n")
+	formattedDetailOut.WriteString(fmt.Sprintf("Total Nodes: %d\n", len(nodes.Items)))
+	formattedDetailOut.WriteString(fmt.Sprintf("Control Plane Nodes: %d\n", controlNodes))
+	formattedDetailOut.WriteString(fmt.Sprintf("Infrastructure Nodes: %d\n", infraNodes))
+	formattedDetailOut.WriteString(fmt.Sprintf("Worker Nodes: %d\n", workloadNodes))
+	formattedDetailOut.WriteString(fmt.Sprintf("Nodes Without Role: %d\n\n", len(nodesWithoutRole)))
+
+	if len(nodesWithoutRole) > 0 {
+		formattedDetailOut.WriteString("Nodes without any role label:\n")
+		for _, nodeName := range nodesWithoutRole {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", nodeName))
+		}
+		formattedDetailOut.WriteString("\n")
+	}
+
+	// Add namespace node selector information with proper formatting
+	if strings.TrimSpace(namespaceNodeSelectors) != "" {
+		formattedDetailOut.WriteString("Namespace Node Selectors:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(namespaceNodeSelectors)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Namespace Node Selectors: No information available\n\n")
+	}
+
+	// Add scheduler configuration information with proper formatting
+	if strings.TrimSpace(schedulerConfig) != "" {
+		formattedDetailOut.WriteString("Scheduler Configuration:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(schedulerConfig)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Scheduler Configuration: Using default configuration\n\n")
+	}
+
+	// Add best practices section
+	formattedDetailOut.WriteString("=== Best Practices ===\n\n")
+	formattedDetailOut.WriteString("1. All nodes should have appropriate role labels\n")
+	formattedDetailOut.WriteString("2. Configure namespace node selectors to control workload placement\n")
+	formattedDetailOut.WriteString("3. Use custom scheduler configuration for fine-grained control\n")
+	formattedDetailOut.WriteString("4. Separate workloads, infrastructure, and control plane functions\n\n")
+
 	// Evaluate node scheduling configuration
 	if len(nodesWithoutRole) > 0 {
 		result := healthcheck.NewResult(
@@ -131,8 +185,7 @@ func (c *DefaultNodeScheduleCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Label all nodes with appropriate role labels (worker, infra, or master)")
 		result.AddRecommendation(fmt.Sprintf("Use 'oc label node <node-name> node-role.kubernetes.io/worker='"))
-		result.Detail = fmt.Sprintf("Nodes without role labels:\n%s\n\nNodes:\n%s",
-			strings.Join(nodesWithoutRole, "\n"), detailedOut)
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -146,7 +199,7 @@ func (c *DefaultNodeScheduleCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Label appropriate nodes with the worker role")
 		result.AddRecommendation(fmt.Sprintf("Use 'oc label node <node-name> node-role.kubernetes.io/worker='"))
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -160,7 +213,7 @@ func (c *DefaultNodeScheduleCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Consider configuring namespace node selectors to control workload placement")
 		result.AddRecommendation(fmt.Sprintf("Refer to the documentation at https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/nodes/index#nodes-scheduler-node-selectors", version))
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -173,7 +226,7 @@ func (c *DefaultNodeScheduleCheck) Run() (healthcheck.Result, error) {
 			types.ResultKeyNoChange,
 		)
 		result.AddRecommendation("For more advanced scheduling control, consider configuring custom scheduler policies")
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -184,6 +237,6 @@ func (c *DefaultNodeScheduleCheck) Run() (healthcheck.Result, error) {
 		"Node scheduling is well configured with custom policies",
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

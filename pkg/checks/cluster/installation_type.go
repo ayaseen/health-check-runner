@@ -120,11 +120,52 @@ func (c *InstallationTypeCheck) Run() (healthcheck.Result, error) {
 		description = "This is a UPI installation where the infrastructure was provisioned manually or by external automation."
 	}
 
-	// Include topology information in the message if available
-	var topologyInfo string
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Installation Type Analysis ===\n\n")
+
+	// Add installation basics
+	formattedDetailOut.WriteString(fmt.Sprintf("Installation Type: %s\n", installationType))
+	formattedDetailOut.WriteString(fmt.Sprintf("Description: %s\n\n", description))
+
+	// Add infrastructure basics
+	formattedDetailOut.WriteString("Infrastructure Information:\n")
+	formattedDetailOut.WriteString(fmt.Sprintf("- Infrastructure Name: %s\n", strings.TrimSpace(infraName)))
+	formattedDetailOut.WriteString(fmt.Sprintf("- Platform Type: %s\n", strings.TrimSpace(platformType)))
+
+	// Add topology information if available
 	if controlPlaneTopology != "" && infrastructureTopology != "" {
-		topologyInfo = fmt.Sprintf("\nControl Plane Topology: %s\nInfrastructure Topology: %s",
-			controlPlaneTopology, infrastructureTopology)
+		formattedDetailOut.WriteString("\nTopology Information:\n")
+		formattedDetailOut.WriteString(fmt.Sprintf("- Control Plane Topology: %s\n", controlPlaneTopology))
+		formattedDetailOut.WriteString(fmt.Sprintf("- Infrastructure Topology: %s\n", infrastructureTopology))
+	}
+	formattedDetailOut.WriteString("\n")
+
+	// Add installation indicators with proper formatting
+	formattedDetailOut.WriteString("Installation Indicators:\n")
+	if cmErr == nil && strings.TrimSpace(cmOutput) != "" {
+		formattedDetailOut.WriteString("OpenShift Install ConfigMap:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(cmOutput)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("OpenShift Install ConfigMap: Not found (typical for UPI installations)\n\n")
+	}
+
+	if msErr == nil && strings.TrimSpace(msOutput) != "" {
+		formattedDetailOut.WriteString("MachineSets Information:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(msOutput)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("MachineSets Information: No MachineSets found\n\n")
+	}
+
+	// Add raw configuration with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Infrastructure Configuration:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Infrastructure Configuration: No information available\n\n")
 	}
 
 	result := healthcheck.NewResult(
@@ -134,14 +175,6 @@ func (c *InstallationTypeCheck) Run() (healthcheck.Result, error) {
 		types.ResultKeyNoChange,
 	)
 
-	// Add detailed information to the result
-	result.Detail = fmt.Sprintf("Infrastructure Name: %s\nPlatform Type: %s\n\nInstallation Type: %s\n\n%s%s\n\n%s",
-		strings.TrimSpace(infraName),
-		strings.TrimSpace(platformType),
-		installationType,
-		description,
-		topologyInfo,
-		detailedOut)
-
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

@@ -61,6 +61,12 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 		// If there's an error, it likely means the proxy is not configured
 		// This is not necessarily a failure, so we'll return a result indicating
 		// that the proxy is not configured
+
+		// Format the detailed output with proper AsciiDoc formatting
+		var formattedDetailedOut strings.Builder
+		formattedDetailedOut.WriteString("=== Proxy Configuration Analysis ===\n\n")
+		formattedDetailedOut.WriteString("No proxy configuration found in the cluster.\n\n")
+
 		return healthcheck.NewResult(
 			c.ID(),
 			types.StatusNotApplicable,
@@ -80,12 +86,24 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 		), fmt.Errorf("error parsing proxy configuration: %v", err)
 	}
 
-	// Get detailed information for the report
-	detailedOut, err := utils.RunCommand("oc", "get", "proxy/cluster", "-o", "yaml")
-	if err != nil {
-		// Non-critical error, we can continue without detailed output
-		detailedOut = "Failed to get detailed proxy configuration"
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailedOut strings.Builder
+	formattedDetailedOut.WriteString("=== Proxy Configuration Analysis ===\n\n")
+
+	// Add proxy configuration with proper formatting
+	if strings.TrimSpace(out) != "" {
+		formattedDetailedOut.WriteString("Proxy Configuration:\n[source, json]\n----\n")
+		formattedDetailedOut.WriteString(out)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Proxy Configuration: No information available\n\n")
 	}
+
+	// Add human-readable summary
+	formattedDetailedOut.WriteString("=== Proxy Settings Summary ===\n\n")
+	formattedDetailedOut.WriteString(fmt.Sprintf("HTTP Proxy: %s\n", proxyConfig.Spec.HTTPProxy))
+	formattedDetailedOut.WriteString(fmt.Sprintf("HTTPS Proxy: %s\n", proxyConfig.Spec.HTTPSProxy))
+	formattedDetailedOut.WriteString(fmt.Sprintf("No Proxy: %s\n\n", proxyConfig.Spec.NoProxy))
 
 	// Check if proxy is configured
 	if proxyConfig.Spec.HTTPProxy == "" && proxyConfig.Spec.HTTPSProxy == "" && proxyConfig.Spec.NoProxy == "" {
@@ -95,7 +113,7 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 			"OpenShift Proxy is not configured",
 			types.ResultKeyNotApplicable,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -103,6 +121,19 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 	isComplete := proxyConfig.Spec.HTTPProxy != "" && proxyConfig.Spec.HTTPSProxy != "" && proxyConfig.Spec.NoProxy != ""
 
 	if !isComplete {
+		// Add analysis of missing components
+		formattedDetailedOut.WriteString("=== Configuration Issues ===\n\n")
+		if proxyConfig.Spec.HTTPProxy == "" {
+			formattedDetailedOut.WriteString("- HTTP Proxy is not configured\n")
+		}
+		if proxyConfig.Spec.HTTPSProxy == "" {
+			formattedDetailedOut.WriteString("- HTTPS Proxy is not configured\n")
+		}
+		if proxyConfig.Spec.NoProxy == "" {
+			formattedDetailedOut.WriteString("- No Proxy list is not configured\n")
+		}
+		formattedDetailedOut.WriteString("\n")
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
@@ -110,7 +141,7 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 			types.ResultKeyAdvisory,
 		)
 		result.AddRecommendation("Configure both HTTP and HTTPS proxies, and set appropriate NoProxy values")
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -130,6 +161,14 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 	}
 
 	if len(missingDomains) > 0 {
+		// Add analysis of missing domains
+		formattedDetailedOut.WriteString("=== NoProxy Configuration Issues ===\n\n")
+		formattedDetailedOut.WriteString("The following important domains are missing from the NoProxy configuration:\n")
+		for _, domain := range missingDomains {
+			formattedDetailedOut.WriteString(fmt.Sprintf("- %s\n", domain))
+		}
+		formattedDetailedOut.WriteString("\nThese domains should be included to ensure proper internal cluster communication.\n\n")
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
@@ -137,17 +176,22 @@ func (c *ProxySettingsCheck) Run() (healthcheck.Result, error) {
 			types.ResultKeyAdvisory,
 		)
 		result.AddRecommendation(fmt.Sprintf("Add these domains to NoProxy: %s", strings.Join(missingDomains, ", ")))
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
 	// All checks passed
+	formattedDetailedOut.WriteString("=== Configuration Analysis ===\n\n")
+	formattedDetailedOut.WriteString("The proxy configuration is complete and properly configured.\n")
+	formattedDetailedOut.WriteString("- Both HTTP and HTTPS proxies are defined\n")
+	formattedDetailedOut.WriteString("- NoProxy list includes all important internal domains\n\n")
+
 	result := healthcheck.NewResult(
 		c.ID(),
 		types.StatusOK,
 		"OpenShift Proxy is properly configured",
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailedOut.String()
 	return result, nil
 }

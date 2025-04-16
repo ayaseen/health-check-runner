@@ -111,6 +111,38 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed operator status"
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailedOut strings.Builder
+	formattedDetailedOut.WriteString("=== Cluster Operators Status ===\n\n")
+
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut.WriteString("Cluster Operators Overview:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(detailedOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Cluster Operators Overview: No information available\n\n")
+	}
+
+	// Add operator analysis section
+	formattedDetailedOut.WriteString("=== Operator Analysis ===\n\n")
+	formattedDetailedOut.WriteString(fmt.Sprintf("Total Cluster Operators: %d\n", len(cos.Items)))
+
+	if len(unavailableOps) > 0 {
+		formattedDetailedOut.WriteString("\nUnavailable Operators:\n")
+		for _, op := range unavailableOps {
+			formattedDetailedOut.WriteString(fmt.Sprintf("- %s\n", op))
+
+			// Try to get more details for unavailable operators
+			opDetails, _ := utils.RunCommand("oc", "describe", "co", op)
+			if strings.TrimSpace(opDetails) != "" {
+				formattedDetailedOut.WriteString(fmt.Sprintf("\nDetails for operator %s:\n[source, yaml]\n----\n%s\n----\n\n", op, opDetails))
+			}
+		}
+	} else {
+		formattedDetailedOut.WriteString("\nAll operators are available.\n")
+	}
+	formattedDetailedOut.WriteString("\n")
+
 	if allAvailable {
 		result := healthcheck.NewResult(
 			c.ID(),
@@ -118,7 +150,7 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 			"All cluster operators are available",
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -134,6 +166,6 @@ func (c *ClusterOperatorsCheck) Run() (healthcheck.Result, error) {
 	result.AddRecommendation("Check operator logs using 'oc logs deployment/<operator-name> -n <operator-namespace>'")
 	result.AddRecommendation("Consult the OpenShift documentation or Red Hat support")
 
-	result.Detail = detailedOut
+	result.Detail = formattedDetailedOut.String()
 	return result, nil
 }

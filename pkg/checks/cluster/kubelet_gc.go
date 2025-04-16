@@ -29,6 +29,8 @@ import (
 // KubeletGarbageCollectionCheck checks if kubelet garbage collection is properly configured
 type KubeletGarbageCollectionCheck struct {
 	healthcheck.BaseCheck
+	cpuThreshold    int
+	memoryThreshold int
 }
 
 // NewKubeletGarbageCollectionCheck creates a new kubelet garbage collection check
@@ -40,6 +42,8 @@ func NewKubeletGarbageCollectionCheck() *KubeletGarbageCollectionCheck {
 			"Checks if kubelet garbage collection is properly configured",
 			types.CategoryClusterConfig,
 		),
+		cpuThreshold:    80, // 80% CPU usage threshold
+		memoryThreshold: 80, // 80% memory usage threshold
 	}
 }
 
@@ -63,6 +67,19 @@ func (c *KubeletGarbageCollectionCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "No custom kubelet configuration found"
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailedOut strings.Builder
+	formattedDetailedOut.WriteString("=== Kubelet Garbage Collection Analysis ===\n\n")
+
+	// Add kubelet configuration information with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut.WriteString("Kubelet Configuration:\n[source, yaml]\n----\n")
+		formattedDetailedOut.WriteString(detailedOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Kubelet Configuration: No information available\n\n")
+	}
+
 	// Check for garbage collection settings
 	gcThreshold, err := utils.RunCommand("oc", "get", "kubeletconfigs.machineconfiguration.openshift.io", "-o", "jsonpath={.items[*].spec.kubeletConfig.evictionHard}")
 
@@ -71,11 +88,23 @@ func (c *KubeletGarbageCollectionCheck) Run() (healthcheck.Result, error) {
 	// Get machine config pools with kubelet config - store for detailed reporting
 	mcpInfo, err := utils.RunCommand("oc", "get", "mcp", "-o", "jsonpath={.items[*].metadata.name}")
 	if err == nil && strings.TrimSpace(mcpInfo) != "" {
-		detailedOut += fmt.Sprintf("\n\nMachine Config Pools:\n%s", mcpInfo)
+		formattedDetailedOut.WriteString("Machine Config Pools:\n[source, text]\n----\n")
+		formattedDetailedOut.WriteString(mcpInfo)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Machine Config Pools: No information available\n\n")
 	}
 
 	// Get node storage information to check for potential issues
 	nodeStorageOut, err := utils.RunCommand("oc", "adm", "top", "nodes", "|", "grep", "100%")
+
+	if err == nil && strings.TrimSpace(nodeStorageOut) != "" {
+		formattedDetailedOut.WriteString("Node Storage Issues Detected:\n[source, bash]\n----\n")
+		formattedDetailedOut.WriteString(nodeStorageOut)
+		formattedDetailedOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailedOut.WriteString("Node Storage Issues: None detected\n\n")
+	}
 
 	nodeStorageIssues := err == nil && strings.TrimSpace(nodeStorageOut) != ""
 
@@ -95,6 +124,14 @@ func (c *KubeletGarbageCollectionCheck) Run() (healthcheck.Result, error) {
 
 	containerLogConfigured := err == nil && strings.TrimSpace(containerLogOut) != ""
 
+	// Add configuration status section to formatted output
+	formattedDetailedOut.WriteString("=== Configuration Status ===\n\n")
+	formattedDetailedOut.WriteString(fmt.Sprintf("Custom Kubelet Configuration Exists: %v\n", kubeletConfigExists))
+	formattedDetailedOut.WriteString(fmt.Sprintf("Garbage Collection Thresholds Configured: %v\n", gcConfigured))
+	formattedDetailedOut.WriteString(fmt.Sprintf("Image Garbage Collection Configured: %v\n", imageGCConfigured))
+	formattedDetailedOut.WriteString(fmt.Sprintf("Container Log Size Limits Configured: %v\n", containerLogConfigured))
+	formattedDetailedOut.WriteString(fmt.Sprintf("Node Storage Issues Detected: %v\n\n", nodeStorageIssues))
+
 	// Evaluate kubelet garbage collection configuration
 	if !kubeletConfigExists {
 		// No custom kubelet config exists, check if we're seeing storage issues
@@ -107,7 +144,7 @@ func (c *KubeletGarbageCollectionCheck) Run() (healthcheck.Result, error) {
 			)
 			result.AddRecommendation("Configure kubelet garbage collection parameters to prevent node storage issues")
 			result.AddRecommendation(fmt.Sprintf("Refer to the documentation at https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/nodes/index#nodes-nodes-garbage-collection", version))
-			result.Detail = detailedOut
+			result.Detail = formattedDetailedOut.String()
 			return result, nil
 		}
 
@@ -119,7 +156,7 @@ func (c *KubeletGarbageCollectionCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Consider configuring kubelet garbage collection parameters for production environments")
 		result.AddRecommendation(fmt.Sprintf("Refer to the documentation at https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/nodes/index#nodes-nodes-garbage-collection", version))
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -133,7 +170,7 @@ func (c *KubeletGarbageCollectionCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Configure evictionHard, imageGCHighThresholdPercent, and containerLogMaxSize parameters")
 		result.AddRecommendation(fmt.Sprintf("Refer to the documentation at https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/nodes/index#nodes-nodes-garbage-collection", version))
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -147,7 +184,7 @@ func (c *KubeletGarbageCollectionCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Review and adjust kubelet garbage collection thresholds")
 		result.AddRecommendation("Check for specific workloads that might be causing excessive disk usage")
-		result.Detail = fmt.Sprintf("Node storage issues:\n%s\n\nKubelet config:\n%s", nodeStorageOut, detailedOut)
+		result.Detail = formattedDetailedOut.String()
 		return result, nil
 	}
 
@@ -158,6 +195,6 @@ func (c *KubeletGarbageCollectionCheck) Run() (healthcheck.Result, error) {
 		"Kubelet garbage collection is properly configured",
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailedOut.String()
 	return result, nil
 }

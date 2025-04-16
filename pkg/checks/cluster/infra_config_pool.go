@@ -63,6 +63,14 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 		detailedOut = "Failed to get detailed machine config pool information"
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailedOut string
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailedOut = fmt.Sprintf("Machine Config Pools:\n[source, bash]\n----\n%s\n----\n\n", detailedOut)
+	} else {
+		formattedDetailedOut = "Machine Config Pools: No information available\n\n"
+	}
+
 	// Check if infra pool exists
 	hasInfraPool := strings.Contains(out, "infra")
 
@@ -84,7 +92,7 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("In a production deployment, it is recommended that you deploy at least three machine sets to hold infrastructure components")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/machine_management/index#creating-infrastructure-machinesets", version))
 
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 
@@ -98,19 +106,31 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 			"Infrastructure machine config pool exists but status could not be determined",
 			types.ResultKeyAdvisory,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 
 	if strings.TrimSpace(mcpStatus) == "True" {
+		// Add MCP status information with proper formatting
+		mcpStatusOut, _ := utils.RunCommand("oc", "get", "mcp", "infra", "-o", "yaml")
+		if strings.TrimSpace(mcpStatusOut) != "" {
+			formattedDetailedOut += fmt.Sprintf("Infra MCP Status:\n[source, yaml]\n----\n%s\n----\n\n", mcpStatusOut)
+		}
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
 			"Infrastructure machine config pool is degraded",
 			types.ResultKeyRequired,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
+	}
+
+	// Add MCP status information with proper formatting
+	mcpStatusOut, _ := utils.RunCommand("oc", "get", "mcp", "infra", "-o", "yaml")
+	if strings.TrimSpace(mcpStatusOut) != "" {
+		formattedDetailedOut += fmt.Sprintf("Infra MCP Status:\n[source, yaml]\n----\n%s\n----\n\n", mcpStatusOut)
 	}
 
 	result := healthcheck.NewResult(
@@ -119,6 +139,6 @@ func (c *InfraMachineConfigPoolCheck) Run() (healthcheck.Result, error) {
 		"Dedicated infrastructure machine config pool is properly configured",
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailedOut
 	return result, nil
 }

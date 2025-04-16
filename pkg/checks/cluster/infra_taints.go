@@ -125,6 +125,58 @@ func (c *InfraTaintsCheck) Run() (healthcheck.Result, error) {
 		version = "4.10" // Default to a known version if we can't determine
 	}
 
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Infrastructure Node Taints Analysis ===\n\n")
+
+	// Add infrastructure node information with proper formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Infrastructure Nodes:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Infrastructure Nodes: No information available\n\n")
+	}
+
+	// Add taint information with proper formatting
+	if strings.TrimSpace(taintInfo) != "" {
+		formattedDetailOut.WriteString("Taint Information:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(taintInfo)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Taint Information: No information available\n\n")
+	}
+
+	// Add taint summary section
+	formattedDetailOut.WriteString("=== Taint Status Summary ===\n\n")
+	formattedDetailOut.WriteString(fmt.Sprintf("Total Infrastructure Nodes: %d\n", len(nodes.Items)))
+	formattedDetailOut.WriteString(fmt.Sprintf("Nodes Without Taints: %d\n", len(nodesWithoutTaints)))
+	formattedDetailOut.WriteString(fmt.Sprintf("Nodes With Insufficient Taints: %d\n\n", len(nodesWithInsufficientTaints)))
+
+	if len(nodesWithoutTaints) > 0 {
+		formattedDetailOut.WriteString("Nodes missing taints:\n")
+		for _, nodeName := range nodesWithoutTaints {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", nodeName))
+		}
+		formattedDetailOut.WriteString("\n")
+	}
+
+	if len(nodesWithInsufficientTaints) > 0 {
+		formattedDetailOut.WriteString("Nodes with insufficient taints (need NoSchedule or NoExecute):\n")
+		for _, nodeName := range nodesWithInsufficientTaints {
+			formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", nodeName))
+		}
+		formattedDetailOut.WriteString("\n")
+	}
+
+	// Add best practices section
+	formattedDetailOut.WriteString("=== Taint Best Practices ===\n\n")
+	formattedDetailOut.WriteString("Infrastructure nodes should have appropriate taints to ensure only infrastructure workloads are scheduled on them.\n\n")
+	formattedDetailOut.WriteString("Recommended taint for infrastructure nodes:\n")
+	formattedDetailOut.WriteString("  node-role.kubernetes.io/infra:NoSchedule\n\n")
+	formattedDetailOut.WriteString("This ensures regular application workloads will not be scheduled on infrastructure nodes,\n")
+	formattedDetailOut.WriteString("while infrastructure components with matching tolerations can still be placed there.\n\n")
+
 	// Evaluate taint configuration
 	if len(nodesWithoutTaints) > 0 {
 		result := healthcheck.NewResult(
@@ -136,8 +188,8 @@ func (c *InfraTaintsCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Add taints to infrastructure nodes to prevent regular workloads from being scheduled on them")
 		result.AddRecommendation(fmt.Sprintf("Use 'oc adm taint nodes <node-name> node-role.kubernetes.io/infra=:NoSchedule'"))
 		result.AddRecommendation(fmt.Sprintf("Refer to the documentation at https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/nodes/scheduling-pods-to-specific-nodes", version))
-		result.Detail = fmt.Sprintf("Nodes without taints:\n%s\n\nTaint information:\n%s\n\nNodes:\n%s",
-			strings.Join(nodesWithoutTaints, "\n"), taintInfo, detailedOut)
+
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -150,8 +202,8 @@ func (c *InfraTaintsCheck) Run() (healthcheck.Result, error) {
 		)
 		result.AddRecommendation("Consider using stronger taint effects (NoSchedule or NoExecute) to ensure regular workloads aren't scheduled on infrastructure nodes")
 		result.AddRecommendation(fmt.Sprintf("Use 'oc adm taint nodes <node-name> node-role.kubernetes.io/infra=:NoSchedule'"))
-		result.Detail = fmt.Sprintf("Nodes with insufficient taints:\n%s\n\nTaint information:\n%s\n\nNodes:\n%s",
-			strings.Join(nodesWithInsufficientTaints, "\n"), taintInfo, detailedOut)
+
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -162,6 +214,6 @@ func (c *InfraTaintsCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("All %d infrastructure nodes are properly tainted", len(nodes.Items)),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = fmt.Sprintf("Taint information:\n%s\n\nNodes:\n%s", taintInfo, detailedOut)
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }
