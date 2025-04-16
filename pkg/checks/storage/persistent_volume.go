@@ -72,10 +72,26 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 
 	// Get detailed information for the report
 	detailedOut, err := utils.RunCommand("oc", "get", "pv", "-o", "wide")
-	if err != nil {
-		// Non-critical error, we can continue without detailed output
-		detailedOut = "Failed to get detailed persistent volume information"
+
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Persistent Volumes Analysis ===\n\n")
+
+	if err == nil && strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Persistent Volumes Overview:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Persistent Volumes Overview: No information available\n\n")
 	}
+
+	// Get more detailed YAML output
+	//detailedYamlOut, _ := utils.RunCommand("oc", "get", "pv", "-o", "yaml")
+	//if strings.TrimSpace(detailedYamlOut) != "" {
+	//	formattedDetailOut.WriteString("Persistent Volumes (YAML):\n[source, yaml]\n----\n")
+	//	formattedDetailOut.WriteString(detailedYamlOut)
+	//	formattedDetailOut.WriteString("\n----\n\n")
+	//}
 
 	// Check PV status
 	var failedPVs []string
@@ -93,6 +109,40 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Add volume status analysis section
+	formattedDetailOut.WriteString("=== Volume Status Analysis ===\n\n")
+	formattedDetailOut.WriteString(fmt.Sprintf("Total Persistent Volumes: %d\n\n", len(pvs.Items)))
+
+	if len(failedPVs) > 0 {
+		formattedDetailOut.WriteString("Failed Persistent Volumes:\n")
+		for _, pv := range failedPVs {
+			formattedDetailOut.WriteString(pv + "\n")
+		}
+		formattedDetailOut.WriteString("\n")
+	} else {
+		formattedDetailOut.WriteString("Failed Persistent Volumes: None\n\n")
+	}
+
+	if len(pendingPVs) > 0 {
+		formattedDetailOut.WriteString("Pending Persistent Volumes:\n")
+		for _, pv := range pendingPVs {
+			formattedDetailOut.WriteString(pv + "\n")
+		}
+		formattedDetailOut.WriteString("\n")
+	} else {
+		formattedDetailOut.WriteString("Pending Persistent Volumes: None\n\n")
+	}
+
+	if len(releasedPVs) > 0 {
+		formattedDetailOut.WriteString("Released Persistent Volumes:\n")
+		for _, pv := range releasedPVs {
+			formattedDetailOut.WriteString(pv + "\n")
+		}
+		formattedDetailOut.WriteString("\n")
+	} else {
+		formattedDetailOut.WriteString("Released Persistent Volumes: None\n\n")
+	}
+
 	// Create result based on PV statuses
 	if len(failedPVs) > 0 {
 		result := healthcheck.NewResult(
@@ -105,17 +155,7 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Investigate and fix the failed persistent volumes")
 		result.AddRecommendation("Consider manually deleting and recreating the volumes if appropriate")
 
-		detail := fmt.Sprintf("Failed persistent volumes:\n%s\n\n", strings.Join(failedPVs, "\n"))
-		if len(pendingPVs) > 0 {
-			detail += fmt.Sprintf("Pending persistent volumes:\n%s\n\n", strings.Join(pendingPVs, "\n"))
-		}
-		if len(releasedPVs) > 0 {
-			detail += fmt.Sprintf("Released persistent volumes:\n%s\n\n", strings.Join(releasedPVs, "\n"))
-		}
-		detail += fmt.Sprintf("Detailed output:\n%s", detailedOut)
-
-		result.Detail = detail
-
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -129,14 +169,7 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 
 		result.AddRecommendation("Check why persistent volumes are in pending state")
 
-		detail := fmt.Sprintf("Pending persistent volumes:\n%s\n\n", strings.Join(pendingPVs, "\n"))
-		if len(releasedPVs) > 0 {
-			detail += fmt.Sprintf("Released persistent volumes:\n%s\n\n", strings.Join(releasedPVs, "\n"))
-		}
-		detail += fmt.Sprintf("Detailed output:\n%s", detailedOut)
-
-		result.Detail = detail
-
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -149,8 +182,7 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 		)
 
 		result.AddRecommendation("Consider reclaiming or deleting released volumes that are no longer needed")
-		result.Detail = fmt.Sprintf("Released persistent volumes:\n%s\n\nDetailed output:\n%s",
-			strings.Join(releasedPVs, "\n"), detailedOut)
+		result.Detail = formattedDetailOut.String()
 
 		return result, nil
 	}
@@ -162,6 +194,6 @@ func (c *PersistentVolumeCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("All %d persistent volumes are healthy", len(pvs.Items)),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

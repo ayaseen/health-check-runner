@@ -94,9 +94,25 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 
 	// Get detailed information using oc command for the report
 	detailedOut, err := utils.RunCommand("oc", "get", "storageclasses", "-o", "wide")
-	if err != nil {
-		// Non-critical error, we can continue without detailed output
-		detailedOut = "Failed to get detailed storage class information"
+
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailOut strings.Builder
+	formattedDetailOut.WriteString("=== Storage Classes Analysis ===\n\n")
+
+	if err == nil && strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut.WriteString("Storage Classes:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(detailedOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Storage Classes: No information available\n\n")
+	}
+
+	// Get detailed YAML output for more comprehensive information
+	detailedYamlOut, err := utils.RunCommand("oc", "get", "storageclasses", "-o", "yaml")
+	if err == nil && strings.TrimSpace(detailedYamlOut) != "" {
+		formattedDetailOut.WriteString("Storage Classes (YAML):\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(detailedYamlOut)
+		formattedDetailOut.WriteString("\n----\n\n")
 	}
 
 	// Check if any storage classes exist
@@ -107,7 +123,7 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 			"No storage classes found",
 			types.ResultKeyRecommended,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -143,6 +159,27 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Add storage class analysis section
+	formattedDetailOut.WriteString("=== Storage Class Analysis ===\n\n")
+
+	if defaultStorageClass != "" {
+		formattedDetailOut.WriteString(fmt.Sprintf("Default Storage Class: %s\n\n", defaultStorageClass))
+	} else {
+		formattedDetailOut.WriteString("Default Storage Class: None\n\n")
+	}
+
+	formattedDetailOut.WriteString("Storage Class Names:\n")
+	for _, name := range storageClassNames {
+		formattedDetailOut.WriteString(fmt.Sprintf("- %s\n", name))
+	}
+	formattedDetailOut.WriteString("\n")
+
+	if hasRWXStorageClass {
+		formattedDetailOut.WriteString("ReadWriteMany (RWX) Capable Storage: Available\n\n")
+	} else {
+		formattedDetailOut.WriteString("ReadWriteMany (RWX) Capable Storage: Not Detected\n\n")
+	}
+
 	// Create appropriate result based on findings
 	if defaultStorageClass == "" {
 		result := healthcheck.NewResult(
@@ -155,9 +192,7 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Configure a default storage class for dynamic provisioning")
 		result.AddRecommendation("Use 'oc patch storageclass <name> -p '{\"metadata\":{\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}'")
 
-		result.Detail = fmt.Sprintf("Available storage classes:\n%s\n\nDetailed output:\n%s",
-			strings.Join(storageClassNames, ", "), detailedOut)
-
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -171,8 +206,7 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 		)
 
 		result.AddRecommendation("Consider adding a storage class that supports ReadWriteMany access mode for shared storage needs")
-		result.Detail = fmt.Sprintf("Available storage classes:\n%s\n\nDetailed output:\n%s",
-			strings.Join(storageClassNames, ", "), detailedOut)
+		result.Detail = formattedDetailOut.String()
 
 		return result, nil
 	}
@@ -184,6 +218,6 @@ func (c *StorageClassCheck) Run() (healthcheck.Result, error) {
 		fmt.Sprintf("Default storage class '%s' is configured and RWX-capable storage is available", defaultStorageClass),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }
