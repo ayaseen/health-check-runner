@@ -19,10 +19,10 @@ package monitoring
 
 import (
 	"fmt"
-	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
@@ -73,113 +73,97 @@ func (c *LoggingHealthCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Check health based on the logging type
+	var loggingPodsOut string
+	var collectorPodsOut string
+	var statusOutput string
+	var unhealthyPods bool
+
 	if loggingInfo.Type == LoggingTypeLoki {
 		// For Loki, check pod status
 		lokiPodsOut, err := utils.RunCommand("oc", "get", "pods", "-n", "openshift-logging", "-l", "app.kubernetes.io/component=loki")
-		if err != nil {
-			return healthcheck.NewResult(
-				c.ID(),
-				types.StatusCritical,
-				"Failed to get Loki pod status",
-				types.ResultKeyRequired,
-			), fmt.Errorf("error getting Loki pod status: %v", err)
-		}
+		loggingPodsOut = lokiPodsOut
 
-		// Check if any pods are not running
-		if strings.Contains(lokiPodsOut, "CrashLoopBackOff") ||
-			strings.Contains(lokiPodsOut, "Error") ||
-			strings.Contains(lokiPodsOut, "Failed") {
-
-			result := healthcheck.NewResult(
-				c.ID(),
-				types.StatusWarning,
-				"Loki Logging has unhealthy pods",
-				types.ResultKeyRecommended,
-			)
-
-			result.AddRecommendation("Investigate the pod issues in the openshift-logging namespace")
-			result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index", version))
-
-			result.Detail = lokiPodsOut
-			return result, nil
+		if err == nil {
+			// Check if any pods are not running
+			unhealthyPods = strings.Contains(lokiPodsOut, "CrashLoopBackOff") ||
+				strings.Contains(lokiPodsOut, "Error") ||
+				strings.Contains(lokiPodsOut, "Failed")
 		}
 
 		// Check collector status
-		collectorPodsOut, err := utils.RunCommand("oc", "get", "pods", "-n", "openshift-logging", "-l", "app.kubernetes.io/component=collector")
-		if err == nil {
-			if strings.Contains(collectorPodsOut, "CrashLoopBackOff") ||
-				strings.Contains(collectorPodsOut, "Error") ||
-				strings.Contains(collectorPodsOut, "Failed") {
-
-				result := healthcheck.NewResult(
-					c.ID(),
-					types.StatusWarning,
-					"Logging collector pods are unhealthy",
-					types.ResultKeyRecommended,
-				)
-
-				result.AddRecommendation("Investigate the collector pod issues in the openshift-logging namespace")
-				result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index", version))
-
-				result.Detail = fmt.Sprintf("Loki pods:\n%s\n\nCollector pods:\n%s", lokiPodsOut, collectorPodsOut)
-				return result, nil
-			}
-		}
-
-		// Logging is healthy
-		result := healthcheck.NewResult(
-			c.ID(),
-			types.StatusOK,
-			"Loki Logging is healthy",
-			types.ResultKeyNoChange,
-		)
-		result.Detail = lokiPodsOut
-		return result, nil
+		collectorPodsOut, _ = utils.RunCommand("oc", "get", "pods", "-n", "openshift-logging", "-l", "app.kubernetes.io/component=collector")
 	} else {
-		// For traditional logging, check the ClusterLogging status
-		clStatus, err := utils.RunCommand("oc", "get", "clusterlogging", "instance", "-n", "openshift-logging", "-o", "yaml")
-		if err != nil {
-			return healthcheck.NewResult(
-				c.ID(),
-				types.StatusCritical,
-				"Failed to get traditional logging status",
-				types.ResultKeyRequired,
-			), fmt.Errorf("error getting traditional logging status: %v", err)
-		}
+		// Traditional logging with ElasticSearch
+		statusOutput, _ = utils.RunCommand("oc", "get", "clusterlogging", "instance", "-n", "openshift-logging", "-o", "yaml")
 
 		// Check Elasticsearch status
 		esPodsOut, _ := utils.RunCommand("oc", "get", "pods", "-n", "openshift-logging", "-l", "component=elasticsearch")
+		loggingPodsOut = esPodsOut
 
 		// Check if status is unhealthy
-		isUnhealthy := strings.Contains(clStatus, "status: yellow") ||
-			strings.Contains(clStatus, "status: red") ||
+		unhealthyPods = strings.Contains(statusOutput, "status: yellow") ||
+			strings.Contains(statusOutput, "status: red") ||
 			strings.Contains(esPodsOut, "CrashLoopBackOff") ||
 			strings.Contains(esPodsOut, "Error") ||
 			strings.Contains(esPodsOut, "Failed")
+	}
 
-		if isUnhealthy {
-			result := healthcheck.NewResult(
-				c.ID(),
-				types.StatusWarning,
-				"Traditional Logging is not healthy (status is degraded)",
-				types.ResultKeyRecommended,
-			)
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailOut strings.Builder
 
-			result.AddRecommendation("Investigate the root cause of logging issues")
-			result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index#cluster-logging-cluster-status", version))
+	// Add logging type information
+	if loggingInfo.Type == LoggingTypeLoki {
+		formattedDetailOut.WriteString("Logging Type: Loki-based logging\n\n")
+	} else {
+		formattedDetailOut.WriteString("Logging Type: Traditional logging with Elasticsearch\n\n")
+	}
 
-			result.Detail = fmt.Sprintf("Cluster logging status:\n%s\n\nElasticsearch pods:\n%s", clStatus, esPodsOut)
-			return result, nil
-		}
+	// Add status output if available
+	if strings.TrimSpace(statusOutput) != "" {
+		formattedDetailOut.WriteString("Logging Status Information:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(statusOutput)
+		formattedDetailOut.WriteString("\n----\n\n")
+	}
 
-		// Logging is healthy
+	// Add logging pods information
+	if strings.TrimSpace(loggingPodsOut) != "" {
+		formattedDetailOut.WriteString("Logging Pods Status:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(loggingPodsOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Logging Pods Status: No information available\n\n")
+	}
+
+	// Add collector pods information if available
+	if strings.TrimSpace(collectorPodsOut) != "" {
+		formattedDetailOut.WriteString("Collector Pods Status:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(collectorPodsOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	}
+
+	// Check if there are unhealthy pods or components
+	if unhealthyPods {
 		result := healthcheck.NewResult(
 			c.ID(),
-			types.StatusOK,
-			"Traditional Logging is healthy",
-			types.ResultKeyNoChange,
+			types.StatusWarning,
+			fmt.Sprintf("%s Logging is not healthy (status is degraded)", string(loggingInfo.Type)),
+			types.ResultKeyRecommended,
 		)
-		result.Detail = clStatus
+
+		result.AddRecommendation("Investigate the root cause of logging issues")
+		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index#cluster-logging-cluster-status", version))
+
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
+
+	// Logging is healthy
+	result := healthcheck.NewResult(
+		c.ID(),
+		types.StatusOK,
+		fmt.Sprintf("%s Logging is healthy", string(loggingInfo.Type)),
+		types.ResultKeyNoChange,
+	)
+	result.Detail = formattedDetailOut.String()
+	return result, nil
 }

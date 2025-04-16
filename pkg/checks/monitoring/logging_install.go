@@ -22,6 +22,7 @@ import (
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
+	"strings"
 )
 
 // LoggingInstallCheck checks if OpenShift Logging is installed and configured
@@ -55,29 +56,47 @@ func (c *LoggingInstallCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Get detailed information for the report
-	var detailedOut string
+	var clfoOut, lokiOut string
 	if loggingInfo.Type == LoggingTypeLoki {
-		clfoOut, detailErr := utils.RunCommand("oc", "get", "clusterlogforwarders.observability.openshift.io", "-n", "openshift-logging", "-o", "yaml")
+		// Get cluster log forwarder info
+		tempClfoOut, detailErr := utils.RunCommand("oc", "get", "clusterlogforwarders.observability.openshift.io", "-n", "openshift-logging", "-o", "yaml")
 		if detailErr == nil {
-			detailedOut = clfoOut
+			clfoOut = tempClfoOut
 		} else {
-			detailedOut = "Failed to get detailed Loki logging information"
+			clfoOut = "Failed to get detailed Loki logging information"
 		}
 
 		// Add Loki Stack info
-		lokiOut, lokiErr := utils.RunCommand("oc", "get", "lokistack", "-n", "openshift-logging", "-o", "yaml")
+		tempLokiOut, lokiErr := utils.RunCommand("oc", "get", "lokistack", "-n", "openshift-logging", "-o", "yaml")
 		if lokiErr == nil {
-			detailedOut += "\n\n=== Loki Stack Configuration ===\n" + lokiOut
+			lokiOut = tempLokiOut
 		}
 	} else if loggingInfo.Type == LoggingTypeTraditional {
 		clOut, detailErr := utils.RunCommand("oc", "get", "clusterlogging", "-n", "openshift-logging", "-o", "yaml")
 		if detailErr == nil {
-			detailedOut = clOut
+			clfoOut = clOut
 		} else {
-			detailedOut = "Failed to get detailed traditional logging information"
+			clfoOut = "Failed to get detailed traditional logging information"
+		}
+	}
+
+	// Create the exact format for the detail output with proper spacing
+	var formattedDetailedOut string
+
+	// Format cluster log forwarder output
+	if strings.TrimSpace(clfoOut) != "" {
+		if loggingInfo.Type == LoggingTypeLoki {
+			formattedDetailedOut = fmt.Sprintf("Cluster Log Forwarder Configuration:\n[source, yaml]\n----\n%s\n----\n\n", clfoOut)
+		} else {
+			formattedDetailedOut = fmt.Sprintf("Cluster Logging Configuration:\n[source, yaml]\n----\n%s\n----\n\n", clfoOut)
 		}
 	} else {
-		detailedOut = "No logging configuration found"
+		formattedDetailedOut = "Logging Configuration: No information available\n\n"
+	}
+
+	// Format Loki Stack output separately
+	if strings.TrimSpace(lokiOut) != "" {
+		formattedDetailedOut += fmt.Sprintf("Loki Stack Configuration:\n[source, yaml]\n----\n%s\n----\n\n", lokiOut)
 	}
 
 	// Get the OpenShift version for recommendations
@@ -98,7 +117,7 @@ func (c *LoggingInstallCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Deploy the logging subsystem to aggregate logs from your OpenShift Container Platform cluster")
 		result.AddRecommendation(fmt.Sprintf("Follow the documentation at https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/cluster-logging-deploying", version))
 
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	} else if loggingInfo.Type == LoggingTypeLoki {
 		result := healthcheck.NewResult(
@@ -107,7 +126,7 @@ func (c *LoggingInstallCheck) Run() (healthcheck.Result, error) {
 			"OpenShift Logging with Loki is installed and configured",
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	} else {
 		// Traditional logging
@@ -117,7 +136,7 @@ func (c *LoggingInstallCheck) Run() (healthcheck.Result, error) {
 			"OpenShift Logging with Elasticsearch is installed and configured",
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailedOut
 		return result, nil
 	}
 }

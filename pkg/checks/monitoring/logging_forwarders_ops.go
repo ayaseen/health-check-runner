@@ -75,6 +75,7 @@ func (c *LoggingForwardersOpsCheck) Run() (healthcheck.Result, error) {
 	// Check if operations logs are forwarded
 	var opsLogsForwarded bool
 	var detailedOut string
+	var formattedDetailOut string
 
 	if loggingInfo.Type == LoggingTypeLoki {
 		clfoOut, err := utils.RunCommand("oc", "get", "clusterlogforwarders.observability.openshift.io", "-n", "openshift-logging", "-o", "yaml")
@@ -93,6 +94,23 @@ func (c *LoggingForwardersOpsCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut = fmt.Sprintf("Log Forwarder Configuration:\n[source, yaml]\n----\n%s\n----\n\n", detailedOut)
+	} else {
+		formattedDetailOut = "Log Forwarder Configuration: No information available\n\n"
+	}
+
+	// Add logging type information
+	var loggingTypeInfo string
+	if loggingInfo.Type == LoggingTypeLoki {
+		loggingTypeInfo = "Logging Type: Loki-based logging\n\n"
+	} else {
+		loggingTypeInfo = "Logging Type: Traditional logging with Elasticsearch\n\n"
+	}
+
+	formattedDetailOut = loggingTypeInfo + formattedDetailOut
+
 	// Check if external forwarding is configured, but operations logs are not included
 	if loggingInfo.HasExternalForwarder && !opsLogsForwarded {
 		result := healthcheck.NewResult(
@@ -105,7 +123,7 @@ func (c *LoggingForwardersOpsCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Configure forwarding for infrastructure and audit logs")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index#cluster-logging-collector-log-forwarding-about_cluster-logging-external", version))
 
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut
 		return result, nil
 	} else if loggingInfo.HasExternalForwarder && opsLogsForwarded {
 		// External forwarding with operations logs is properly configured
@@ -115,7 +133,7 @@ func (c *LoggingForwardersOpsCheck) Run() (healthcheck.Result, error) {
 			"Operations logs are properly configured for forwarding",
 			types.ResultKeyNoChange,
 		)
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut
 		return result, nil
 	} else {
 		// No external forwarding is configured
@@ -129,7 +147,7 @@ func (c *LoggingForwardersOpsCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Configure external forwarding for infrastructure and audit logs")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index#cluster-logging-external", version))
 
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut
 		return result, nil
 	}
 }

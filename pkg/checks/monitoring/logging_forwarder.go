@@ -19,6 +19,8 @@ package monitoring
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
@@ -71,50 +73,50 @@ func (c *LoggingForwarderCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Check if external forwarding is configured
+	var detailedOut string
+	var formattedDetailOut string
+	var loggingTypeInfo string
+
+	if loggingInfo.Type == LoggingTypeLoki {
+		detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogforwarders.observability.openshift.io", "-n", "openshift-logging", "-o", "yaml")
+		loggingTypeInfo = "Logging Type: Loki-based logging\n\n"
+	} else {
+		detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogforwarder", "-n", "openshift-logging", "-o", "yaml")
+		loggingTypeInfo = "Logging Type: Traditional logging with Elasticsearch\n\n"
+	}
+
+	// Format the detailed output with proper AsciiDoc formatting
+	if strings.TrimSpace(detailedOut) != "" {
+		formattedDetailOut = fmt.Sprintf("Log Forwarder Configuration:\n[source, yaml]\n----\n%s\n----\n\n", detailedOut)
+	} else {
+		formattedDetailOut = "Log Forwarder Configuration: No information available\n\n"
+	}
+
+	formattedDetailOut = loggingTypeInfo + formattedDetailOut
+
+	// Check if we have external forwarding configured
 	if !loggingInfo.HasExternalForwarder {
-		var detailedOut string
-		var message string
-
-		if loggingInfo.Type == LoggingTypeLoki {
-			detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogforwarders.observability.openshift.io", "-n", "openshift-logging", "-o", "yaml")
-			message = "Loki logging is configured but no external forwarding is set up"
-		} else {
-			detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogging", "-n", "openshift-logging", "-o", "yaml")
-			message = "Traditional logging is configured but no external forwarding is set up"
-		}
-
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
-			message,
+			"No external log forwarding configured",
 			types.ResultKeyRecommended,
 		)
 
 		result.AddRecommendation("Configure external log forwarding for long-term storage and better log management")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index#cluster-logging-external", version))
 
-		result.Detail = detailedOut
+		result.Detail = formattedDetailOut
 		return result, nil
 	}
 
 	// External forwarding is configured
-	var detailedOut string
-	var message string
-
-	if loggingInfo.Type == LoggingTypeLoki {
-		detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogforwarders.observability.openshift.io", "-n", "openshift-logging", "-o", "yaml")
-		message = "Loki logging with external forwarding is properly configured"
-	} else {
-		detailedOut, _ = utils.RunCommand("oc", "get", "clusterlogforwarder", "-n", "openshift-logging", "-o", "yaml")
-		message = "Traditional logging with external forwarding is properly configured"
-	}
-
 	result := healthcheck.NewResult(
 		c.ID(),
 		types.StatusOK,
-		message,
+		fmt.Sprintf("%s with external forwarding is properly configured", string(loggingInfo.Type)),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = detailedOut
+	result.Detail = formattedDetailOut
 	return result, nil
 }

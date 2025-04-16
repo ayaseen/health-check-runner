@@ -90,14 +90,15 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 		version = "4.14" // Default to a known version if we can't determine
 	}
 
-	// Create detailed information for the report
+	// Build detailed output with proper AsciiDoc formatting
 	var detailedOut strings.Builder
-	detailedOut.WriteString("User Workload Monitoring Configuration\n\n")
+	detailedOut.WriteString("== User Workload Monitoring Configuration ==\n\n")
 
+	// Format cluster monitoring config
 	if monConfigExists {
-		detailedOut.WriteString("Cluster Monitoring Config exists:\n\n")
+		detailedOut.WriteString("Cluster Monitoring ConfigMap:\n[source, yaml]\n----\n")
 		detailedOut.WriteString(monConfigYaml)
-		detailedOut.WriteString("\n\n")
+		detailedOut.WriteString("\n----\n\n")
 		detailedOut.WriteString(fmt.Sprintf("User Workload Monitoring enabled in config: %v\n\n", uwmEnabled))
 	} else {
 		detailedOut.WriteString("No cluster-monitoring-config ConfigMap found\n\n")
@@ -110,16 +111,26 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 		// Get the user-workload-monitoring-config ConfigMap
 		uwmConfigExists, uwmConfigYaml := getUserWorkloadMonitoringConfig(client)
 
-		detailedOut.WriteString("User Workload Monitoring Components\n\n")
+		detailedOut.WriteString("== User Workload Monitoring Components ==\n\n")
 
 		if uwmConfigExists {
-			detailedOut.WriteString("User Workload Monitoring Config exists:\n\n")
+			detailedOut.WriteString("User Workload Monitoring ConfigMap:\n[source, yaml]\n----\n")
 			detailedOut.WriteString(uwmConfigYaml)
-			detailedOut.WriteString("\n\n")
+			detailedOut.WriteString("\n----\n\n")
 
 			// Check user workload monitoring components
 			configuredComponents, missingComponents, componentDetails := checkUserWorkloadComponents(uwmConfigYaml)
 			detailedOut.WriteString(componentDetails)
+
+			// Format and add pod status information
+			podStatusOut, _ := utils.RunCommand("oc", "get", "pods", "-n", "openshift-user-workload-monitoring", "-o", "wide")
+			if strings.TrimSpace(podStatusOut) != "" {
+				detailedOut.WriteString("User Workload Monitoring Pods:\n[source, bash]\n----\n")
+				detailedOut.WriteString(podStatusOut)
+				detailedOut.WriteString("\n----\n\n")
+			} else {
+				detailedOut.WriteString("User Workload Monitoring Pods: No information available\n\n")
+			}
 
 			if len(missingComponents) > 0 {
 				result := healthcheck.NewResult(
@@ -138,8 +149,18 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 
 			// Check for persistent storage configuration
 			hasPersistentStorage, storageDetails := checkUserWorkloadPersistentStorage(uwmConfigYaml)
-			detailedOut.WriteString("\nUser Workload Monitoring Storage\n\n")
+			detailedOut.WriteString("== User Workload Monitoring Storage ==\n\n")
 			detailedOut.WriteString(storageDetails)
+
+			// Format and add PVC information
+			pvcOut, _ := utils.RunCommand("oc", "get", "pvc", "-n", "openshift-user-workload-monitoring", "-o", "wide")
+			if strings.TrimSpace(pvcOut) != "" {
+				detailedOut.WriteString("User Workload Monitoring PVCs:\n[source, bash]\n----\n")
+				detailedOut.WriteString(pvcOut)
+				detailedOut.WriteString("\n----\n\n")
+			} else {
+				detailedOut.WriteString("User Workload Monitoring PVCs: No information available\n\n")
+			}
 
 			if !hasPersistentStorage {
 				result := healthcheck.NewResult(
@@ -174,6 +195,16 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 			running, componentStatus := checkUserWorkloadComponentsRunning()
 			detailedOut.WriteString(componentStatus)
 
+			// Add ServiceMonitor information
+			smOut, _ := utils.RunCommand("oc", "get", "servicemonitors", "--all-namespaces", "-o", "wide")
+			if strings.TrimSpace(smOut) != "" {
+				detailedOut.WriteString("ServiceMonitors in the Cluster:\n[source, bash]\n----\n")
+				detailedOut.WriteString(smOut)
+				detailedOut.WriteString("\n----\n\n")
+			} else {
+				detailedOut.WriteString("ServiceMonitors in the Cluster: No ServiceMonitors found\n\n")
+			}
+
 			if running {
 				result := healthcheck.NewResult(
 					c.ID(),
@@ -199,6 +230,14 @@ func (c *UserWorkloadMonitoringCheck) Run() (healthcheck.Result, error) {
 				return result, nil
 			}
 		}
+	}
+
+	// Get additional monitoring context
+	prometheusOut, _ := utils.RunCommand("oc", "get", "prometheuses", "-n", "openshift-monitoring", "-o", "yaml")
+	if strings.TrimSpace(prometheusOut) != "" {
+		detailedOut.WriteString("Prometheus Configuration:\n[source, yaml]\n----\n")
+		detailedOut.WriteString(prometheusOut)
+		detailedOut.WriteString("\n----\n\n")
 	}
 
 	// User workload monitoring is not enabled
@@ -358,7 +397,7 @@ func checkUserWorkloadComponents(uwmConfigYaml string) ([]string, []string, stri
 		}
 	}
 
-	// Generate detailed output
+	// Generate detailed output with proper AsciiDoc formatting
 	var details strings.Builder
 
 	if len(configuredComponents) > 0 {
@@ -382,7 +421,7 @@ func checkUserWorkloadComponents(uwmConfigYaml string) ([]string, []string, stri
 	}
 
 	// Check if components are actually running
-	details.WriteString("Verifying component status in the cluster:\n\n")
+	details.WriteString("=== Component Status in the Cluster ===\n\n")
 
 	for _, component := range requiredComponents {
 		isRunning := isUserWorkloadComponentRunning(component)
@@ -392,6 +431,7 @@ func checkUserWorkloadComponents(uwmConfigYaml string) ([]string, []string, stri
 		}
 		details.WriteString(fmt.Sprintf("- %s: %s\n", component, status))
 	}
+	details.WriteString("\n")
 
 	return configuredComponents, missingComponents, details.String()
 }
@@ -432,8 +472,20 @@ func checkUserWorkloadComponentsRunning() (bool, string) {
 
 	allRunning := true
 	var details strings.Builder
-	details.WriteString("User Workload Monitoring components status:\n\n")
+	details.WriteString("=== User Workload Monitoring Component Status ===\n\n")
 
+	// Get all pods in the namespace with proper AsciiDoc formatting
+	podsOut, _ := utils.RunCommand("oc", "get", "pods", "-n", "openshift-user-workload-monitoring", "-o", "wide")
+	if strings.TrimSpace(podsOut) != "" {
+		details.WriteString("Pods in openshift-user-workload-monitoring namespace:\n[source, bash]\n----\n")
+		details.WriteString(podsOut)
+		details.WriteString("\n----\n\n")
+	} else {
+		details.WriteString("Pods in openshift-user-workload-monitoring namespace: No information available\n\n")
+	}
+
+	// Check individual components
+	details.WriteString("Component status:\n\n")
 	for _, component := range requiredComponents {
 		isRunning := isUserWorkloadComponentRunning(component)
 		status := "✅ Running"
@@ -443,6 +495,7 @@ func checkUserWorkloadComponentsRunning() (bool, string) {
 		}
 		details.WriteString(fmt.Sprintf("- %s: %s\n", component, status))
 	}
+	details.WriteString("\n")
 
 	return allRunning, details.String()
 }

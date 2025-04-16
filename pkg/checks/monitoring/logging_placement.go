@@ -19,10 +19,10 @@ package monitoring
 
 import (
 	"fmt"
-	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
 	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
@@ -78,6 +78,25 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 		), nil
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailOut strings.Builder
+
+	// Add logging type information
+	if loggingInfo.Type == LoggingTypeLoki {
+		formattedDetailOut.WriteString("Logging Type: Loki-based logging\n\n")
+	} else {
+		formattedDetailOut.WriteString("Logging Type: Traditional logging with Elasticsearch\n\n")
+	}
+
+	// Get infrastructure node information
+	if strings.TrimSpace(nodeOut) != "" {
+		formattedDetailOut.WriteString("Infrastructure Nodes:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(nodeOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Infrastructure Nodes: No information available\n\n")
+	}
+
 	// Get infrastructure node names
 	infraNodeNames := []string{}
 	for _, line := range strings.Split(nodeOut, "\n") {
@@ -119,6 +138,15 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Add pod placement information
+	if strings.TrimSpace(podOut) != "" {
+		formattedDetailOut.WriteString("Logging Component Pods:\n[source, bash]\n----\n")
+		formattedDetailOut.WriteString(podOut)
+		formattedDetailOut.WriteString("\n----\n\n")
+	} else {
+		formattedDetailOut.WriteString("Logging Component Pods: No information available\n\n")
+	}
+
 	// Check if all pods are on infrastructure nodes
 	allOnInfraNodes = true
 	for _, line := range strings.Split(podOut, "\n") {
@@ -158,6 +186,11 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 			componentName = "Elasticsearch"
 		}
 
+		// Add placement analysis
+		formattedDetailOut.WriteString("Placement Analysis:\n")
+		formattedDetailOut.WriteString(fmt.Sprintf("The following pods are not running on infrastructure nodes:\n- %s\n\n",
+			strings.Join(podsOnNonInfraNodes, "\n- ")))
+
 		result := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
@@ -168,12 +201,7 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation(fmt.Sprintf("Move %s pods to infrastructure nodes", componentName))
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/logging/index#infrastructure-moving-logging_cluster-logging-moving", version))
 
-		detail := fmt.Sprintf("%s pods not on infrastructure nodes:\n%s\n\nInfrastructure nodes:\n%s\n\nPod details:\n%s",
-			componentName,
-			strings.Join(podsOnNonInfraNodes, "\n"),
-			nodeOut,
-			podOut)
-		result.Detail = detail
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -185,12 +213,16 @@ func (c *LoggingPlacementCheck) Run() (healthcheck.Result, error) {
 		componentName = "Elasticsearch"
 	}
 
+	// Add placement analysis
+	formattedDetailOut.WriteString("Placement Analysis:\n")
+	formattedDetailOut.WriteString("All logging component pods are correctly placed on infrastructure nodes.\n\n")
+
 	result := healthcheck.NewResult(
 		c.ID(),
 		types.StatusOK,
 		fmt.Sprintf("All %s pods are scheduled on infrastructure nodes", componentName),
 		types.ResultKeyNoChange,
 	)
-	result.Detail = podOut
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }

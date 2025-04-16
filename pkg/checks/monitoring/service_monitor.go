@@ -20,15 +20,16 @@ package monitoring
 import (
 	"context"
 	"fmt"
-	"github.com/ayaseen/health-check-runner/pkg/types"
 	"strings"
 
-	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
-	"github.com/ayaseen/health-check-runner/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+
+	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
+	"github.com/ayaseen/health-check-runner/pkg/types"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
 
 // ServiceMonitorCheck checks if ServiceMonitors are configured for application monitoring
@@ -72,6 +73,27 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 		), fmt.Errorf("error creating Kubernetes client: %v", err)
 	}
 
+	// Format the detailed output with proper AsciiDoc formatting
+	var formattedDetailOut strings.Builder
+
+	// Add section for User Workload Monitoring
+	formattedDetailOut.WriteString("=== User Workload Monitoring Status ===\n\n")
+
+	// Check if user workload monitoring is enabled
+	uwmEnabled, uwmStatus := checkUserWorkloadMonitoringEnabled()
+	if uwmEnabled {
+		formattedDetailOut.WriteString("User Workload Monitoring is ENABLED in the cluster\n\n")
+	} else {
+		formattedDetailOut.WriteString("User Workload Monitoring is NOT ENABLED in the cluster\n\n")
+	}
+
+	// Add detailed UWM status if available
+	if strings.TrimSpace(uwmStatus) != "" {
+		formattedDetailOut.WriteString("User Workload Monitoring Status:\n[source, yaml]\n----\n")
+		formattedDetailOut.WriteString(uwmStatus)
+		formattedDetailOut.WriteString("\n----\n\n")
+	}
+
 	// Define the ServiceMonitor resource
 	groupVersion := schema.GroupVersionResource{
 		Group:    "monitoring.coreos.com",
@@ -85,35 +107,28 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 
 	// If the error is related to the CRD not being found, this means user workload monitoring isn't enabled
 	if err != nil {
-		// Check if user workload monitoring is enabled
-		cmExists, _ := checkUserWorkloadMonitoringEnabled()
-		if !cmExists {
-			result := healthcheck.NewResult(
-				c.ID(),
-				types.StatusWarning,
-				"User Workload Monitoring is not enabled in the cluster",
-				types.ResultKeyRecommended,
-			)
+		// Add section for error information
+		formattedDetailOut.WriteString("=== ServiceMonitor Check Results ===\n\n")
+		formattedDetailOut.WriteString("Error: ServiceMonitor CRD not found. This typically means User Workload Monitoring is not properly enabled.\n\n")
 
-			// Get OpenShift version for documentation links
-			version, verErr := utils.GetOpenShiftMajorMinorVersion()
-			if verErr != nil {
-				version = "4.10" // Default to a known version if we can't determine
-			}
+		result := healthcheck.NewResult(
+			c.ID(),
+			types.StatusWarning,
+			"User Workload Monitoring is not enabled in the cluster",
+			types.ResultKeyRecommended,
+		)
 
-			result.AddRecommendation("Enable User Workload Monitoring to monitor application metrics")
-			result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/monitoring/index#enabling-monitoring-for-user-defined-projects", version))
-
-			return result, nil
+		// Get OpenShift version for documentation links
+		version, verErr := utils.GetOpenShiftMajorMinorVersion()
+		if verErr != nil {
+			version = "4.10" // Default to a known version if we can't determine
 		}
 
-		// If the user workload monitoring is enabled but we can't get ServiceMonitors, there's a different issue
-		return healthcheck.NewResult(
-			c.ID(),
-			types.StatusCritical,
-			"Failed to list ServiceMonitors",
-			types.ResultKeyRequired,
-		), fmt.Errorf("error listing ServiceMonitors: %v", err)
+		result.AddRecommendation("Enable User Workload Monitoring to monitor application metrics")
+		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/monitoring/index#enabling-monitoring-for-user-defined-projects", version))
+
+		result.Detail = formattedDetailOut.String()
+		return result, nil
 	}
 
 	// Exclude ServiceMonitors in system namespaces
@@ -136,22 +151,33 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 		}
 	}
 
+	// Generate detailed ServiceMonitor information
+	formattedDetailOut.WriteString("=== ServiceMonitor Check Results ===\n\n")
+
+	if len(userServiceMonitors) > 0 {
+		// Get a list of ServiceMonitors with their namespaces
+		formattedDetailOut.WriteString("User ServiceMonitors found in the cluster:\n\n")
+		for _, sm := range userServiceMonitors {
+			formattedDetailOut.WriteString(fmt.Sprintf("- Namespace: %s, Name: %s\n", sm.GetNamespace(), sm.GetName()))
+		}
+
+		// Get a sample ServiceMonitor YAML for reference if there's at least one
+		if len(userServiceMonitors) > 0 {
+			sampleSM, err := utils.RunCommand("oc", "get", "servicemonitor", userServiceMonitors[0].GetName(), "-n", userServiceMonitors[0].GetNamespace(), "-o", "yaml")
+			if err == nil && strings.TrimSpace(sampleSM) != "" {
+				formattedDetailOut.WriteString("\nSample ServiceMonitor configuration:\n[source, yaml]\n----\n")
+				formattedDetailOut.WriteString(sampleSM)
+				formattedDetailOut.WriteString("\n----\n\n")
+			}
+		}
+	} else {
+		formattedDetailOut.WriteString("No user ServiceMonitors found in the cluster\n\n")
+	}
+
 	// Get OpenShift version for documentation links
 	version, verErr := utils.GetOpenShiftMajorMinorVersion()
 	if verErr != nil {
 		version = "4.10" // Default to a known version if we can't determine
-	}
-
-	// Generate detailed output for the report
-	var detailedOut strings.Builder
-	detailedOut.WriteString("ServiceMonitors found:\n\n")
-
-	if len(userServiceMonitors) > 0 {
-		for _, sm := range userServiceMonitors {
-			detailedOut.WriteString(fmt.Sprintf("Namespace: %s, Name: %s\n", sm.GetNamespace(), sm.GetName()))
-		}
-	} else {
-		detailedOut.WriteString("No user ServiceMonitors found\n")
 	}
 
 	// Check if there are any user ServiceMonitors
@@ -166,7 +192,7 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 		result.AddRecommendation("Create ServiceMonitors for your applications to collect custom metrics")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/monitoring/index#specifying-how-a-service-is-monitored", version))
 
-		result.Detail = detailedOut.String()
+		result.Detail = formattedDetailOut.String()
 		return result, nil
 	}
 
@@ -178,31 +204,24 @@ func (c *ServiceMonitorCheck) Run() (healthcheck.Result, error) {
 		types.ResultKeyNoChange,
 	)
 
-	result.Detail = detailedOut.String()
+	result.Detail = formattedDetailOut.String()
 	return result, nil
 }
 
 // checkUserWorkloadMonitoringEnabled checks if the user workload monitoring is enabled
-func checkUserWorkloadMonitoringEnabled() (bool, error) {
+func checkUserWorkloadMonitoringEnabled() (bool, string) {
 	// Check if the openshift-user-workload-monitoring namespace exists
 	out, err := utils.RunCommand("oc", "get", "namespace", "openshift-user-workload-monitoring")
 	if err != nil {
-		return false, err
+		// Try checking the cluster-monitoring-config ConfigMap
+		cmOut, cmErr := utils.RunCommand("oc", "get", "configmap", "cluster-monitoring-config", "-n", "openshift-monitoring", "-o", "yaml")
+		if cmErr != nil {
+			return false, "Failed to get user workload monitoring status"
+		}
+		return strings.Contains(cmOut, "enableUserWorkload: true"), cmOut
 	}
 
-	if strings.Contains(out, "openshift-user-workload-monitoring") {
-		return true, nil
-	}
-
-	// Check the cluster-monitoring-config ConfigMap for enableUserWorkload setting
-	out, err = utils.RunCommand("oc", "get", "configmap", "cluster-monitoring-config", "-n", "openshift-monitoring", "-o", "jsonpath={.data.config\\.yaml}")
-	if err != nil {
-		return false, err
-	}
-
-	if strings.Contains(out, "enableUserWorkload: true") {
-		return true, nil
-	}
-
-	return false, nil
+	// The namespace exists, check the configuration
+	configOut, _ := utils.RunCommand("oc", "get", "configmap", "cluster-monitoring-config", "-n", "openshift-monitoring", "-o", "yaml")
+	return true, fmt.Sprintf("Namespace Status:\n%s\n\nConfig Status:\n%s", out, configOut)
 }
