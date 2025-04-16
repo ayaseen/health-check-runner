@@ -214,6 +214,28 @@ func GenerateAsciiDocReportHeader(title string) string {
 	return sb.String()
 }
 
+// CheckForAsciiDocFormatting determines if the content already contains AsciiDoc formatting
+func CheckForAsciiDocFormatting(content string) bool {
+	// List of patterns that indicate AsciiDoc formatting
+	patterns := []string{
+		"[source,",
+		"[source, ",
+		"== ",
+		"=== ",
+		"WARNING:",
+		"|===",
+		"----\n",
+		"[cols=",
+	}
+
+	for _, pattern := range patterns {
+		if strings.Contains(content, pattern) {
+			return true
+		}
+	}
+	return false
+}
+
 // GenerateAsciiDocCheckSection generates a detailed section for a health check
 func GenerateAsciiDocCheckSection(check types.Check, result types.Result, version string) string {
 	var sb strings.Builder
@@ -222,9 +244,16 @@ func GenerateAsciiDocCheckSection(check types.Check, result types.Result, versio
 	sb.WriteString(GetChanges(result.ResultKey) + "\n\n")
 
 	if result.Detail != "" {
-		sb.WriteString("[source,bash]\n----\n")
-		sb.WriteString(result.Detail)
-		sb.WriteString("\n----\n\n")
+		if CheckForAsciiDocFormatting(result.Detail) {
+			// If result.Detail already contains AsciiDoc formatting, include it directly
+			sb.WriteString(result.Detail)
+			sb.WriteString("\n\n")
+		} else {
+			// Otherwise, wrap it in a source block
+			sb.WriteString("[source,bash]\n----\n")
+			sb.WriteString(result.Detail)
+			sb.WriteString("\n----\n\n")
+		}
 	}
 
 	sb.WriteString("**Observation**\n\n")

@@ -180,9 +180,16 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 
 			// Add detailed output if available, properly formatted
 			if result.Detail != "" {
-				sb.WriteString("[source, bash]\n----\n")
-				sb.WriteString(result.Detail)
-				sb.WriteString("\n----\n\n")
+				if containsAsciiDocFormatting(result.Detail) {
+					// If result.Detail already contains AsciiDoc formatting, include it directly
+					sb.WriteString(result.Detail)
+					sb.WriteString("\n\n")
+				} else {
+					// Otherwise, wrap it in a source block
+					sb.WriteString("[source, bash]\n----\n")
+					sb.WriteString(result.Detail)
+					sb.WriteString("\n----\n\n")
+				}
 			}
 
 			// Add observation section
@@ -209,6 +216,28 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 	sb.WriteString("// Reset bgcolor for future tables\n[grid=none,frame=none]\n|===\n|{set:cellbgcolor!}\n|===\n\n")
 
 	return sb.String()
+}
+
+// containsAsciiDocFormatting checks if a string already contains AsciiDoc formatting elements
+func containsAsciiDocFormatting(text string) bool {
+	// List of patterns that indicate AsciiDoc formatting
+	patterns := []string{
+		"[source,",
+		"[source, ",
+		"== ",
+		"=== ",
+		"WARNING:",
+		"|===",
+		"----\n",
+		"[cols=",
+	}
+
+	for _, pattern := range patterns {
+		if strings.Contains(text, pattern) {
+			return true
+		}
+	}
+	return false
 }
 
 // formatResultKeyForSummaryTable formats a result key for display in the summary table
