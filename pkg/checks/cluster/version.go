@@ -2,7 +2,7 @@
 Author: Amjad Yaseen
 Email: ayaseen@redhat.com
 Date: 2023-03-06
-Modified: 2025-04-15
+Modified: 2025-04-17
 
 This file implements health checks for cluster version. It:
 
@@ -20,6 +20,7 @@ package cluster
 import (
 	"fmt"
 	"github.com/ayaseen/health-check-runner/pkg/types"
+	"github.com/ayaseen/health-check-runner/pkg/version"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -30,11 +31,10 @@ import (
 // ClusterVersionCheck checks if the cluster is running the latest version
 type ClusterVersionCheck struct {
 	healthcheck.BaseCheck
-	latestVersion string
 }
 
 // NewClusterVersionCheck creates a new cluster version check
-func NewClusterVersionCheck(latestVersion string) *ClusterVersionCheck {
+func NewClusterVersionCheck() *ClusterVersionCheck {
 	return &ClusterVersionCheck{
 		BaseCheck: healthcheck.NewBaseCheck(
 			"cluster-version",
@@ -42,14 +42,13 @@ func NewClusterVersionCheck(latestVersion string) *ClusterVersionCheck {
 			"Checks if the cluster is running the latest version of OpenShift",
 			types.CategoryClusterConfig,
 		),
-		latestVersion: latestVersion,
 	}
 }
 
 // Run executes the health check
 func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 	// Get the current version of OpenShift
-	out, err := exec.Command("oc", "get", "clusterversion", "-o", "jsonpath={.items[].status.history[].version}").Output()
+	out, err := exec.Command("oc", "get", "clusterversion", "-o", "jsonpath={.items[].status.history[0].version}").Output()
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
@@ -82,11 +81,14 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 		), fmt.Errorf("error getting detailed cluster version: %v", err)
 	}
 
+	// Get the latest version that was embedded during build
+	latestVersion := version.LatestOpenShiftVersion
+
 	// Format the detailed output with proper AsciiDoc formatting
 	var formattedDetailedOut strings.Builder
 	formattedDetailedOut.WriteString("=== Cluster Version Analysis ===\n\n")
 	formattedDetailedOut.WriteString(fmt.Sprintf("Current Version: %s\n", currentVersion))
-	formattedDetailedOut.WriteString(fmt.Sprintf("Latest Available Version: %s\n\n", c.latestVersion))
+	formattedDetailedOut.WriteString(fmt.Sprintf("Latest Available Version: %s\n\n", latestVersion))
 
 	// Add detailed cluster version information
 	if len(detailedOut) > 0 {
@@ -106,7 +108,7 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 	}
 
 	// Compare versions
-	result, err := compareVersions(currentVersion, c.latestVersion)
+	result, err := compareVersions(currentVersion, latestVersion)
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
@@ -120,12 +122,12 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 	formattedDetailedOut.WriteString("=== Version Comparison ===\n\n")
 	if result < 0 {
 		formattedDetailedOut.WriteString(fmt.Sprintf("The cluster version %s is older than the latest available version %s.\n\n",
-			currentVersion, c.latestVersion))
+			currentVersion, latestVersion))
 	} else if result == 0 {
 		formattedDetailedOut.WriteString(fmt.Sprintf("The cluster is running the latest version %s.\n\n", currentVersion))
 	} else {
 		formattedDetailedOut.WriteString(fmt.Sprintf("The cluster version %s is newer than our reference version %s.\n\n",
-			currentVersion, c.latestVersion))
+			currentVersion, latestVersion))
 	}
 
 	if result < 0 {
@@ -133,11 +135,11 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 		checkResult := healthcheck.NewResult(
 			c.ID(),
 			types.StatusWarning,
-			fmt.Sprintf("Cluster version %s is not the latest version (%s)", currentVersion, c.latestVersion),
+			fmt.Sprintf("Cluster version %s is not the latest version (%s)", currentVersion, latestVersion),
 			types.ResultKeyRecommended,
 		)
 
-		checkResult.AddRecommendation(fmt.Sprintf("Update to the latest version %s", c.latestVersion))
+		checkResult.AddRecommendation(fmt.Sprintf("Update to the latest version %s", latestVersion))
 		checkResult.AddRecommendation("Follow the upgrade documentation at https://docs.openshift.com/container-platform/latest/updating/updating-cluster.html")
 		checkResult.Detail = formattedDetailedOut.String()
 

@@ -57,7 +57,7 @@ func GetChecks() []healthcheck.Check {
 	checks = append(checks, NewNodeUsageCheck())
 
 	// Cluster Version - first in Cluster Config
-	checks = append(checks, NewClusterVersionCheck(latestVersion))
+	checks = append(checks, NewClusterVersionCheck())
 
 	// Cluster Operators
 	checks = append(checks, NewClusterOperatorsCheck())
