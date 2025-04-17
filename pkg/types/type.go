@@ -65,33 +65,23 @@ const (
 type Category string
 
 const (
-	// CategoryInfra is for infrastructure-level checks (renamed from Infrastructure)
-	CategoryInfra Category = "Infra"
-
-	// CategoryNetwork is for networking-related checks (changed from Networking)
-	CategoryNetwork Category = "Network"
-
-	// CategoryStorage is for storage-related checks (unchanged)
-	CategoryStorage Category = "Storage"
-
-	// CategoryClusterConfig is for cluster-level checks (changed from Cluster)
+	// CategoryClusterConfig is for cluster-level checks
 	CategoryClusterConfig Category = "Cluster Config"
 
-	// CategoryAppDev is for application-related checks (changed from Applications)
-	CategoryAppDev Category = "App Dev"
+	// CategoryNetworking is for networking-related checks
+	CategoryNetworking Category = "Networking"
 
-	// CategorySecurity is for security-related checks (unchanged)
-	CategorySecurity Category = "Security"
+	// CategoryApplications is for application-related checks
+	CategoryApplications Category = "Applications"
 
-	// CategoryOpReady is for monitoring-related checks (changed from Monitoring)
+	// CategoryOpReady is for operational readiness checks
 	CategoryOpReady Category = "Op-Ready"
 
-	// Keep the original categories for backward compatibility during transition
-	CategoryCluster        Category = "Cluster"
-	CategoryNetworking     Category = "Networking"
-	CategoryApplications   Category = "Applications"
-	CategoryMonitoring     Category = "Monitoring"
-	CategoryInfrastructure Category = "Infrastructure"
+	// CategorySecurity is for security-related checks
+	CategorySecurity Category = "Security"
+
+	// CategoryStorage is for storage-related checks
+	CategoryStorage Category = "Storage"
 )
 
 // ReportFormat defines the format of the generated report

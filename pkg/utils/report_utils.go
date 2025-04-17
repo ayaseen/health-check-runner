@@ -97,25 +97,7 @@ func GenerateFullAsciiDocReport(title string, checks []types.Check, results map[
 	sb.WriteString(GenerateAsciiDocReportHeader(title))
 
 	// Organize checks by category
-	categorizedChecks := make(map[types.Category][]types.Check)
-	for _, check := range checks {
-		// Map old categories to new ones for consistent reporting
-		category := check.Category()
-		switch category {
-		case types.CategoryCluster:
-			category = types.CategoryClusterConfig
-		case types.CategoryNetworking:
-			category = types.CategoryNetwork
-		case types.CategoryApplications:
-			category = types.CategoryAppDev
-		case types.CategoryMonitoring:
-			category = types.CategoryOpReady
-		case types.CategoryInfrastructure:
-			category = types.CategoryInfra
-		}
-
-		categorizedChecks[category] = append(categorizedChecks[category], check)
-	}
+	categorizedChecks := OrganizeChecksByCategory(checks)
 
 	// Generate summary table
 	sb.WriteString(GenerateAsciiDocSummaryTable(checks, results))
@@ -146,21 +128,7 @@ func OrganizeChecksByCategory(checks []types.Check) map[types.Category][]types.C
 	categorized := make(map[types.Category][]types.Check)
 
 	for _, check := range checks {
-		// Map old categories to new ones for consistent reporting
 		category := check.Category()
-		switch category {
-		case types.CategoryCluster:
-			category = types.CategoryClusterConfig
-		case types.CategoryNetworking:
-			category = types.CategoryNetwork
-		case types.CategoryApplications:
-			category = types.CategoryAppDev
-		case types.CategoryMonitoring:
-			category = types.CategoryOpReady
-		case types.CategoryInfrastructure:
-			category = types.CategoryInfra
-		}
-
 		categorized[category] = append(categorized[category], check)
 	}
 
@@ -170,13 +138,12 @@ func OrganizeChecksByCategory(checks []types.Check) map[types.Category][]types.C
 // GetSortedCategories returns categories in the preferred order
 func GetSortedCategories() []types.Category {
 	return []types.Category{
-		types.CategoryInfra,
-		types.CategoryNetwork,
-		types.CategoryStorage,
 		types.CategoryClusterConfig,
-		types.CategoryAppDev,
-		types.CategorySecurity,
+		types.CategoryNetworking,
+		types.CategoryApplications,
 		types.CategoryOpReady,
+		types.CategorySecurity,
+		types.CategoryStorage,
 	}
 }
 

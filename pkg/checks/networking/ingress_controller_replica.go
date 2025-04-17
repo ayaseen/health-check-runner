@@ -39,7 +39,7 @@ func NewIngressControllerReplicaCheck() *IngressControllerReplicaCheck {
 			"ingress-controller-replica",
 			"Ingress Controller Replicas",
 			"Checks if the ingress controller has sufficient replicas for high availability",
-			types.CategoryNetwork,
+			types.CategoryNetworking,
 		),
 	}
 }

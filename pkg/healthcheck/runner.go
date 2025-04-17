@@ -87,6 +87,24 @@ func (r *Runner) GetChecks() []Check {
 	return r.checks
 }
 
+// normalizeCategory maps legacy categories to their standardized versions
+func normalizeCategory(category types.Category) types.Category {
+	switch category {
+	case "Infra", "Infrastructure":
+		return types.CategoryClusterConfig
+	case "Network":
+		return types.CategoryNetworking
+	case "Cluster":
+		return types.CategoryClusterConfig
+	case "App Dev":
+		return types.CategoryApplications
+	case "Monitoring":
+		return types.CategoryOpReady
+	default:
+		return category
+	}
+}
+
 // Run executes all registered health checks
 func (r *Runner) Run() error {
 	if len(r.checks) == 0 {
@@ -97,8 +115,10 @@ func (r *Runner) Run() error {
 	var checksToRun []Check
 	if len(r.config.CategoryFilter) > 0 {
 		for _, check := range r.checks {
+			normalizedCheckCategory := normalizeCategory(check.Category())
 			for _, cat := range r.config.CategoryFilter {
-				if check.Category() == cat {
+				normalizedFilterCategory := normalizeCategory(cat)
+				if normalizedCheckCategory == normalizedFilterCategory {
 					checksToRun = append(checksToRun, check)
 					break
 				}
@@ -283,7 +303,8 @@ func (r *Runner) GetResultsByCategory() map[types.Category][]Result {
 
 	for _, check := range r.checks {
 		if result, exists := r.results[check.ID()]; exists {
-			category := check.Category()
+			// Normalize the category
+			category := normalizeCategory(check.Category())
 			resultsByCategory[category] = append(resultsByCategory[category], result)
 		}
 	}

@@ -49,15 +49,14 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 	checksByCategory := groupChecksByCategory(checks, results)
 
 	// Add all checks to the summary section
-	// Order categories as in the old report
+	// Order categories as specified by the user
 	orderedCategories := []types.Category{
-		types.CategoryInfra,
-		types.CategoryNetwork,
-		types.CategoryStorage,
 		types.CategoryClusterConfig,
-		types.CategoryAppDev,
-		types.CategorySecurity,
+		types.CategoryNetworking,
+		types.CategoryApplications,
 		types.CategoryOpReady,
+		types.CategorySecurity,
+		types.CategoryStorage,
 	}
 
 	for _, category := range orderedCategories {
@@ -141,7 +140,7 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 
 		sb.WriteString("|===\n\n")
 
-		// NEW CHANGE: Add detailed sections for each check in this category right after the category table
+		// Add detailed sections for each check in this category right after the category table
 		for _, check := range categoryChecks {
 			result, exists := results[check.ID()]
 			if !exists {
@@ -278,21 +277,6 @@ func groupChecksByCategory(checks []types.Check, results map[string]types.Result
 	for _, check := range checks {
 		if _, exists := results[check.ID()]; exists {
 			category := check.Category()
-
-			// Map old categories to new ones for consistent reporting
-			switch category {
-			case types.CategoryCluster:
-				category = types.CategoryClusterConfig
-			case types.CategoryNetworking:
-				category = types.CategoryNetwork
-			case types.CategoryApplications:
-				category = types.CategoryAppDev
-			case types.CategoryMonitoring:
-				category = types.CategoryOpReady
-			case types.CategoryInfrastructure:
-				category = types.CategoryInfra
-			}
-
 			categorized[category] = append(categorized[category], check)
 		}
 	}

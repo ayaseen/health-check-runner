@@ -40,7 +40,7 @@ func NewLimitRangeCheck() *LimitRangeCheck {
 			"limit-range",
 			"LimitRange Configuration",
 			"Checks if LimitRange is configured in user namespaces",
-			types.CategoryAppDev,
+			types.CategoryApplications,
 		),
 	}
 }

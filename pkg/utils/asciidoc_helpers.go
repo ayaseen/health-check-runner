@@ -303,15 +303,14 @@ func GenerateAsciiDocCategorySections(
 ) string {
 	var sb strings.Builder
 
-	// Sort categories in the same order as the old report
+	// Sort categories in the order specified by the user
 	categories := []types.Category{
-		types.CategoryInfra,
-		types.CategoryNetwork,
-		types.CategoryStorage,
 		types.CategoryClusterConfig,
-		types.CategoryAppDev,
-		types.CategorySecurity,
+		types.CategoryNetworking,
+		types.CategoryApplications,
 		types.CategoryOpReady,
+		types.CategorySecurity,
+		types.CategoryStorage,
 	}
 
 	for _, category := range categories {

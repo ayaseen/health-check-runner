@@ -211,20 +211,19 @@ func validateFlags() error {
 		return fmt.Errorf("timeout must be greater than or equal to 0")
 	}
 
-	// Validate category filters
+	// Validate category filters - using the updated category names
 	validCategories := map[string]bool{
-		"Cluster":        true,
-		"Security":       true,
 		"Networking":     true,
-		"Storage":        true,
 		"Applications":   true,
-		"Monitoring":     true,
-		"Infrastructure": true,
+		"Op-Ready":       true,
+		"Security":       true,
+		"Cluster Config": true,
+		"Storage":        true,
 	}
 
 	for _, category := range categoryFilter {
 		if !validCategories[category] {
-			return fmt.Errorf("invalid category: %s (must be one of: Cluster, Security, Networking, Storage, Applications, Monitoring, Infrastructure)", category)
+			return fmt.Errorf("invalid category: %s (must be one of: Networking, Applications, Op-Ready, Security, Cluster Config, Storage)", category)
 		}
 	}
 
