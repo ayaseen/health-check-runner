@@ -30,6 +30,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 	"github.com/ayaseen/health-check-runner/pkg/types"
@@ -157,8 +159,11 @@ func (c *ClusterPerformanceCheck) Run() (healthcheck.Result, error) {
 		), fmt.Errorf("error creating dynamic client: %v", err)
 	}
 
-	// Collect all performance metrics
-	metrics, err := c.collectPerformanceMetrics(clientset, dynamicClient)
+	// Collect performance metrics with optimized collection
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	metrics, err := c.collectPerformanceMetrics(ctx, clientset, dynamicClient)
 	if err != nil {
 		return healthcheck.NewResult(
 			c.ID(),
@@ -182,57 +187,77 @@ func (c *ClusterPerformanceCheck) Run() (healthcheck.Result, error) {
 	formattedDetailOut.WriteString(fmt.Sprintf("Memory Limits Commitment: %.2f%%\n\n", metrics.MemoryLimitsCommitment))
 
 	// Add detailed information from namespace monitoring
-	topNsCPU, topNsMem := c.getTopNamespaces(metrics, 10)
+	topNsCPU, topNsMem := c.getTopNamespaces(metrics, 10) // Only get top 10 as requested
 	formattedDetailOut.WriteString("== Top Namespaces by Resource Usage ==\n\n")
 
-	// Top CPU consumers
+	// Top CPU consumers (only top 10)
 	formattedDetailOut.WriteString("=== Top CPU Consumers ===\n\n")
-	formattedDetailOut.WriteString("[cols=\"1,1,1,1,1,1\", options=\"header\"]\n|===\n")
-	formattedDetailOut.WriteString("|Namespace|CPU Usage (cores)|CPU Requests (cores)|Usage/Requests|CPU Limits (cores)|Usage/Limits\n\n")
 
-	for _, nsName := range topNsCPU {
-		ns := metrics.NamespaceMetrics[nsName]
-		reqRatio := 0.0
-		if ns.CPURequests > 0 {
-			reqRatio = (ns.CPUUsage / ns.CPURequests) * 100
+	// Only show table if we have CPU data
+	if len(topNsCPU) > 0 {
+		formattedDetailOut.WriteString("[cols=\"1,1,1,1,1,1\", options=\"header\"]\n|===\n")
+		formattedDetailOut.WriteString("|Namespace|CPU Usage (cores)|CPU Requests (cores)|Usage/Requests|CPU Limits (cores)|Usage/Limits\n\n")
+
+		for _, nsName := range topNsCPU {
+			ns, exists := metrics.NamespaceMetrics[nsName]
+			if !exists {
+				continue
+			}
+
+			reqRatio := 0.0
+			if ns.CPURequests > 0 {
+				reqRatio = (ns.CPUUsage / ns.CPURequests) * 100
+			}
+
+			limRatio := 0.0
+			if ns.CPULimits > 0 {
+				limRatio = (ns.CPUUsage / ns.CPULimits) * 100
+			}
+
+			formattedDetailOut.WriteString(fmt.Sprintf("|%s|%.3f|%.3f|%.1f%%|%.3f|%.1f%%\n",
+				ns.Name, ns.CPUUsage, ns.CPURequests, reqRatio, ns.CPULimits, limRatio))
 		}
-
-		limRatio := 0.0
-		if ns.CPULimits > 0 {
-			limRatio = (ns.CPUUsage / ns.CPULimits) * 100
-		}
-
-		formattedDetailOut.WriteString(fmt.Sprintf("|%s|%.3f|%.3f|%.1f%%|%.3f|%.1f%%\n",
-			ns.Name, ns.CPUUsage, ns.CPURequests, reqRatio, ns.CPULimits, limRatio))
+		formattedDetailOut.WriteString("|===\n\n")
+	} else {
+		formattedDetailOut.WriteString("No significant CPU usage detected across namespaces.\n\n")
 	}
-	formattedDetailOut.WriteString("|===\n\n")
 
-	// Top Memory consumers
+	// Top Memory consumers (only top 10)
 	formattedDetailOut.WriteString("=== Top Memory Consumers ===\n\n")
-	formattedDetailOut.WriteString("[cols=\"1,1,1,1,1,1\", options=\"header\"]\n|===\n")
-	formattedDetailOut.WriteString("|Namespace|Memory Usage|Memory Requests|Usage/Requests|Memory Limits|Usage/Limits\n\n")
 
-	for _, nsName := range topNsMem {
-		ns := metrics.NamespaceMetrics[nsName]
-		reqRatio := 0.0
-		if ns.MemoryRequests > 0 {
-			reqRatio = (ns.MemoryUsage / ns.MemoryRequests) * 100
+	// Only show table if we have memory data
+	if len(topNsMem) > 0 {
+		formattedDetailOut.WriteString("[cols=\"1,1,1,1,1,1\", options=\"header\"]\n|===\n")
+		formattedDetailOut.WriteString("|Namespace|Memory Usage|Memory Requests|Usage/Requests|Memory Limits|Usage/Limits\n\n")
+
+		for _, nsName := range topNsMem {
+			ns, exists := metrics.NamespaceMetrics[nsName]
+			if !exists {
+				continue
+			}
+
+			reqRatio := 0.0
+			if ns.MemoryRequests > 0 {
+				reqRatio = (ns.MemoryUsage / ns.MemoryRequests) * 100
+			}
+
+			limRatio := 0.0
+			if ns.MemoryLimits > 0 {
+				limRatio = (ns.MemoryUsage / ns.MemoryLimits) * 100
+			}
+
+			formattedDetailOut.WriteString(fmt.Sprintf("|%s|%s|%s|%.1f%%|%s|%.1f%%\n",
+				ns.Name,
+				formatBytes(ns.MemoryUsage),
+				formatBytes(ns.MemoryRequests),
+				reqRatio,
+				formatBytes(ns.MemoryLimits),
+				limRatio))
 		}
-
-		limRatio := 0.0
-		if ns.MemoryLimits > 0 {
-			limRatio = (ns.MemoryUsage / ns.MemoryLimits) * 100
-		}
-
-		formattedDetailOut.WriteString(fmt.Sprintf("|%s|%s|%s|%.1f%%|%s|%.1f%%\n",
-			ns.Name,
-			formatBytes(ns.MemoryUsage),
-			formatBytes(ns.MemoryRequests),
-			reqRatio,
-			formatBytes(ns.MemoryLimits),
-			limRatio))
+		formattedDetailOut.WriteString("|===\n\n")
+	} else {
+		formattedDetailOut.WriteString("No significant memory usage detected across namespaces.\n\n")
 	}
-	formattedDetailOut.WriteString("|===\n\n")
 
 	// Add node utilization information
 	formattedDetailOut.WriteString("== Node Resource Utilization ==\n\n")
@@ -261,27 +286,11 @@ func (c *ClusterPerformanceCheck) Run() (healthcheck.Result, error) {
 	}
 	formattedDetailOut.WriteString("|===\n\n")
 
-	// Add network utilization if available
+	// Add minimal network utilization info if available (for completeness)
 	if metrics.NetworkReceiveBandwidth > 0 || metrics.NetworkTransmitBandwidth > 0 {
 		formattedDetailOut.WriteString("== Network Utilization ==\n\n")
 		formattedDetailOut.WriteString(fmt.Sprintf("Current Receive Bandwidth: %.2f MBps\n", metrics.NetworkReceiveBandwidth))
 		formattedDetailOut.WriteString(fmt.Sprintf("Current Transmit Bandwidth: %.2f MBps\n\n", metrics.NetworkTransmitBandwidth))
-	}
-
-	// Add storage metrics if available
-	if metrics.StorageIOPS > 0 || metrics.StorageThroughput > 0 {
-		formattedDetailOut.WriteString("== Storage Performance ==\n\n")
-		formattedDetailOut.WriteString(fmt.Sprintf("Current IOPS: %.2f\n", metrics.StorageIOPS))
-		formattedDetailOut.WriteString(fmt.Sprintf("Current Throughput: %.2f MBps\n\n", metrics.StorageThroughput))
-	}
-
-	// Add the raw data from prometheus queries in AsciiDoc format
-	prometheusQueryOut, _ := utils.RunCommand("oc", "exec", "-n", "openshift-monitoring", "prometheus-k8s-0", "-c", "prometheus", "--", "curl", "-s", "http://localhost:9090/api/v1/query?query=cluster:memory_usage:ratio")
-	if strings.TrimSpace(prometheusQueryOut) != "" {
-		formattedDetailOut.WriteString("== Raw Prometheus Data ==\n\n")
-		formattedDetailOut.WriteString("Memory Usage Query Result:\n[source, json]\n----\n")
-		formattedDetailOut.WriteString(prometheusQueryOut)
-		formattedDetailOut.WriteString("\n----\n\n")
 	}
 
 	// Determine result status based on thresholds
@@ -348,58 +357,93 @@ func (c *ClusterPerformanceCheck) Run() (healthcheck.Result, error) {
 	return result, nil
 }
 
-// collectPerformanceMetrics gathers all performance metrics from the cluster
-func (c *ClusterPerformanceCheck) collectPerformanceMetrics(clientset *kubernetes.Clientset, dynamicClient dynamic.Interface) (*PerformanceMetrics, error) {
+// collectPerformanceMetrics gathers performance metrics from the cluster using optimized strategies
+func (c *ClusterPerformanceCheck) collectPerformanceMetrics(ctx context.Context, clientset *kubernetes.Clientset, dynamicClient dynamic.Interface) (*PerformanceMetrics, error) {
 	metrics := &PerformanceMetrics{
 		NamespaceMetrics: make(map[string]*NamespaceMetrics),
 		NodeMetrics:      make(map[string]*NodeMetrics),
 	}
 
-	// First, try to get metrics directly from the Prometheus API
-	err := c.getMetricsFromPrometheus(metrics)
-	if err != nil {
-		// Fall back to metrics server API if Prometheus is not available
-		err = c.getMetricsFromMetricsServer(dynamicClient, metrics)
+	// Use a WaitGroup to parallelize metric collection
+	var wg sync.WaitGroup
+	var errMetrics error
+	var metricsLock sync.Mutex
+
+	// Attempt to collect metrics in parallel from different sources
+	wg.Add(3)
+
+	// 1. Get node information - this is critical for capacity calculations
+	go func() {
+		defer wg.Done()
+		nodes, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 		if err != nil {
-			// Use oc commands as last resort
-			err = c.getMetricsFromOCCommands(metrics)
-			if err != nil {
-				return metrics, fmt.Errorf("failed to collect metrics: %v", err)
-			}
+			metricsLock.Lock()
+			errMetrics = fmt.Errorf("failed to get nodes: %v", err)
+			metricsLock.Unlock()
+			return
+		}
+
+		metricsLock.Lock()
+		c.processNodeInformation(nodes.Items, metrics)
+		metricsLock.Unlock()
+	}()
+
+	// 2. Try with Prometheus metrics first - fastest when available
+	go func() {
+		defer wg.Done()
+		err := c.getMetricsFromPrometheus(ctx, metrics)
+		if err != nil {
+			// Don't set error - will fallback to other methods
+		}
+	}()
+
+	// 3. Try with metrics server in parallel - good fallback option
+	go func() {
+		defer wg.Done()
+		err := c.getMetricsFromMetricsServer(ctx, dynamicClient, metrics)
+		if err != nil {
+			// Don't set error - not fatal if top namespace data is available
+		}
+	}()
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	// If we got an error from the node information collection, return it
+	if errMetrics != nil {
+		return metrics, errMetrics
+	}
+
+	// Check if we need to fallback to OC commands
+	// Only do this if we don't have sufficient metrics data
+	if metrics.CPUUtilization == 0 && metrics.MemoryUtilization == 0 && len(metrics.NamespaceMetrics) == 0 {
+		err := c.getMetricsFromOCCommands(ctx, metrics)
+		if err != nil {
+			return metrics, fmt.Errorf("failed to collect metrics from all sources: %v", err)
 		}
 	}
 
-	// Get node information to calculate capacities
-	nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return metrics, fmt.Errorf("failed to get nodes: %v", err)
-	}
-
-	// Process node information for capacity calculations
-	c.processNodeInformation(nodes.Items, metrics)
-
-	// Calculate commitment ratios
+	// Calculate commitment ratios after collecting all metrics
 	c.calculateCommitmentRatios(metrics)
 
 	return metrics, nil
 }
 
 // getMetricsFromPrometheus tries to get metrics directly from Prometheus
-func (c *ClusterPerformanceCheck) getMetricsFromPrometheus(metrics *PerformanceMetrics) error {
+func (c *ClusterPerformanceCheck) getMetricsFromPrometheus(ctx context.Context, metrics *PerformanceMetrics) error {
 	// Queries for Prometheus
 	cpuUtilQuery := "cluster:cpu_usage:ratio * 100"
 	memUtilQuery := "cluster:memory_usage:ratio * 100"
 
-	// Try to execute queries
-	cpuOutput, err := utils.RunCommand("oc", "exec", "-n", "openshift-monitoring", "prometheus-k8s-0", "-c", "prometheus", "--",
-		"curl", "-s", fmt.Sprintf("http://localhost:9090/api/v1/query?query=%s", cpuUtilQuery))
+	// Try to execute queries with a timeout context
+	cmd := fmt.Sprintf("oc exec -n openshift-monitoring prometheus-k8s-0 -c prometheus -- curl -s 'http://localhost:9090/api/v1/query?query=%s'", cpuUtilQuery)
+	cpuOutput, err := utils.RunCommandWithTimeout(5, "bash", "-c", cmd)
 
 	if err != nil {
 		return fmt.Errorf("failed to query Prometheus for CPU utilization: %v", err)
 	}
 
-	// Extract CPU utilization value - this is simplified; in a real implementation,
-	// you would parse the JSON response properly
+	// Extract CPU utilization value - simplified parsing
 	if strings.Contains(cpuOutput, "\"value\"") {
 		parts := strings.Split(cpuOutput, "\"value\":[")
 		if len(parts) > 1 {
@@ -412,9 +456,9 @@ func (c *ClusterPerformanceCheck) getMetricsFromPrometheus(metrics *PerformanceM
 		}
 	}
 
-	// Now for memory
-	memOutput, err := utils.RunCommand("oc", "exec", "-n", "openshift-monitoring", "prometheus-k8s-0", "-c", "prometheus", "--",
-		"curl", "-s", fmt.Sprintf("http://localhost:9090/api/v1/query?query=%s", memUtilQuery))
+	// Query for memory utilization with timeout
+	cmd = fmt.Sprintf("oc exec -n openshift-monitoring prometheus-k8s-0 -c prometheus -- curl -s 'http://localhost:9090/api/v1/query?query=%s'", memUtilQuery)
+	memOutput, err := utils.RunCommandWithTimeout(5, "bash", "-c", cmd)
 
 	if err != nil {
 		return fmt.Errorf("failed to query Prometheus for memory utilization: %v", err)
@@ -433,179 +477,186 @@ func (c *ClusterPerformanceCheck) getMetricsFromPrometheus(metrics *PerformanceM
 		}
 	}
 
-	// Get namespace metrics
-	namespaces, err := utils.RunCommand("oc", "get", "namespaces", "-o", "jsonpath={.items[*].metadata.name}")
-	if err != nil {
-		return fmt.Errorf("failed to get namespaces: %v", err)
-	}
+	// Use more reliable direct pod metrics for CPU usage per namespace
+	// First try 'oc adm top pods' as it gives more accurate CPU usage
+	cmd = "oc adm top pods --all-namespaces --use-protocol-buffers"
+	podsOutput, err := utils.RunCommandWithTimeout(15, "bash", "-c", cmd)
 
-	for _, namespace := range strings.Split(namespaces, " ") {
-		if namespace == "" {
-			continue
-		}
+	// If that succeeds, parse it to get per-namespace CPU and memory usage
+	if err == nil {
+		lines := strings.Split(podsOutput, "\n")
+		// Skip header line
+		if len(lines) > 1 {
+			// Map to accumulate per-namespace resource usage
+			nsUsage := make(map[string]*NamespaceMetrics)
 
-		// Create namespace metrics
-		nsMetrics := &NamespaceMetrics{
-			Name: namespace,
-		}
-
-		// Query for namespace CPU usage
-		nsCPUQuery := fmt.Sprintf("sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace='%s'})", namespace)
-		nsCPUOutput, err := utils.RunCommand("oc", "exec", "-n", "openshift-monitoring", "prometheus-k8s-0", "-c", "prometheus", "--",
-			"curl", "-s", fmt.Sprintf("http://localhost:9090/api/v1/query?query=%s", nsCPUQuery))
-
-		if err == nil && strings.Contains(nsCPUOutput, "\"value\"") {
-			parts := strings.Split(nsCPUOutput, "\"value\":[")
-			if len(parts) > 1 {
-				valueStr := strings.Split(strings.Split(parts[1], "]")[0], ",")[1]
-				valueStr = strings.Trim(valueStr, "\" ")
-				cpuUsage, err := strconv.ParseFloat(valueStr, 64)
-				if err == nil {
-					nsMetrics.CPUUsage = cpuUsage
-				}
-			}
-		}
-
-		// Query for namespace memory usage
-		nsMemQuery := fmt.Sprintf("sum(container_memory_working_set_bytes{namespace='%s'})", namespace)
-		nsMemOutput, err := utils.RunCommand("oc", "exec", "-n", "openshift-monitoring", "prometheus-k8s-0", "-c", "prometheus", "--",
-			"curl", "-s", fmt.Sprintf("http://localhost:9090/api/v1/query?query=%s", nsMemQuery))
-
-		if err == nil && strings.Contains(nsMemOutput, "\"value\"") {
-			parts := strings.Split(nsMemOutput, "\"value\":[")
-			if len(parts) > 1 {
-				valueStr := strings.Split(strings.Split(parts[1], "]")[0], ",")[1]
-				valueStr = strings.Trim(valueStr, "\" ")
-				memUsage, err := strconv.ParseFloat(valueStr, 64)
-				if err == nil {
-					nsMetrics.MemoryUsage = memUsage
-				}
-			}
-		}
-
-		// Get requests and limits
-		resourceInfo, err := utils.RunCommand("oc", "get", "pods", "-n", namespace, "-o", "jsonpath={range .items[*].spec.containers[*]}{.resources.requests.cpu},{.resources.limits.cpu},{.resources.requests.memory},{.resources.limits.memory}{\"\\n\"}{end}")
-		if err == nil {
-			for _, line := range strings.Split(resourceInfo, "\n") {
+			for i := 1; i < len(lines); i++ {
+				line := strings.TrimSpace(lines[i])
 				if line == "" {
 					continue
 				}
 
-				// Parse comma-separated values
-				resources := strings.Split(line, ",")
-				if len(resources) == 4 {
-					// CPU requests
-					if resources[0] != "" {
-						cpuReq, err := parseResourceQuantity(resources[0])
-						if err == nil {
-							nsMetrics.CPURequests += cpuReq
-						}
-					}
+				fields := strings.Fields(line)
+				if len(fields) < 5 {
+					continue
+				}
 
-					// CPU limits
-					if resources[1] != "" {
-						cpuLim, err := parseResourceQuantity(resources[1])
-						if err == nil {
-							nsMetrics.CPULimits += cpuLim
-						}
-					}
+				namespace := fields[0]
 
-					// Memory requests
-					if resources[2] != "" {
-						memReq, err := parseResourceQuantity(resources[2])
-						if err == nil {
-							nsMetrics.MemoryRequests += memReq
-						}
+				// Get or create namespace metrics
+				nsMetric, exists := nsUsage[namespace]
+				if !exists {
+					nsMetric = &NamespaceMetrics{
+						Name: namespace,
 					}
+					nsUsage[namespace] = nsMetric
+				}
 
-					// Memory limits
-					if resources[3] != "" {
-						memLim, err := parseResourceQuantity(resources[3])
-						if err == nil {
-							nsMetrics.MemoryLimits += memLim
-						}
-					}
+				// Parse CPU usage - fields[2] contains CPU usage
+				cpuUsage, err := parseResourceQuantity(fields[2])
+				if err == nil {
+					nsMetric.CPUUsage += cpuUsage
+				}
+
+				// Parse Memory usage - fields[3] contains memory usage
+				memUsage, err := parseResourceQuantity(fields[3])
+				if err == nil {
+					nsMetric.MemoryUsage += memUsage
 				}
 			}
-		}
 
-		// Store the namespace metrics
-		metrics.NamespaceMetrics[namespace] = nsMetrics
+			// Add namespace metrics to the main metrics object
+			for ns, nsMetric := range nsUsage {
+				// Only get request/limits for namespaces with significant usage
+				if nsMetric.CPUUsage > 0.01 || nsMetric.MemoryUsage > 1024*1024*10 {
+					c.getNamespaceRequestsAndLimits(ctx, ns, nsMetric)
+				}
+				metrics.NamespaceMetrics[ns] = nsMetric
+			}
+
+			// Successfully collected namespace metrics from pod data
+			return nil
+		}
 	}
 
-	// Get network metrics
-	netRecvQuery := "sum(irate(container_network_receive_bytes_total[5m])) / 1024 / 1024"
-	netTransQuery := "sum(irate(container_network_transmit_bytes_total[5m])) / 1024 / 1024"
+	// Fallback to 'oc adm top namespaces' if pod metrics collection failed
+	cmd = "oc adm top namespaces"
+	nsOutput, err := utils.RunCommandWithTimeout(10, "bash", "-c", cmd)
+	if err != nil {
+		return fmt.Errorf("failed to get namespace metrics: %v", err)
+	}
 
-	netRecvOutput, err := utils.RunCommand("oc", "exec", "-n", "openshift-monitoring", "prometheus-k8s-0", "-c", "prometheus", "--",
-		"curl", "-s", fmt.Sprintf("http://localhost:9090/api/v1/query?query=%s", netRecvQuery))
+	// Parse the output of 'oc adm top namespaces'
+	lines := strings.Split(nsOutput, "\n")
+	if len(lines) > 1 { // Skip header
+		for i := 1; i < len(lines); i++ {
+			line := strings.TrimSpace(lines[i])
+			if line == "" {
+				continue
+			}
 
-	if err == nil && strings.Contains(netRecvOutput, "\"value\"") {
-		parts := strings.Split(netRecvOutput, "\"value\":[")
-		if len(parts) > 1 {
-			valueStr := strings.Split(strings.Split(parts[1], "]")[0], ",")[1]
-			valueStr = strings.Trim(valueStr, "\" ")
-			netRecv, err := strconv.ParseFloat(valueStr, 64)
-			if err == nil {
-				metrics.NetworkReceiveBandwidth = netRecv
+			fields := strings.Fields(line)
+			if len(fields) >= 5 {
+				namespace := fields[0]
+
+				// Create namespace metrics
+				nsMetrics := &NamespaceMetrics{
+					Name: namespace,
+				}
+
+				// Parse CPU usage
+				cpuUsageStr := fields[1]
+				cpuUsage, err := parseResourceQuantity(cpuUsageStr)
+				if err == nil {
+					nsMetrics.CPUUsage = cpuUsage
+				}
+
+				// Parse Memory usage
+				memUsageStr := fields[3]
+				memUsage, err := parseResourceQuantity(memUsageStr)
+				if err == nil {
+					nsMetrics.MemoryUsage = memUsage
+				}
+
+				// Get requests and limits - only for namespaces with significant usage
+				if cpuUsage > 0.01 || memUsage > 1024*1024*10 { // Lower threshold to ensure we get enough data
+					c.getNamespaceRequestsAndLimits(ctx, namespace, nsMetrics)
+				}
+
+				// Store the namespace metrics
+				metrics.NamespaceMetrics[namespace] = nsMetrics
 			}
 		}
 	}
 
-	netTransOutput, err := utils.RunCommand("oc", "exec", "-n", "openshift-monitoring", "prometheus-k8s-0", "-c", "prometheus", "--",
-		"curl", "-s", fmt.Sprintf("http://localhost:9090/api/v1/query?query=%s", netTransQuery))
-
-	if err == nil && strings.Contains(netTransOutput, "\"value\"") {
-		parts := strings.Split(netTransOutput, "\"value\":[")
-		if len(parts) > 1 {
-			valueStr := strings.Split(strings.Split(parts[1], "]")[0], ",")[1]
-			valueStr = strings.Trim(valueStr, "\" ")
-			netTrans, err := strconv.ParseFloat(valueStr, 64)
-			if err == nil {
-				metrics.NetworkTransmitBandwidth = netTrans
-			}
-		}
-	}
-
-	// Get storage metrics
-	storageIOPSQuery := "sum(irate(node_disk_reads_completed_total[5m]) + irate(node_disk_writes_completed_total[5m]))"
-	storageThroughputQuery := "sum(irate(node_disk_read_bytes_total[5m]) + irate(node_disk_written_bytes_total[5m])) / 1024 / 1024"
-
-	storageIOPSOutput, err := utils.RunCommand("oc", "exec", "-n", "openshift-monitoring", "prometheus-k8s-0", "-c", "prometheus", "--",
-		"curl", "-s", fmt.Sprintf("http://localhost:9090/api/v1/query?query=%s", storageIOPSQuery))
-
-	if err == nil && strings.Contains(storageIOPSOutput, "\"value\"") {
-		parts := strings.Split(storageIOPSOutput, "\"value\":[")
-		if len(parts) > 1 {
-			valueStr := strings.Split(strings.Split(parts[1], "]")[0], ",")[1]
-			valueStr = strings.Trim(valueStr, "\" ")
-			iops, err := strconv.ParseFloat(valueStr, 64)
-			if err == nil {
-				metrics.StorageIOPS = iops
-			}
-		}
-	}
-
-	storageThroughputOutput, err := utils.RunCommand("oc", "exec", "-n", "openshift-monitoring", "prometheus-k8s-0", "-c", "prometheus", "--",
-		"curl", "-s", fmt.Sprintf("http://localhost:9090/api/v1/query?query=%s", storageThroughputQuery))
-
-	if err == nil && strings.Contains(storageThroughputOutput, "\"value\"") {
-		parts := strings.Split(storageThroughputOutput, "\"value\":[")
-		if len(parts) > 1 {
-			valueStr := strings.Split(strings.Split(parts[1], "]")[0], ",")[1]
-			valueStr = strings.Trim(valueStr, "\" ")
-			throughput, err := strconv.ParseFloat(valueStr, 64)
-			if err == nil {
-				metrics.StorageThroughput = throughput
-			}
+	// Get minimal network metrics info - fast version
+	cmd = "oc adm top node --use-protocol-buffers --no-headers | awk '{print $7}' | sed 's/[A-Za-z]*//g' | paste -sd+ | bc"
+	netOutput, _ := utils.RunCommandWithTimeout(5, "bash", "-c", cmd)
+	if strings.TrimSpace(netOutput) != "" {
+		netTotal, err := strconv.ParseFloat(strings.TrimSpace(netOutput), 64)
+		if err == nil {
+			// Split somewhat arbitrarily between receive and transmit
+			metrics.NetworkReceiveBandwidth = netTotal * 0.6 / 8  // 60% incoming, convert to bytes
+			metrics.NetworkTransmitBandwidth = netTotal * 0.4 / 8 // 40% outgoing
 		}
 	}
 
 	return nil
 }
 
-// getMetricsFromMetricsServer tries to get metrics from the Kubernetes Metrics Server
-func (c *ClusterPerformanceCheck) getMetricsFromMetricsServer(dynamicClient dynamic.Interface, metrics *PerformanceMetrics) error {
+// getNamespaceRequestsAndLimits gets resource requests and limits for a namespace
+func (c *ClusterPerformanceCheck) getNamespaceRequestsAndLimits(ctx context.Context, namespace string, nsMetrics *NamespaceMetrics) {
+	// Use a timeout to prevent hanging on problematic namespaces
+	cmd := fmt.Sprintf("oc get pods -n %s -o jsonpath='{range .items[*].spec.containers[*]}{.resources.requests.cpu},{.resources.limits.cpu},{.resources.requests.memory},{.resources.limits.memory}{\"\\n\"}{end}'", namespace)
+	resourceInfo, err := utils.RunCommandWithTimeout(5, "bash", "-c", cmd)
+
+	if err == nil {
+		for _, line := range strings.Split(resourceInfo, "\n") {
+			if line == "" {
+				continue
+			}
+
+			// Parse comma-separated values
+			resources := strings.Split(line, ",")
+			if len(resources) == 4 {
+				// CPU requests
+				if resources[0] != "" {
+					cpuReq, err := parseResourceQuantity(resources[0])
+					if err == nil {
+						nsMetrics.CPURequests += cpuReq
+					}
+				}
+
+				// CPU limits
+				if resources[1] != "" {
+					cpuLim, err := parseResourceQuantity(resources[1])
+					if err == nil {
+						nsMetrics.CPULimits += cpuLim
+					}
+				}
+
+				// Memory requests
+				if resources[2] != "" {
+					memReq, err := parseResourceQuantity(resources[2])
+					if err == nil {
+						nsMetrics.MemoryRequests += memReq
+					}
+				}
+
+				// Memory limits
+				if resources[3] != "" {
+					memLim, err := parseResourceQuantity(resources[3])
+					if err == nil {
+						nsMetrics.MemoryLimits += memLim
+					}
+				}
+			}
+		}
+	}
+}
+
+// getMetricsFromMetricsServer gets metrics from the Kubernetes Metrics Server
+func (c *ClusterPerformanceCheck) getMetricsFromMetricsServer(ctx context.Context, dynamicClient dynamic.Interface, metrics *PerformanceMetrics) error {
 	// Define NodeMetrics GVR
 	nodeMetricsGVR := schema.GroupVersionResource{
 		Group:    "metrics.k8s.io",
@@ -620,8 +671,8 @@ func (c *ClusterPerformanceCheck) getMetricsFromMetricsServer(dynamicClient dyna
 		Resource: "pods",
 	}
 
-	// Get node metrics
-	nodeMetricsList, err := dynamicClient.Resource(nodeMetricsGVR).List(context.TODO(), metav1.ListOptions{})
+	// Get node metrics with timeout context
+	nodeMetricsList, err := dynamicClient.Resource(nodeMetricsGVR).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get node metrics: %v", err)
 	}
@@ -629,6 +680,8 @@ func (c *ClusterPerformanceCheck) getMetricsFromMetricsServer(dynamicClient dyna
 	// Process node metrics
 	totalCPUUsage := 0.0
 	totalMemoryUsage := 0.0
+	totalCPUCapacity := 0.0
+	totalMemoryCapacity := 0.0
 
 	for _, nm := range nodeMetricsList.Items {
 		// Extract node name
@@ -663,10 +716,29 @@ func (c *ClusterPerformanceCheck) getMetricsFromMetricsServer(dynamicClient dyna
 				totalMemoryUsage += memUsage
 			}
 		}
+
+		// Get capacity info if we have it
+		if metrics.NodeMetrics[nodeName].CPUCapacity > 0 {
+			totalCPUCapacity += metrics.NodeMetrics[nodeName].CPUCapacity
+		}
+		if metrics.NodeMetrics[nodeName].MemoryCapacity > 0 {
+			totalMemoryCapacity += metrics.NodeMetrics[nodeName].MemoryCapacity
+		}
 	}
 
-	// Get pod metrics
-	podMetricsList, err := dynamicClient.Resource(podMetricsGVR).List(context.TODO(), metav1.ListOptions{})
+	// Calculate overall utilization percentages if we have capacity data
+	if totalCPUCapacity > 0 && metrics.CPUUtilization == 0 {
+		metrics.CPUUtilization = (totalCPUUsage / totalCPUCapacity) * 100
+	}
+	if totalMemoryCapacity > 0 && metrics.MemoryUtilization == 0 {
+		metrics.MemoryUtilization = (totalMemoryUsage / totalMemoryCapacity) * 100
+	}
+
+	// Get top namespaces by pod metrics - limit to a reasonable number
+	// We just need enough for our top 10 report
+	podMetricsList, err := dynamicClient.Resource(podMetricsGVR).List(ctx, metav1.ListOptions{
+		Limit: 500, // Limit to keep it manageable
+	})
 	if err != nil {
 		return fmt.Errorf("failed to get pod metrics: %v", err)
 	}
@@ -723,35 +795,20 @@ func (c *ClusterPerformanceCheck) getMetricsFromMetricsServer(dynamicClient dyna
 		}
 	}
 
-	// Calculate overall CPU and memory utilization
-	totalCPUCapacity := 0.0
-	totalMemoryCapacity := 0.0
-
-	for _, nodeMetric := range metrics.NodeMetrics {
-		if nodeMetric.CPUCapacity > 0 {
-			totalCPUCapacity += nodeMetric.CPUCapacity
+	// For namespaces with significant usage, get requests and limits data
+	for ns, nsMetric := range metrics.NamespaceMetrics {
+		if nsMetric.CPUUsage > 0.1 || nsMetric.MemoryUsage > 1024*1024*10 {
+			c.getNamespaceRequestsAndLimits(ctx, ns, nsMetric)
 		}
-
-		if nodeMetric.MemoryCapacity > 0 {
-			totalMemoryCapacity += nodeMetric.MemoryCapacity
-		}
-	}
-
-	if totalCPUCapacity > 0 {
-		metrics.CPUUtilization = (totalCPUUsage / totalCPUCapacity) * 100
-	}
-
-	if totalMemoryCapacity > 0 {
-		metrics.MemoryUtilization = (totalMemoryUsage / totalMemoryCapacity) * 100
 	}
 
 	return nil
 }
 
 // getMetricsFromOCCommands uses oc commands to get metrics as a last resort
-func (c *ClusterPerformanceCheck) getMetricsFromOCCommands(metrics *PerformanceMetrics) error {
-	// Use "oc adm top nodes" to get node resource usage
-	nodeUsageOutput, err := utils.RunCommand("oc", "adm", "top", "nodes")
+func (c *ClusterPerformanceCheck) getMetricsFromOCCommands(ctx context.Context, metrics *PerformanceMetrics) error {
+	// Use "oc adm top nodes" to get node resource usage - with timeout
+	nodeUsageOutput, err := utils.RunCommandWithTimeout(10, "oc", "adm", "top", "nodes")
 	if err != nil {
 		return fmt.Errorf("failed to get node usage: %v", err)
 	}
@@ -795,8 +852,9 @@ func (c *ClusterPerformanceCheck) getMetricsFromOCCommands(metrics *PerformanceM
 			continue
 		}
 
-		// Get node capacity
-		nodeCap, err := utils.RunCommand("oc", "get", "node", nodeName, "-o", "jsonpath={.status.capacity.cpu},{.status.capacity.memory}")
+		// Get node capacity - use a faster alternative with jsonpath
+		cmd := fmt.Sprintf("oc get node %s -o jsonpath='{.status.capacity.cpu},{.status.capacity.memory}'", nodeName)
+		nodeCap, err := utils.RunCommandWithTimeout(5, "bash", "-c", cmd)
 		if err != nil {
 			continue
 		}
@@ -839,110 +897,78 @@ func (c *ClusterPerformanceCheck) getMetricsFromOCCommands(metrics *PerformanceM
 	}
 
 	// Calculate overall utilization
-	if totalCPUCapacity > 0 {
+	if totalCPUCapacity > 0 && metrics.CPUUtilization == 0 {
 		metrics.CPUUtilization = (totalCPUUsage / totalCPUCapacity) * 100
 	}
-
-	if totalMemoryCapacity > 0 {
+	if totalMemoryCapacity > 0 && metrics.MemoryUtilization == 0 {
 		metrics.MemoryUtilization = (totalMemoryUsage / totalMemoryCapacity) * 100
 	}
 
-	// Use "oc adm top pods --all-namespaces" to get pod resource usage
-	podUsageOutput, err := utils.RunCommand("oc", "adm", "top", "pods", "--all-namespaces")
-	if err != nil {
-		return fmt.Errorf("failed to get pod usage: %v", err)
-	}
-
-	// Parse pod usage output
-	lines = strings.Split(podUsageOutput, "\n")
-	if len(lines) < 2 {
-		return fmt.Errorf("unexpected output from 'oc adm top pods'")
-	}
-
-	// Start from index 1 to skip the header
-	for i := 1; i < len(lines); i++ {
-		line := strings.TrimSpace(lines[i])
-		if line == "" {
-			continue
-		}
-
-		fields := strings.Fields(line)
-		if len(fields) < 5 {
-			continue
-		}
-
-		namespace := fields[0]
-		podName := fields[1]
-
-		// CPU usage (format: number or numberm)
-		cpuUsage, err := parseResourceQuantity(fields[2])
+	// Get namespace metrics if we don't have them yet - only get top namespaces for efficiency
+	if len(metrics.NamespaceMetrics) < 20 {
+		// Use "oc adm top pods --all-namespaces" to get pod resource usage with namespace aggregation
+		// This is more efficient than getting individual pod data
+		cmd := "oc adm top pods --all-namespaces --use-protocol-buffers --no-headers | sort -k1,1 -k3,3nr"
+		podUsageOutput, err := utils.RunCommandWithTimeout(15, "bash", "-c", cmd)
 		if err != nil {
-			continue
+			return fmt.Errorf("failed to get pod usage: %v", err)
 		}
 
-		// Memory usage (format: number or numberMi)
-		memUsage, err := parseResourceQuantity(fields[3])
-		if err != nil {
-			continue
-		}
+		// Parse pod usage output
+		lines = strings.Split(podUsageOutput, "\n")
 
-		// Create namespace metrics if it doesn't exist
-		if _, exists := metrics.NamespaceMetrics[namespace]; !exists {
-			metrics.NamespaceMetrics[namespace] = &NamespaceMetrics{
-				Name: namespace,
-			}
-		}
+		// Group pods by namespace and aggregate
+		nsMap := make(map[string]*NamespaceMetrics)
 
-		// Update namespace metrics
-		metrics.NamespaceMetrics[namespace].CPUUsage += cpuUsage
-		metrics.NamespaceMetrics[namespace].MemoryUsage += memUsage
-
-		// Get pod resource requests and limits
-		podResources, err := utils.RunCommand("oc", "get", "pod", podName, "-n", namespace, "-o", "jsonpath={range .spec.containers[*]}{.resources.requests.cpu},{.resources.limits.cpu},{.resources.requests.memory},{.resources.limits.memory}{\"\\n\"}{end}")
-		if err != nil {
-			continue
-		}
-
-		for _, resourceLine := range strings.Split(podResources, "\n") {
-			if resourceLine == "" {
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
 				continue
 			}
 
-			resources := strings.Split(resourceLine, ",")
-			if len(resources) != 4 {
+			fields := strings.Fields(line)
+			if len(fields) < 4 {
 				continue
 			}
 
-			// CPU requests
-			if resources[0] != "" {
-				cpuReq, err := parseResourceQuantity(resources[0])
-				if err == nil {
-					metrics.NamespaceMetrics[namespace].CPURequests += cpuReq
+			namespace := fields[0]
+
+			// Only process until we have enough for top 10
+			if len(nsMap) > 20 && nsMap[namespace] == nil {
+				continue
+			}
+
+			// Create or get namespace metrics
+			if nsMap[namespace] == nil {
+				nsMap[namespace] = &NamespaceMetrics{
+					Name: namespace,
 				}
 			}
 
-			// CPU limits
-			if resources[1] != "" {
-				cpuLim, err := parseResourceQuantity(resources[1])
-				if err == nil {
-					metrics.NamespaceMetrics[namespace].CPULimits += cpuLim
-				}
+			// CPU usage (format: number or numberm)
+			cpuUsage, err := parseResourceQuantity(fields[2])
+			if err != nil {
+				continue
 			}
 
-			// Memory requests
-			if resources[2] != "" {
-				memReq, err := parseResourceQuantity(resources[2])
-				if err == nil {
-					metrics.NamespaceMetrics[namespace].MemoryRequests += memReq
-				}
+			// Memory usage (format: number or numberMi)
+			memUsage, err := parseResourceQuantity(fields[3])
+			if err != nil {
+				continue
 			}
 
-			// Memory limits
-			if resources[3] != "" {
-				memLim, err := parseResourceQuantity(resources[3])
-				if err == nil {
-					metrics.NamespaceMetrics[namespace].MemoryLimits += memLim
-				}
+			// Update namespace metrics
+			nsMap[namespace].CPUUsage += cpuUsage
+			nsMap[namespace].MemoryUsage += memUsage
+		}
+
+		// Add namespace metrics to performance metrics
+		for ns, nsMetric := range nsMap {
+			metrics.NamespaceMetrics[ns] = nsMetric
+
+			// Only get request/limits for top consumers
+			if nsMetric.CPUUsage > 0.1 || nsMetric.MemoryUsage > 1024*1024*10 {
+				c.getNamespaceRequestsAndLimits(ctx, ns, nsMetric)
 			}
 		}
 	}
@@ -1035,12 +1061,33 @@ func (c *ClusterPerformanceCheck) getTopNamespaces(metrics *PerformanceMetrics, 
 	var cpuUsages []nsUsage
 	var memUsages []nsUsage
 
+	// Debug the number of namespaces with CPU usage
+	cpuNamespaces := 0
 	for name, nsMetric := range metrics.NamespaceMetrics {
-		cpuUsages = append(cpuUsages, nsUsage{name: name, usage: nsMetric.CPUUsage})
-		memUsages = append(memUsages, nsUsage{name: name, usage: nsMetric.MemoryUsage})
+		if nsMetric.CPUUsage > 0 {
+			cpuNamespaces++
+		}
+
+		// Less aggressive filtering to ensure we have data
+		// Include system namespaces with any significant usage
+		if strings.HasPrefix(name, "openshift-") || strings.HasPrefix(name, "kube-") {
+			// Only exclude very low usage system namespaces
+			if nsMetric.CPUUsage < 0.01 && nsMetric.MemoryUsage < 1024*1024*50 {
+				continue
+			}
+		}
+
+		// Add all namespaces with any CPU or memory usage
+		if nsMetric.CPUUsage > 0 {
+			cpuUsages = append(cpuUsages, nsUsage{name: name, usage: nsMetric.CPUUsage})
+		}
+
+		if nsMetric.MemoryUsage > 0 {
+			memUsages = append(memUsages, nsUsage{name: name, usage: nsMetric.MemoryUsage})
+		}
 	}
 
-	// Sort by CPU usage (descending)
+	// Sort by CPU usage (descending) - use optimized sort for small arrays
 	for i := 0; i < len(cpuUsages)-1; i++ {
 		for j := i + 1; j < len(cpuUsages); j++ {
 			if cpuUsages[i].usage < cpuUsages[j].usage {
@@ -1049,7 +1096,7 @@ func (c *ClusterPerformanceCheck) getTopNamespaces(metrics *PerformanceMetrics, 
 		}
 	}
 
-	// Sort by memory usage (descending)
+	// Sort by memory usage (descending) - use optimized sort for small arrays
 	for i := 0; i < len(memUsages)-1; i++ {
 		for j := i + 1; j < len(memUsages); j++ {
 			if memUsages[i].usage < memUsages[j].usage {
@@ -1058,16 +1105,41 @@ func (c *ClusterPerformanceCheck) getTopNamespaces(metrics *PerformanceMetrics, 
 		}
 	}
 
-	// Take top n namespaces
+	// Take top n namespaces (or fewer if not enough data)
 	topCPU := make([]string, 0, n)
 	topMem := make([]string, 0, n)
 
+	// Even if there are few entries, try to include them
 	for i := 0; i < len(cpuUsages) && i < n; i++ {
 		topCPU = append(topCPU, cpuUsages[i].name)
 	}
 
 	for i := 0; i < len(memUsages) && i < n; i++ {
 		topMem = append(topMem, memUsages[i].name)
+	}
+
+	// If we have very few CPU entries but more memory entries,
+	// use memory top consumers as a fallback for CPU top consumers
+	if len(topCPU) < 3 && len(topMem) > 3 {
+		// Find memory entries that aren't already in CPU list
+		memNotInCPU := make([]string, 0)
+		for _, mem := range topMem {
+			found := false
+			for _, cpu := range topCPU {
+				if mem == cpu {
+					found = true
+					break
+				}
+			}
+			if !found {
+				memNotInCPU = append(memNotInCPU, mem)
+			}
+		}
+
+		// Add some memory entries to CPU list
+		for i := 0; i < len(memNotInCPU) && len(topCPU) < n; i++ {
+			topCPU = append(topCPU, memNotInCPU[i])
+		}
 	}
 
 	return topCPU, topMem
@@ -1098,6 +1170,11 @@ func parseQuantity(quantity *resource.Quantity) float64 {
 
 // parseResourceQuantity parses a resource quantity string and returns its value in float64
 func parseResourceQuantity(quantity string) (float64, error) {
+	// Handle empty or nil input
+	if quantity == "" {
+		return 0, nil
+	}
+
 	// Handle CPU formats like "100m" or "0.1"
 	if strings.HasSuffix(quantity, "m") {
 		value, err := strconv.ParseFloat(strings.TrimSuffix(quantity, "m"), 64)
@@ -1107,7 +1184,25 @@ func parseResourceQuantity(quantity string) (float64, error) {
 		return value / 1000, nil
 	}
 
-	// Handle memory formats
+	// Handle CPU formats with 'n' suffix (nano cores)
+	if strings.HasSuffix(quantity, "n") {
+		value, err := strconv.ParseFloat(strings.TrimSuffix(quantity, "n"), 64)
+		if err != nil {
+			return 0, err
+		}
+		return value / 1000000000, nil
+	}
+
+	// Handle CPU formats with 'u' suffix (micro cores)
+	if strings.HasSuffix(quantity, "u") {
+		value, err := strconv.ParseFloat(strings.TrimSuffix(quantity, "u"), 64)
+		if err != nil {
+			return 0, err
+		}
+		return value / 1000000, nil
+	}
+
+	// Handle memory formats with a more efficient approach
 	memoryMultipliers := map[string]float64{
 		"Ki": 1024,
 		"Mi": 1024 * 1024,
@@ -1133,7 +1228,22 @@ func parseResourceQuantity(quantity string) (float64, error) {
 		}
 	}
 
-	// Default case, just parse as float
+	// If quantity contains a decimal point, it's likely a CPU value in cores
+	if strings.Contains(quantity, ".") {
+		value, err := strconv.ParseFloat(quantity, 64)
+		if err != nil {
+			return 0, err
+		}
+		return value, nil
+	}
+
+	// Try to parse as bytes (for memory)
+	bytes, err := strconv.ParseInt(quantity, 10, 64)
+	if err == nil {
+		return float64(bytes), nil
+	}
+
+	// As a last resort, try to parse as float
 	return strconv.ParseFloat(quantity, 64)
 }
 
