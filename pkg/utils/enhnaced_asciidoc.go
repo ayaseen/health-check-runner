@@ -1,19 +1,4 @@
-/*
-Author: Amjad Yaseen
-Email: ayaseen@redhat.com
-Date: 2023-03-06
-Modified: 2025-04-15
-
-This file provides enhanced AsciiDoc report generation utilities. It includes:
-
-- Functions for creating comprehensive and well-formatted AsciiDoc reports
-- Methods for organizing health check results by category
-- Utilities for formatting result keys and status indicators
-- Functions for creating detailed check sections with recommendations
-- Helpers for generating summary tables and detailed explanations
-
-These utilities enhance the standard AsciiDoc generation with more sophisticated formatting and organization.
-*/
+// pkg/utils/enhanced_asciidoc.go
 
 package utils
 
@@ -110,7 +95,13 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 	sb.WriteString("<<<\n\n")
 	sb.WriteString("{set:cellbgcolor!}\n\n")
 
-	// Add detailed category sections
+	// Get OpenShift version for documentation links
+	version, err := GetOpenShiftMajorMinorVersion()
+	if err != nil {
+		version = "4.14" // Default to a known version if we can't determine
+	}
+
+	// Add detailed category sections with tables followed immediately by check details for that category
 	for _, category := range orderedCategories {
 		categoryChecks, exists := checksByCategory[category]
 		if !exists {
@@ -149,23 +140,8 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 		}
 
 		sb.WriteString("|===\n\n")
-		sb.WriteString("<<<\n\n")
-		sb.WriteString("{set:cellbgcolor!}\n\n")
-	}
 
-	// Get OpenShift version for documentation links
-	version, err := GetOpenShiftMajorMinorVersion()
-	if err != nil {
-		version = "4.14" // Default to a known version if we can't determine
-	}
-
-	// Add detailed sections for each check
-	for _, category := range orderedCategories {
-		categoryChecks, exists := checksByCategory[category]
-		if !exists {
-			continue
-		}
-
+		// NEW CHANGE: Add detailed sections for each check in this category right after the category table
 		for _, check := range categoryChecks {
 			result, exists := results[check.ID()]
 			if !exists {
@@ -175,6 +151,9 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 			// Generate the detailed check section
 			sb.WriteString(FormatEnhancedCheckDetail(check, result, version))
 		}
+
+		sb.WriteString("<<<\n\n")
+		sb.WriteString("{set:cellbgcolor!}\n\n")
 	}
 
 	// Reset bgcolor for future tables - exactly as in old report
