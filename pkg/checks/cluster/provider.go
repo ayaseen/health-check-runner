@@ -2,14 +2,13 @@
 Author: Amjad Yaseen
 Email: ayaseen@redhat.com
 Date: 2023-03-06
-Modified: 2025-04-15
+Modified: 2025-04-17
 
 This file acts as a provider for cluster-related health checks. It includes:
 
 - A registry of all available cluster configuration health checks
 - Functions to retrieve and initialize cluster checks
 - Organization of checks related to node configuration, operators, and cluster version
-- Utilities for fetching the latest OpenShift version for comparison
 - Registration of checks for core cluster components
 
 The provider ensures that all cluster-related health checks are properly registered and available for execution by the main runner.
@@ -18,25 +17,11 @@ The provider ensures that all cluster-related health checks are properly registe
 package cluster
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 )
 
 // GetChecks returns all cluster-related health checks
 func GetChecks() []healthcheck.Check {
-	// Retrieve the latest OpenShift version
-	latestVersion, err := getLatestOpenShiftVersion()
-	if err != nil {
-		// Fall back to a hardcoded version if there's an error
-		latestVersion = "4.14.0"
-	}
-
 	var checks []healthcheck.Check
 
 	// Following the order in the PDF:
@@ -93,52 +78,4 @@ func GetChecks() []healthcheck.Check {
 	checks = append(checks, NewInfraTaintsCheck())
 
 	return checks
-}
-
-// VersionInfo represents the version information from the Red Hat API
-type VersionInfo struct {
-	LatestReleases struct {
-		Stable string `json:"stable"`
-	} `json:"latest_releases"`
-}
-
-// getLatestOpenShiftVersion attempts to get the latest OpenShift version from Red Hat
-func getLatestOpenShiftVersion() (string, error) {
-	// Define API URL
-	apiUrl := "https://api.openshift.com/api/upgrades_info/v1/graph"
-
-	// Create a client with timeout
-	client := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-
-	// Make the request
-	resp, err := client.Get(apiUrl)
-	if err != nil {
-		return "", fmt.Errorf("failed to get latest version: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Read the response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response body: %v", err)
-	}
-
-	// Parse the JSON response
-	var versionInfo VersionInfo
-	if err := json.Unmarshal(body, &versionInfo); err != nil {
-		return "", fmt.Errorf("failed to parse version info: %v", err)
-	}
-
-	// Extract and validate the version
-	version := versionInfo.LatestReleases.Stable
-	if version == "" {
-		return "", fmt.Errorf("empty version received from API")
-	}
-
-	// Clean the version string (remove leading 'v' if present)
-	version = strings.TrimPrefix(version, "v")
-
-	return version, nil
 }

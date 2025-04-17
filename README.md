@@ -48,7 +48,7 @@ If you would like to contribute code, please fork the repository and submit a pu
 
 Run  ./main
 
-![health-check-demo](images/health-check.gif)
+![health-check-demo](images/hc.gif)
 
 
 

@@ -9,4 +9,4 @@ This file provides the latest OpenShift version information embedded during buil
 package version
 
 // LatestOpenShiftVersion is set during build time via ldflags
-var LatestOpenShiftVersion = "unknown"
+var LatestOpenShiftVersion = "4.18.9"
