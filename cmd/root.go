@@ -151,6 +151,10 @@ The application runs a variety of checks and generates a formatted report with t
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+
+	// Verify OpenShift connection before running any checks
+	verifyOpenShiftConnection()
+
 	err := rootCmd.Execute()
 
 	if err != nil {
@@ -230,4 +234,14 @@ func validateFlags() error {
 	}
 
 	return nil
+}
+
+// verifyOpenShiftConnection checks if the OpenShift API is accessible and exits with an error message if not
+func verifyOpenShiftConnection() {
+	accessible, message := utils.VerifyOpenShiftAccess()
+	if !accessible {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", message)
+		os.Exit(1)
+	}
+	fmt.Println(message)
 }

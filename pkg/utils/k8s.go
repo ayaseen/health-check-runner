@@ -359,3 +359,32 @@ func SafeWriteFile(path string, data []byte, perm os.FileMode) error {
 
 	return nil
 }
+
+// VerifyOpenShiftAccess checks if the OpenShift API is accessible and if the user is authenticated
+func VerifyOpenShiftAccess() (bool, string) {
+	// Check if oc command is available
+	if !IsOCCommandAvailable() {
+		return false, "OpenShift CLI (oc) not found. Please install the OpenShift CLI to run health checks."
+	}
+
+	// Try to reach the OpenShift API server
+	cmd := exec.Command("oc", "whoami", "--request-timeout=10s")
+	out, err := cmd.CombinedOutput()
+
+	// Convert output to string
+	output := strings.TrimSpace(string(out))
+
+	// If we have an error, determine the type of error
+	if err != nil {
+		if strings.Contains(output, "was refused") || strings.Contains(output, "Unable to connect to the server") {
+			return false, "Connection to the OpenShift API server was refused. Please check if the server is running and accessible."
+		} else if strings.Contains(output, "Missing or incomplete configuration info") ||
+			strings.Contains(output, "You must be logged in") {
+			return false, "Not authenticated to OpenShift cluster. Please login using 'oc login'."
+		}
+		return false, fmt.Sprintf("Error accessing OpenShift API: %s", output)
+	}
+
+	// No error means we are connected and authenticated
+	return true, fmt.Sprintf("Successfully authenticated as user: %s", output)
+}
