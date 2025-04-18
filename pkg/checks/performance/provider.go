@@ -11,6 +11,9 @@ func GetChecks() []healthcheck.Check {
 	// Add all performance checks here
 	checks = append(checks, NewClusterPerformanceCheck())
 
+	// Add user workload performance check
+	checks = append(checks, NewUserWorkloadPerformanceCheck())
+
 	// Add additional performance checks as they are developed
 	// checks = append(checks, NewOtherPerformanceCheck())
 
