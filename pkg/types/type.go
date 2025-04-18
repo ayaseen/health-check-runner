@@ -82,6 +82,9 @@ const (
 
 	// CategoryStorage is for storage-related checks
 	CategoryStorage Category = "Storage"
+
+	// CategoryPerformance is for performance-related checks
+	CategoryPerformance Category = "Performance"
 )
 
 // ReportFormat defines the format of the generated report

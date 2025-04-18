@@ -22,6 +22,7 @@ import (
 	"github.com/ayaseen/health-check-runner/pkg/checks/cluster"
 	"github.com/ayaseen/health-check-runner/pkg/checks/monitoring"
 	"github.com/ayaseen/health-check-runner/pkg/checks/networking"
+	"github.com/ayaseen/health-check-runner/pkg/checks/performance"
 	"github.com/ayaseen/health-check-runner/pkg/checks/security"
 	"github.com/ayaseen/health-check-runner/pkg/checks/storage"
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
@@ -45,6 +46,9 @@ func GetOpenShiftChecks() []healthcheck.Check {
 
 	// Add monitoring checks (Op-Ready in the PDF)
 	checks = append(checks, monitoring.GetChecks()...)
+
+	// Add performance checks
+	checks = append(checks, performance.GetChecks()...)
 
 	return checks
 }

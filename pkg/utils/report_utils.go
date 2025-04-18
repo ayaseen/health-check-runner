@@ -144,6 +144,7 @@ func GetSortedCategories() []types.Category {
 		types.CategoryOpReady,
 		types.CategorySecurity,
 		types.CategoryStorage,
+		types.CategoryPerformance,
 	}
 }
 

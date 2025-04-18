@@ -100,6 +100,8 @@ func normalizeCategory(category types.Category) types.Category {
 		return types.CategoryApplications
 	case "Monitoring":
 		return types.CategoryOpReady
+	case "Perf", "Performance Metrics":
+		return types.CategoryPerformance
 	default:
 		return category
 	}

@@ -57,6 +57,7 @@ func GenerateEnhancedAsciiDocReport(title string, checks []types.Check, results 
 		types.CategoryOpReady,
 		types.CategorySecurity,
 		types.CategoryStorage,
+		types.CategoryPerformance,
 	}
 
 	for _, category := range orderedCategories {

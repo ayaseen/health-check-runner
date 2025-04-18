@@ -219,6 +219,7 @@ func validateFlags() error {
 		"Security":       true,
 		"Cluster Config": true,
 		"Storage":        true,
+		"Performance":    true,
 	}
 
 	for _, category := range categoryFilter {

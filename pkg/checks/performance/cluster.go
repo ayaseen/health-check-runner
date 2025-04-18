@@ -8,8 +8,10 @@ This file implements health checks for cluster performance metrics. It:
 
 - Monitors CPU and memory utilization across the cluster
 - Examines CPU and memory requests/limits commitment
+- Provides detailed per-node resource utilization metrics using oc adm top
+- Lists top CPU and memory consuming pods in the cluster
 - Provides recommendations for improving cluster performance and resource allocation
-- Uses a direct bash script execution for maximum reliability
+- Uses a combination of Prometheus and CLI tools for maximum reliability
 
 This check ensures the cluster is operating efficiently and has sufficient resources for workloads.
 */
@@ -23,13 +25,36 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ayaseen/health-check-runner/pkg/healthcheck"
 	"github.com/ayaseen/health-check-runner/pkg/types"
+	"github.com/ayaseen/health-check-runner/pkg/utils"
 )
+
+// NodeMetrics holds resource metrics for a single node
+type NodeMetrics struct {
+	Name              string
+	CPUCapacity       string
+	CPUUsage          string
+	CPUUtilization    float64
+	MemoryCapacity    string
+	MemoryUsage       string
+	MemoryUtilization float64
+}
+
+// PodMetrics holds resource metrics for a single pod
+type PodMetrics struct {
+	Name      string
+	Namespace string
+	CPU       string
+	CPUValue  float64
+	Memory    string
+	MemValue  float64
+}
 
 // PerformanceMetrics holds various cluster performance metrics
 type PerformanceMetrics struct {
@@ -42,6 +67,13 @@ type PerformanceMetrics struct {
 	MemoryUtilization        float64
 	MemoryRequestsCommitment float64
 	MemoryLimitsCommitment   float64
+
+	// Node-specific metrics
+	NodeMetrics []NodeMetrics
+
+	// Top resource consumers
+	TopCPUPods    []PodMetrics
+	TopMemoryPods []PodMetrics
 
 	// Raw query results for debugging
 	RawResults map[string]string
@@ -76,7 +108,7 @@ func NewClusterPerformanceCheck() *ClusterPerformanceCheck {
 			"cluster-performance",
 			"Cluster Performance",
 			"Checks cluster performance metrics including CPU and memory utilization",
-			types.CategoryClusterConfig,
+			types.CategoryPerformance,
 		),
 		CPUUtilizationWarning:     80.0,
 		CPUUtilizationCritical:    90.0,
@@ -110,6 +142,89 @@ func (c *ClusterPerformanceCheck) Run() (healthcheck.Result, error) {
 	formattedDetailOut.WriteString(fmt.Sprintf("Memory Utilization: %.2f%%\n", metrics.MemoryUtilization))
 	formattedDetailOut.WriteString(fmt.Sprintf("Memory Requests Commitment: %.2f%%\n", metrics.MemoryRequestsCommitment))
 	formattedDetailOut.WriteString(fmt.Sprintf("Memory Limits Commitment: %.2f%%\n\n", metrics.MemoryLimitsCommitment))
+
+	// Add node-specific metrics
+	formattedDetailOut.WriteString("== Node Resource Utilization ==\n\n")
+
+	if len(metrics.NodeMetrics) > 0 {
+		formattedDetailOut.WriteString("[cols=\"1,1,1,1,1,1,1\", options=\"header\"]\n|===\n")
+		formattedDetailOut.WriteString("|Node Name|CPU Capacity|CPU Usage|CPU %|Memory Capacity|Memory Usage|Memory %\n\n")
+
+		for _, node := range metrics.NodeMetrics {
+			formattedDetailOut.WriteString(fmt.Sprintf("|%s|%s|%s|%.2f%%|%s|%s|%.2f%%\n",
+				node.Name,
+				node.CPUCapacity,
+				node.CPUUsage,
+				node.CPUUtilization,
+				node.MemoryCapacity,
+				node.MemoryUsage,
+				node.MemoryUtilization))
+		}
+
+		formattedDetailOut.WriteString("|===\n\n")
+
+		// Identify high utilization nodes
+		var highCpuNodes []string
+		var highMemNodes []string
+
+		for _, node := range metrics.NodeMetrics {
+			if node.CPUUtilization >= c.CPUUtilizationWarning {
+				highCpuNodes = append(highCpuNodes, fmt.Sprintf("%s (%.2f%%)", node.Name, node.CPUUtilization))
+			}
+			if node.MemoryUtilization >= c.MemoryUtilizationWarning {
+				highMemNodes = append(highMemNodes, fmt.Sprintf("%s (%.2f%%)", node.Name, node.MemoryUtilization))
+			}
+		}
+
+		if len(highCpuNodes) > 0 {
+			formattedDetailOut.WriteString("=== Nodes with High CPU Utilization ===\n\n")
+			for _, node := range highCpuNodes {
+				formattedDetailOut.WriteString(fmt.Sprintf("* %s\n", node))
+			}
+			formattedDetailOut.WriteString("\n")
+		}
+
+		if len(highMemNodes) > 0 {
+			formattedDetailOut.WriteString("=== Nodes with High Memory Utilization ===\n\n")
+			for _, node := range highMemNodes {
+				formattedDetailOut.WriteString(fmt.Sprintf("* %s\n", node))
+			}
+			formattedDetailOut.WriteString("\n")
+		}
+	} else {
+		formattedDetailOut.WriteString("No node-specific metrics available.\n\n")
+	}
+
+	// Add top CPU and memory consumers
+	if len(metrics.TopCPUPods) > 0 {
+		formattedDetailOut.WriteString("== Top CPU Consumers (Top 10) ==\n\n")
+		formattedDetailOut.WriteString("[cols=\"1,1,1\", options=\"header\"]\n|===\n")
+		formattedDetailOut.WriteString("|Pod Name|Namespace|CPU Usage\n\n")
+
+		for _, pod := range metrics.TopCPUPods {
+			formattedDetailOut.WriteString(fmt.Sprintf("|%s|%s|%s\n",
+				pod.Name,
+				pod.Namespace,
+				pod.CPU))
+		}
+
+		formattedDetailOut.WriteString("|===\n\n")
+	}
+
+	if len(metrics.TopMemoryPods) > 0 {
+		formattedDetailOut.WriteString("== Top Memory Consumers (Top 10) ==\n\n")
+		formattedDetailOut.WriteString("[cols=\"1,1,1\", options=\"header\"]\n|===\n")
+		formattedDetailOut.WriteString("|Pod Name|Namespace|Memory Usage\n\n")
+
+		for _, pod := range metrics.TopMemoryPods {
+			formattedDetailOut.WriteString(fmt.Sprintf("|%s|%s|%s\n",
+				pod.Name,
+				pod.Namespace,
+				pod.Memory))
+		}
+
+		formattedDetailOut.WriteString("|===\n\n")
+	}
 
 	// If we have raw results, include them for debugging
 	if len(metrics.RawResults) > 0 {
@@ -192,10 +307,10 @@ func (c *ClusterPerformanceCheck) collectPerformanceMetrics(ctx context.Context)
 	}
 
 	// Create a bash script file with the exact content of your bash script
-	scriptContent := `#!/usr/bin/env bash
+	scriptContent := `#!/bin/bash
 #
 # Fetch cluster performance metrics via CLI + Prometheus API
-# Requirements: oc CLI logged in, curl, bash ≥4
+# Requirements: oc CLI logged in, curl, bash
 
 # 1. Grab your Bearer token and Thanos Querier host
 TOKEN=$(oc whoami -t)
@@ -203,25 +318,25 @@ HOST=$(oc -n openshift-monitoring get route thanos-querier \
   -o jsonpath='{.status.ingress[0].host}')
 BASE_URL="https://$HOST/api/v1/query"
 
-# 2. Define each PromQL expression from the dashboards
-declare -A QUERIES=(
-  [cpu_utilization]='cluster:node_cpu:ratio_rate5m{}'
-  [cpu_requests_commitment]='sum(namespace_cpu:kube_pod_container_resource_requests:sum{}) / sum(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu"})'
-  [cpu_limits_commitment]='sum(namespace_cpu:kube_pod_container_resource_limits:sum{})  / sum(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu"})'
-  [memory_utilization]='1 - sum(:node_memory_MemAvailable_bytes:sum{}) / sum(node_memory_MemTotal_bytes{job="node-exporter"})'
-  [memory_requests_commitment]='sum(namespace_memory:kube_pod_container_resource_requests:sum{}) / sum(kube_node_status_allocatable{job="kube-state-metrics",resource="memory"})'
-  [memory_limits_commitment]='sum(namespace_memory:kube_pod_container_resource_limits:sum{})  / sum(kube_node_status_allocatable{job="kube-state-metrics",resource="memory"})'
-)
+# 2. Define queries one by one to avoid associative arrays which require bash 4+
+function run_query() {
+    local name=$1
+    local query=$2
+    echo "=== $name ==="
+    curl -s -k -G \
+      -H "Authorization: Bearer $TOKEN" \
+      --data-urlencode "query=$query" \
+      "$BASE_URL"
+    echo -e "\n"
+}
 
-# 3. Loop and curl each metric
-for name in "${!QUERIES[@]}"; do
-  echo "=== $name ==="
-  curl -s -k -G \
-    -H "Authorization: Bearer $TOKEN" \
-    --data-urlencode "query=${QUERIES[$name]}" \
-    "$BASE_URL"
-  echo -e "\n"
-done
+# 3. Run each query
+run_query "cpu_utilization" "cluster:node_cpu:ratio_rate5m{}"
+run_query "cpu_requests_commitment" "sum(namespace_cpu:kube_pod_container_resource_requests:sum{}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\"})"
+run_query "cpu_limits_commitment" "sum(namespace_cpu:kube_pod_container_resource_limits:sum{})  / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\"})"
+run_query "memory_utilization" "1 - sum(:node_memory_MemAvailable_bytes:sum{}) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\"})"
+run_query "memory_requests_commitment" "sum(namespace_memory:kube_pod_container_resource_requests:sum{}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\"})"
+run_query "memory_limits_commitment" "sum(namespace_memory:kube_pod_container_resource_limits:sum{})  / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\"})"
 `
 
 	// Write script to a temporary file
@@ -284,7 +399,7 @@ done
 			continue
 		}
 
-		// Extract the value
+		// Extract the value for cluster-wide metrics
 		if result.Status != "success" || len(result.Data.Result) == 0 {
 			fmt.Printf("No results for %s\n", metricName)
 			continue
@@ -332,6 +447,29 @@ done
 	metrics.MemoryRequestsCommitment = memReq
 	metrics.MemoryLimitsCommitment = memLim
 
+	// Get node utilization using 'oc adm top nodes'
+	nodeMetrics, err := c.getNodeUtilization(ctx)
+	if err != nil {
+		fmt.Printf("Warning: Could not gather node utilization with 'oc adm top nodes': %v\n", err)
+	} else {
+		metrics.NodeMetrics = nodeMetrics
+	}
+
+	// Get top pod CPU and memory consumers
+	topCPUPods, err := c.getTopPods(ctx, "cpu")
+	if err != nil {
+		fmt.Printf("Warning: Could not gather top CPU consuming pods: %v\n", err)
+	} else {
+		metrics.TopCPUPods = topCPUPods
+	}
+
+	topMemoryPods, err := c.getTopPods(ctx, "memory")
+	if err != nil {
+		fmt.Printf("Warning: Could not gather top memory consuming pods: %v\n", err)
+	} else {
+		metrics.TopMemoryPods = topMemoryPods
+	}
+
 	// If we didn't get any metrics, use fallback values
 	if metrics.CPUUtilization == 0 && metrics.MemoryUtilization == 0 {
 		fmt.Printf("Warning: Using fallback metrics as all collection methods failed\n")
@@ -344,4 +482,166 @@ done
 	}
 
 	return metrics, nil
+}
+
+// getNodeUtilization retrieves node utilization using 'oc adm top nodes'
+func (c *ClusterPerformanceCheck) getNodeUtilization(ctx context.Context) ([]NodeMetrics, error) {
+	var nodes []NodeMetrics
+
+	// Get node utilization using 'oc adm top nodes'
+	out, err := utils.RunCommand("oc", "adm", "top", "nodes")
+	if err != nil {
+		return nodes, fmt.Errorf("failed to get node utilization information: %v", err)
+	}
+
+	// Parse the output
+	lines := strings.Split(out, "\n")
+	if len(lines) < 2 {
+		return nodes, fmt.Errorf("unexpected output format from 'oc adm top nodes'")
+	}
+
+	// Skip header line
+	for i := 1; i < len(lines); i++ {
+		line := strings.TrimSpace(lines[i])
+		if line == "" {
+			continue
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 5 {
+			continue
+		}
+
+		// Fields from 'oc adm top nodes' are:
+		// NAME CPU(cores) CPU% MEMORY(bytes) MEMORY%
+
+		cpuUtilization, _ := strconv.ParseFloat(strings.TrimSuffix(fields[2], "%"), 64)
+		memUtilization, _ := strconv.ParseFloat(strings.TrimSuffix(fields[4], "%"), 64)
+
+		node := NodeMetrics{
+			Name:              fields[0],
+			CPUCapacity:       "", // Will be populated below
+			CPUUsage:          fields[1],
+			CPUUtilization:    cpuUtilization,
+			MemoryCapacity:    "", // Will be populated below
+			MemoryUsage:       fields[3],
+			MemoryUtilization: memUtilization,
+		}
+
+		nodes = append(nodes, node)
+	}
+
+	// Get capacity information to supplement the metrics
+	capacityOut, err := utils.RunCommand("oc", "get", "nodes", "-o", "custom-columns=NAME:.metadata.name,CPU:.status.capacity.cpu,MEMORY:.status.capacity.memory")
+	if err == nil {
+		capacityLines := strings.Split(capacityOut, "\n")
+		if len(capacityLines) >= 2 {
+			// Create a map for quick lookups
+			capacityMap := make(map[string][]string)
+
+			// Skip header line
+			for i := 1; i < len(capacityLines); i++ {
+				line := strings.TrimSpace(capacityLines[i])
+				if line == "" {
+					continue
+				}
+
+				fields := strings.Fields(line)
+				if len(fields) < 3 {
+					continue
+				}
+
+				capacityMap[fields[0]] = []string{fields[1], fields[2]}
+			}
+
+			// Update node metrics with capacity information
+			for i := range nodes {
+				if capacity, ok := capacityMap[nodes[i].Name]; ok && len(capacity) >= 2 {
+					nodes[i].CPUCapacity = capacity[0]
+					nodes[i].MemoryCapacity = capacity[1]
+				}
+			}
+		}
+	}
+
+	// Sort nodes by CPU utilization (highest first)
+	sort.Slice(nodes, func(i, j int) bool {
+		return nodes[i].CPUUtilization > nodes[j].CPUUtilization
+	})
+
+	return nodes, nil
+}
+
+// getTopPods retrieves top pod consumers for CPU or memory
+func (c *ClusterPerformanceCheck) getTopPods(ctx context.Context, resource string) ([]PodMetrics, error) {
+	var pods []PodMetrics
+
+	// Get top pods using 'oc adm top pods'
+	out, err := utils.RunCommand("oc", "adm", "top", "pods", "--all-namespaces", fmt.Sprintf("--sort-by=%s", resource))
+	if err != nil {
+		return pods, fmt.Errorf("failed to get top pods information: %v", err)
+	}
+
+	// Parse the output
+	lines := strings.Split(out, "\n")
+	if len(lines) < 2 {
+		return pods, fmt.Errorf("unexpected output format from 'oc adm top pods'")
+	}
+
+	// Skip header line and limit to top 10
+	count := 0
+	for i := 1; i < len(lines) && count < 10; i++ {
+		line := strings.TrimSpace(lines[i])
+		if line == "" {
+			continue
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 5 {
+			continue
+		}
+
+		// Fields from 'oc adm top pods' are:
+		// NAMESPACE NAME CPU(cores) MEMORY(bytes)
+
+		var cpuValue, memValue float64
+
+		// Try to parse CPU value for sorting
+		cpuStr := fields[2]
+		if strings.HasSuffix(cpuStr, "m") {
+			// Convert millicores to cores
+			mcores, _ := strconv.ParseFloat(strings.TrimSuffix(cpuStr, "m"), 64)
+			cpuValue = mcores / 1000
+		} else {
+			cpuValue, _ = strconv.ParseFloat(cpuStr, 64)
+		}
+
+		// Try to parse memory value for sorting
+		memStr := fields[3]
+		if strings.HasSuffix(memStr, "Mi") {
+			memValue, _ = strconv.ParseFloat(strings.TrimSuffix(memStr, "Mi"), 64)
+		} else if strings.HasSuffix(memStr, "Gi") {
+			memValue, _ = strconv.ParseFloat(strings.TrimSuffix(memStr, "Gi"), 64)
+			memValue *= 1024 // Convert to Mi
+		} else if strings.HasSuffix(memStr, "Ki") {
+			memValue, _ = strconv.ParseFloat(strings.TrimSuffix(memStr, "Ki"), 64)
+			memValue /= 1024 // Convert to Mi
+		} else {
+			memValue, _ = strconv.ParseFloat(memStr, 64)
+		}
+
+		pod := PodMetrics{
+			Namespace: fields[0],
+			Name:      fields[1],
+			CPU:       fields[2],
+			CPUValue:  cpuValue,
+			Memory:    fields[3],
+			MemValue:  memValue,
+		}
+
+		pods = append(pods, pod)
+		count++
+	}
+
+	return pods, nil
 }
