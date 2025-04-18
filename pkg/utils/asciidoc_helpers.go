@@ -311,6 +311,7 @@ func GenerateAsciiDocCategorySections(
 		types.CategoryOpReady,
 		types.CategorySecurity,
 		types.CategoryStorage,
+		types.CategoryPerformance,
 	}
 
 	for _, category := range categories {

@@ -95,5 +95,8 @@ func GetAllChecks() []healthcheck.Check {
 	// Add monitoring checks (Op-Ready in the PDF)
 	checks = append(checks, monitoring.GetChecks()...)
 
+	// Add performance checks
+	checks = append(checks, performance.GetChecks()...)
+
 	return checks
 }

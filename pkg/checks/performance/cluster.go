@@ -20,11 +20,12 @@ package performance
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"os/exec"
+	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -147,8 +148,10 @@ func (c *ClusterPerformanceCheck) Run() (healthcheck.Result, error) {
 	formattedDetailOut.WriteString("== Node Resource Utilization ==\n\n")
 
 	if len(metrics.NodeMetrics) > 0 {
+		// Set cell background to none for this table
+		formattedDetailOut.WriteString("{set:cellbgcolor!}\n")
 		formattedDetailOut.WriteString("[cols=\"1,1,1,1,1,1,1\", options=\"header\"]\n|===\n")
-		formattedDetailOut.WriteString("|Node Name|CPU Capacity|CPU Usage|CPU %|Memory Capacity|Memory Usage|Memory %\n\n")
+		formattedDetailOut.WriteString("|Node Name|CPU Capacity|CPU Usage|CPU %|Memory Capacity|Memory Usage|Memory %\n")
 
 		for _, node := range metrics.NodeMetrics {
 			formattedDetailOut.WriteString(fmt.Sprintf("|%s|%s|%s|%.2f%%|%s|%s|%.2f%%\n",
@@ -306,180 +309,152 @@ func (c *ClusterPerformanceCheck) collectPerformanceMetrics(ctx context.Context)
 		RawResults: make(map[string]string),
 	}
 
-	// Create a bash script file with the exact content of your bash script
-	scriptContent := `#!/bin/bash
-#
-# Fetch cluster performance metrics via CLI + Prometheus API
-# Requirements: oc CLI logged in, curl, bash
+	// Define queries
+	queries := map[string]string{
+		"cpu_utilization":            "cluster:node_cpu:ratio_rate5m{}",
+		"cpu_requests_commitment":    "sum(namespace_cpu:kube_pod_container_resource_requests:sum{}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\"})",
+		"cpu_limits_commitment":      "sum(namespace_cpu:kube_pod_container_resource_limits:sum{})  / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\"})",
+		"memory_utilization":         "1 - sum(:node_memory_MemAvailable_bytes:sum{}) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\"})",
+		"memory_requests_commitment": "sum(namespace_memory:kube_pod_container_resource_requests:sum{}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\"})",
+		"memory_limits_commitment":   "sum(namespace_memory:kube_pod_container_resource_limits:sum{})  / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\"})",
+	}
 
-# 1. Grab your Bearer token and Thanos Querier host
-TOKEN=$(oc whoami -t)
-HOST=$(oc -n openshift-monitoring get route thanos-querier \
-  -o jsonpath='{.status.ingress[0].host}')
-BASE_URL="https://$HOST/api/v1/query"
-
-# 2. Define queries one by one to avoid associative arrays which require bash 4+
-function run_query() {
-    local name=$1
-    local query=$2
-    echo "=== $name ==="
-    curl -s -k -G \
-      -H "Authorization: Bearer $TOKEN" \
-      --data-urlencode "query=$query" \
-      "$BASE_URL"
-    echo -e "\n"
-}
-
-# 3. Run each query
-run_query "cpu_utilization" "cluster:node_cpu:ratio_rate5m{}"
-run_query "cpu_requests_commitment" "sum(namespace_cpu:kube_pod_container_resource_requests:sum{}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\"})"
-run_query "cpu_limits_commitment" "sum(namespace_cpu:kube_pod_container_resource_limits:sum{})  / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\"})"
-run_query "memory_utilization" "1 - sum(:node_memory_MemAvailable_bytes:sum{}) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\"})"
-run_query "memory_requests_commitment" "sum(namespace_memory:kube_pod_container_resource_requests:sum{}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\"})"
-run_query "memory_limits_commitment" "sum(namespace_memory:kube_pod_container_resource_limits:sum{})  / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\"})"
-`
-
-	// Write script to a temporary file
-	tmpFile, err := ioutil.TempFile("", "perf-metrics-*.sh")
+	// Get token for authentication
+	token, err := utils.RunCommand("oc", "whoami", "-t")
 	if err != nil {
-		return metrics, fmt.Errorf("failed to create temporary script file: %v", err)
+		// Continue silently if can't get token
+		token = ""
 	}
-	defer os.Remove(tmpFile.Name())
+	token = strings.TrimSpace(token)
 
-	if _, err := tmpFile.Write([]byte(scriptContent)); err != nil {
-		return metrics, fmt.Errorf("failed to write script content: %v", err)
-	}
-	if err := tmpFile.Close(); err != nil {
-		return metrics, fmt.Errorf("failed to close script file: %v", err)
-	}
-
-	// Make the script executable
-	if err := os.Chmod(tmpFile.Name(), 0755); err != nil {
-		return metrics, fmt.Errorf("failed to make script executable: %v", err)
-	}
-
-	// Execute the script
-	cmd := exec.CommandContext(ctx, "/bin/bash", tmpFile.Name())
-	output, err := cmd.CombinedOutput()
+	// Get thanos querier host
+	host, err := utils.RunCommand("oc", "-n", "openshift-monitoring", "get", "route", "thanos-querier", "-o", "jsonpath={.status.ingress[0].host}")
 	if err != nil {
-		// Save partial output if any and continue
-		fmt.Printf("Script execution warning: %v\nPartial output: %s\n", err, string(output))
+		// Continue silently if can't get host
+		host = ""
 	}
+	host = strings.TrimSpace(host)
 
-	// Parse the output
-	outputStr := string(output)
-	sections := strings.Split(outputStr, "===")
+	if token != "" && host != "" {
+		baseURL := fmt.Sprintf("https://%s/api/v1/query", host)
 
-	// Variables to track values
-	var cpuUtil, cpuReq, cpuLim, memUtil, memReq, memLim float64
+		// Variables to track values
+		var cpuUtil, cpuReq, cpuLim, memUtil, memReq, memLim float64
 
-	// Process each section
-	for _, section := range sections {
-		section = strings.TrimSpace(section)
-		if section == "" {
-			continue
+		// Execute queries
+		for name, query := range queries {
+			// Set up HTTP client with timeout
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+			client := &http.Client{Transport: tr, Timeout: 10 * time.Second}
+
+			// Set up URL and parameters
+			u, err := url.Parse(baseURL)
+			if err != nil {
+				continue
+			}
+
+			params := url.Values{}
+			params.Add("query", query)
+			u.RawQuery = params.Encode()
+
+			// Create request
+			req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
+			if err != nil {
+				continue
+			}
+			req.Header.Add("Authorization", "Bearer "+token)
+
+			// Execute request
+			resp, err := client.Do(req)
+			if err != nil {
+				continue
+			}
+			defer resp.Body.Close()
+
+			// Read response
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				continue
+			}
+
+			// Store raw result for debugging
+			metrics.RawResults[name] = string(body)
+
+			// Parse the JSON result
+			var result PrometheusQueryResult
+			if err := json.Unmarshal(body, &result); err != nil {
+				continue
+			}
+
+			// Extract the value
+			if result.Status != "success" || len(result.Data.Result) == 0 {
+				continue
+			}
+
+			if len(result.Data.Result[0].Value) < 2 {
+				continue
+			}
+
+			valueStr, ok := result.Data.Result[0].Value[1].(string)
+			if !ok {
+				continue
+			}
+
+			value, err := strconv.ParseFloat(valueStr, 64)
+			if err != nil {
+				continue
+			}
+
+			// Assign value to appropriate metric
+			switch name {
+			case "cpu_utilization":
+				cpuUtil = value * 100 // Convert to percentage
+			case "cpu_requests_commitment":
+				cpuReq = value * 100 // Convert to percentage
+			case "cpu_limits_commitment":
+				cpuLim = value * 100 // Convert to percentage
+			case "memory_utilization":
+				memUtil = value * 100 // Convert to percentage
+			case "memory_requests_commitment":
+				memReq = value * 100 // Convert to percentage
+			case "memory_limits_commitment":
+				memLim = value * 100 // Convert to percentage
+			}
 		}
 
-		// Split into lines
-		lines := strings.SplitN(section, "\n", 2)
-		if len(lines) < 2 {
-			continue
-		}
-
-		metricName := strings.TrimSpace(lines[0])
-		jsonData := strings.TrimSpace(lines[1])
-
-		// Store raw result for debugging
-		metrics.RawResults[metricName] = jsonData
-
-		// Parse the JSON result
-		var result PrometheusQueryResult
-		if err := json.Unmarshal([]byte(jsonData), &result); err != nil {
-			fmt.Printf("Error parsing JSON for %s: %v\n", metricName, err)
-			continue
-		}
-
-		// Extract the value for cluster-wide metrics
-		if result.Status != "success" || len(result.Data.Result) == 0 {
-			fmt.Printf("No results for %s\n", metricName)
-			continue
-		}
-
-		if len(result.Data.Result[0].Value) < 2 {
-			fmt.Printf("No value for %s\n", metricName)
-			continue
-		}
-
-		valueStr, ok := result.Data.Result[0].Value[1].(string)
-		if !ok {
-			fmt.Printf("Invalid value type for %s\n", metricName)
-			continue
-		}
-
-		value, err := strconv.ParseFloat(valueStr, 64)
-		if err != nil {
-			fmt.Printf("Error parsing value for %s: %v\n", metricName, err)
-			continue
-		}
-
-		// Assign value to appropriate metric
-		switch metricName {
-		case "cpu_utilization":
-			cpuUtil = value * 100 // Convert to percentage
-		case "cpu_requests_commitment":
-			cpuReq = value * 100 // Convert to percentage
-		case "cpu_limits_commitment":
-			cpuLim = value * 100 // Convert to percentage
-		case "memory_utilization":
-			memUtil = value * 100 // Convert to percentage
-		case "memory_requests_commitment":
-			memReq = value * 100 // Convert to percentage
-		case "memory_limits_commitment":
-			memLim = value * 100 // Convert to percentage
-		}
+		// Set metrics values
+		metrics.CPUUtilization = cpuUtil
+		metrics.CPURequestsCommitment = cpuReq
+		metrics.CPULimitsCommitment = cpuLim
+		metrics.MemoryUtilization = memUtil
+		metrics.MemoryRequestsCommitment = memReq
+		metrics.MemoryLimitsCommitment = memLim
 	}
-
-	// Set metrics values
-	metrics.CPUUtilization = cpuUtil
-	metrics.CPURequestsCommitment = cpuReq
-	metrics.CPULimitsCommitment = cpuLim
-	metrics.MemoryUtilization = memUtil
-	metrics.MemoryRequestsCommitment = memReq
-	metrics.MemoryLimitsCommitment = memLim
 
 	// Get node utilization using 'oc adm top nodes'
 	nodeMetrics, err := c.getNodeUtilization(ctx)
 	if err != nil {
-		fmt.Printf("Warning: Could not gather node utilization with 'oc adm top nodes': %v\n", err)
-	} else {
-		metrics.NodeMetrics = nodeMetrics
+		// Silently continue without node metrics
+		nodeMetrics = []NodeMetrics{}
 	}
+	metrics.NodeMetrics = nodeMetrics
 
 	// Get top pod CPU and memory consumers
 	topCPUPods, err := c.getTopPods(ctx, "cpu")
 	if err != nil {
-		fmt.Printf("Warning: Could not gather top CPU consuming pods: %v\n", err)
-	} else {
-		metrics.TopCPUPods = topCPUPods
+		// Silently continue without top CPU pods
+		topCPUPods = []PodMetrics{}
 	}
+	metrics.TopCPUPods = topCPUPods
 
 	topMemoryPods, err := c.getTopPods(ctx, "memory")
 	if err != nil {
-		fmt.Printf("Warning: Could not gather top memory consuming pods: %v\n", err)
-	} else {
-		metrics.TopMemoryPods = topMemoryPods
+		// Silently continue without top memory pods
+		topMemoryPods = []PodMetrics{}
 	}
-
-	// If we didn't get any metrics, use fallback values
-	if metrics.CPUUtilization == 0 && metrics.MemoryUtilization == 0 {
-		fmt.Printf("Warning: Using fallback metrics as all collection methods failed\n")
-		metrics.CPUUtilization = 4.83
-		metrics.CPURequestsCommitment = 17.55
-		metrics.CPULimitsCommitment = 16.49
-		metrics.MemoryUtilization = 9.44
-		metrics.MemoryRequestsCommitment = 12.82
-		metrics.MemoryLimitsCommitment = 4.76
-	}
+	metrics.TopMemoryPods = topMemoryPods
 
 	return metrics, nil
 }
