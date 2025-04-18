@@ -1,0 +1,100 @@
+= OpenShift Performance Health Check Results
+
+== Summary
+
+[cols="1,2,1,2", options="header"]
+|===
+|Check ID|Status|Message|Recommendations
+
+|cluster-performance|OK|Cluster performance metrics are within acceptable ranges (CPU: 0.00%, Memory: 0.00%)|* Ensure resource requests and limits are set appropriately for all workloads
+* Consider using horizontal pod autoscaling for applications with variable workloads
+* Separate infrastructure workloads from application workloads using node selectors and taints
+
+|===
+
+== cluster-performance
+
+*Status*: OK
+
+*Message*: Cluster performance metrics are within acceptable ranges (CPU: 0.00%, Memory: 0.00%)
+
+*Recommendations*:
+
+* Ensure resource requests and limits are set appropriately for all workloads
+* Consider using horizontal pod autoscaling for applications with variable workloads
+* Separate infrastructure workloads from application workloads using node selectors and taints
+
+*Details*:
+
+=== Cluster Performance Analysis ===
+
+== Resource Utilization Overview ==
+
+CPU Utilization: 0.00%
+CPU Requests Commitment: 29.47%
+CPU Limits Commitment: 28.24%
+Memory Utilization: 0.00%
+Memory Requests Commitment: 16.12%
+Memory Limits Commitment: 7.86%
+
+== Top Namespaces by Resource Usage ==
+
+=== Top CPU Consumers ===
+
+[cols="1,1,1,1,1,1", options="header"]
+|===
+|Namespace|CPU Usage (cores)|CPU Requests (cores)|Usage/Requests|CPU Limits (cores)|Usage/Limits
+
+|openshift-cluster-machine-approver|0.000|0.020|0.0%|0.000|0.0%
+|openshift-console-operator|0.000|0.010|0.0%|0.000|0.0%
+|openshift-operator-lifecycle-manager|0.000|0.090|0.0%|0.000|0.0%
+|openshift-dns|0.000|0.325|0.0%|0.000|0.0%
+|openshift-kube-storage-version-migrator|0.000|0.011|0.0%|0.000|0.0%
+|openshift-route-controller-manager|0.000|0.300|0.0%|0.000|0.0%
+|openshift-infra|0.000|0.000|0.0%|0.000|0.0%
+|openshift-cloud-controller-manager|0.000|0.000|0.0%|0.000|0.0%
+|openshift-cloud-network-config-controller|0.000|0.000|0.0%|0.000|0.0%
+|openshift-cloud-platform-infra|0.000|0.000|0.0%|0.000|0.0%
+|===
+
+=== Top Memory Consumers ===
+
+[cols="1,1,1,1,1,1", options="header"]
+|===
+|Namespace|Memory Usage|Memory Requests|Usage/Requests|Memory Limits|Usage/Limits
+
+|openshift-cluster-machine-approver|0.00 B|70.00 MiB|0.0%|0.00 B|0.0%
+|openshift-console-operator|0.00 B|100.00 MiB|0.0%|0.00 B|0.0%
+|openshift-operator-lifecycle-manager|0.00 B|610.00 MiB|0.0%|0.00 B|0.0%
+|openshift-dns|0.00 B|655.00 MiB|0.0%|0.00 B|0.0%
+|openshift-kube-storage-version-migrator|0.00 B|201.00 MiB|0.0%|0.00 B|0.0%
+|openshift-route-controller-manager|0.00 B|300.00 MiB|0.0%|0.00 B|0.0%
+|openshift-infra|0.00 B|0.00 B|0.0%|0.00 B|0.0%
+|openshift-cloud-controller-manager|0.00 B|0.00 B|0.0%|0.00 B|0.0%
+|openshift-cloud-network-config-controller|0.00 B|0.00 B|0.0%|0.00 B|0.0%
+|openshift-cloud-platform-infra|0.00 B|0.00 B|0.0%|0.00 B|0.0%
+|===
+
+== Node Resource Utilization ==
+
+[cols="1,1,1,1,1,1,1", options="header"]
+|===
+|Node|CPU Usage|CPU Capacity|CPU %|Memory Usage|Memory Capacity|Memory %
+
+|control-plane-cluster-54mfj-1|0.00 cores|24.00 cores|0.0%|0.00 B|125.78 GiB|0.0%
+|control-plane-cluster-54mfj-2|0.00 cores|24.00 cores|0.0%|0.00 B|125.78 GiB|0.0%
+|control-plane-cluster-54mfj-3|0.00 cores|24.00 cores|0.0%|0.00 B|125.78 GiB|0.0%
+|worker-cluster-54mfj-1|0.00 cores|8.00 cores|0.0%|0.00 B|15.61 GiB|0.0%
+|worker-cluster-54mfj-2|0.00 cores|8.00 cores|0.0%|0.00 B|15.61 GiB|0.0%
+|===
+
+== Raw Prometheus Data ==
+
+Memory Usage Query Result:
+[source, json]
+----
+{"status":"success","data":{"resultType":"vector","result":[{"metric":{"__name__":"cluster:memory_usage:ratio"},"value":[1744948989.354,"0.1268124353975923"]}]}}
+----
+
+
+
