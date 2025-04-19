@@ -90,7 +90,7 @@ func (c *CNINetworkPluginCheck) Run() (healthcheck.Result, error) {
 		c.ID(),
 		types.StatusWarning,
 		fmt.Sprintf("Cluster is using CNI network plugin: %s (recommended: OVNKubernetes)", cniType),
-		types.ResultKeyRecommended,
+		types.ResultKeyRequired,
 	)
 
 	// Add recommendations based on the current CNI type

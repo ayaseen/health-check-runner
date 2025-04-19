@@ -148,15 +148,24 @@ The application runs a variety of checks and generates a formatted report with t
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// Modified Execute function to skip OpenShift connectivity check for exec-summary command
 func Execute() {
+	// Check if the command is exec-summary
+	// If exec-summary, skip OpenShift connectivity check
+	isExecSummary := false
+	for _, arg := range os.Args {
+		if arg == "exec-summary" {
+			isExecSummary = true
+			break
+		}
+	}
 
-	// Verify OpenShift connection before running any checks
-	verifyOpenShiftConnection()
+	// Verify OpenShift connection before running health checks, but not for exec-summary command
+	if !isExecSummary {
+		verifyOpenShiftConnection()
+	}
 
 	err := rootCmd.Execute()
-
 	if err != nil {
 		os.Exit(1)
 	}

@@ -107,7 +107,7 @@ func (c *DefaultIngressCertificateCheck) Run() (healthcheck.Result, error) {
 			c.ID(),
 			types.StatusWarning,
 			"No custom certificate is configured for the default ingress controller",
-			types.ResultKeyRecommended,
+			types.ResultKeyRequired,
 		)
 		result.AddRecommendation("Configure a custom certificate for the default ingress controller to avoid browser security warnings")
 		result.AddRecommendation(fmt.Sprintf("Refer to the documentation at https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/security/certificates/replacing-default-ingress-certificate", version))

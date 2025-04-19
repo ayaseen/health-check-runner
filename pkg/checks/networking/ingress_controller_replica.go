@@ -151,7 +151,7 @@ func (c *IngressControllerReplicaCheck) Run() (healthcheck.Result, error) {
 		c.ID(),
 		types.StatusWarning,
 		fmt.Sprintf("Ingress controller has insufficient replicas: %d (recommended: >= 3)", replicas),
-		types.ResultKeyRecommended,
+		types.ResultKeyRequired,
 	)
 
 	result.AddRecommendation("Increase the number of ingress controller replicas to at least 3 for high availability")

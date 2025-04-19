@@ -136,7 +136,7 @@ func (c *ClusterVersionCheck) Run() (healthcheck.Result, error) {
 			c.ID(),
 			types.StatusWarning,
 			fmt.Sprintf("Cluster version %s is not the latest version (%s)", currentVersion, latestVersion),
-			types.ResultKeyRecommended,
+			types.ResultKeyRequired,
 		)
 
 		checkResult.AddRecommendation(fmt.Sprintf("Update to the latest version %s", latestVersion))

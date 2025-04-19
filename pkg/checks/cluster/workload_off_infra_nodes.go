@@ -199,7 +199,7 @@ func (c *WorkloadOffInfraNodesCheck) Run() (healthcheck.Result, error) {
 		c.ID(),
 		types.StatusWarning,
 		fmt.Sprintf("%d user workloads are running on infrastructure nodes", len(podsOnInfraNodes)),
-		types.ResultKeyRecommended,
+		types.ResultKeyRequired,
 	)
 
 	result.AddRecommendation("Infrastructure nodes should be dedicated to infrastructure components")

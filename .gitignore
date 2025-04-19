@@ -29,3 +29,5 @@ author*
 # Go workspace file
 go.work
 /docs/
+resources/
+health-reports/

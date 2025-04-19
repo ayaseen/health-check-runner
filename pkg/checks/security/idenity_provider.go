@@ -159,7 +159,7 @@ func (c *IdentityProviderCheck) Run() (healthcheck.Result, error) {
 			c.ID(),
 			types.StatusWarning,
 			fmt.Sprintf("Identity providers are configured (%s), but no LDAP provider found", getProviderTypes(idpConfig.Spec.IdentityProviders)),
-			types.ResultKeyRecommended,
+			types.ResultKeyRequired,
 		)
 		result.AddRecommendation("Configure a central identity provider (LDAP) for better integration with existing identity management systems")
 		result.AddRecommendation(fmt.Sprintf("Refer to https://access.redhat.com/documentation/en-us/openshift_container_platform/%s/html-single/authentication_and_authorization/index#configuring-ldap-identity-provider", version))
