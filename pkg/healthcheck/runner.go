@@ -88,19 +88,40 @@ func (r *Runner) GetChecks() []Check {
 }
 
 // normalizeCategory maps legacy categories to their standardized versions
+//func normalizeCategory(category types.Category) types.Category {
+//	switch category {
+//	case "Infra", "Infrastructure":
+//		return types.CategoryClusterConfig
+//	case "Network":
+//		return types.CategoryNetworking
+//	case "Cluster":
+//		return types.CategoryClusterConfig
+//	case "App Dev":
+//		return types.CategoryApplications
+//	case "Monitoring":
+//		return types.CategoryOpReady
+//
+//	default:
+//		return category
+//	}
+//}
+
+// normalizeCategory ensures categories match those defined in types.go
 func normalizeCategory(category types.Category) types.Category {
 	switch category {
-	case "Infra", "Infrastructure":
+	case types.CategoryClusterConfig:
 		return types.CategoryClusterConfig
-	case "Network":
+	case types.CategoryNetworking:
 		return types.CategoryNetworking
-	case "Cluster":
-		return types.CategoryClusterConfig
-	case "App Dev":
+	case types.CategoryApplications:
 		return types.CategoryApplications
-	case "Monitoring":
+	case types.CategoryOpReady:
 		return types.CategoryOpReady
-	case "Perf", "Performance Metrics":
+	case types.CategorySecurity:
+		return types.CategorySecurity
+	case types.CategoryStorage:
+		return types.CategoryStorage
+	case types.CategoryPerformance:
 		return types.CategoryPerformance
 	default:
 		return category
